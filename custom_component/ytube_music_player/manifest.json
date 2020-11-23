@@ -1,0 +1,11 @@
+{
+  "domain": "ytube_music_player",
+  "name": "YouTube Music Player",
+  "documentation": "https://github.com/KoljaWindeler/ytube_music_player",
+  "requirements": [
+    "ytmusicapi",
+    "pytube"
+  ],
+  "dependencies": [],
+  "codeowners": []
+}
