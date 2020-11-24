@@ -67,7 +67,7 @@ It should look like the screenshot below
 **2. The easiest way to prcocede is to convert is to use the config flow of homeassistant**
 1. Open Settings -> Integrations -> "add integration" -> "YouTube Music Player"
 2. Paste the cookie into the first field
-3. Make sure that the path below is valif for your environment. Docker uses /config/ but ymmv.
+3. Make sure that the path below is valid for your environment. Docker uses /config/, but ymmv.
 4. Save, it will claim that it worked (hopefully) but you still have to add the configuration to you yaml! 
 (full storage based configuration isn't working yet)
 
@@ -83,7 +83,7 @@ Key | Type | Required | Default | Description
 
 Last step is simply the setup in yaml. 
 All you have to do is to download the already existing package file download 
-https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/packages/ytube.yaml 
+https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/package/ytube.yaml
 into you /config/packages folder (see https://www.home-assistant.io/docs/configuration/packages/)
 
 Or copy this into your configuration.yaml:
