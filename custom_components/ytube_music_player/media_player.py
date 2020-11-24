@@ -27,13 +27,13 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
 	"""Run setup via YAML."""
-	_LOGGER.error("Config via YAML")
+	_LOGGER.debug("Config via YAML")
 	if(config is not None):
 		add_entities([yTubeMusicComponent(hass, config)], True)
 
 async def async_setup_entry(hass, config, async_add_devices):
 	"""Run setup via Storage."""
-	_LOGGER.error("Config via Storage/UI currently not supported due to me not understanding asyncio")
+	_LOGGER.debug("Config via Storage/UI currently not supported due to me not understanding asyncio")
 #	if(len(config.data) > 0):
 #		async_add_devices([yTubeMusicComponent(hass, config.data)], True)
 
@@ -47,12 +47,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
 
-		_LOGGER.error("YtubeMediaPlayer config: ")
-		_LOGGER.error("\tHeader path: " + config.get(CONF_HEADER_PATH))
-		_LOGGER.error("\tplaylist: " + self._playlist)
-		_LOGGER.error("\tmediaplayer: " + self._media_player)
-		_LOGGER.error("\tsource: " + self._source)
-		_LOGGER.error("\tspeakerlist: " + str(self._speakersList))
+		_LOGGER.debug("YtubeMediaPlayer config: ")
+		_LOGGER.debug("\tHeader path: " + config.get(CONF_HEADER_PATH))
+		_LOGGER.debug("\tplaylist: " + self._playlist)
+		_LOGGER.debug("\tmediaplayer: " + self._media_player)
+		_LOGGER.debug("\tsource: " + self._source)
+		_LOGGER.debug("\tspeakerlist: " + str(self._speakersList))
 
 #		try:
 		# geth nicht self._api= await self.hass.async_add_executor_job(partial(YTMusic, config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)))
