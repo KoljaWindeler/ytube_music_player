@@ -8,5 +8,6 @@
     "pytube"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+     "KoljaWindeler"]
 }
