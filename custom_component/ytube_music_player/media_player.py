@@ -1,6 +1,7 @@
 """
 Attempting to support Google Music in Home Assistant
 """
+import asyncio
 import logging
 import time
 import random
@@ -9,6 +10,7 @@ import os.path
 import random
 from datetime import timedelta
 
+from .const import *
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.condition import state
@@ -17,120 +19,48 @@ from homeassistant.helpers.event import call_later
 
 import homeassistant.components.input_select as input_select
 
-from homeassistant.const import (
-	EVENT_HOMEASSISTANT_START,
-	ATTR_ENTITY_ID,
-	CONF_DEVICE_ID,
-	CONF_USERNAME,
-	CONF_PASSWORD,
-	STATE_PLAYING,
-	STATE_PAUSED,
-	STATE_OFF,
-	STATE_IDLE,
-)
-
-from homeassistant.components.media_player import (
-	MediaPlayerEntity,
-	PLATFORM_SCHEMA,
-	SERVICE_TURN_ON,
-	SERVICE_TURN_OFF,
-	SERVICE_PLAY_MEDIA,
-	SERVICE_MEDIA_PAUSE,
-	SERVICE_VOLUME_UP,
-	SERVICE_VOLUME_DOWN,
-	SERVICE_VOLUME_SET,
-	ATTR_MEDIA_VOLUME_LEVEL,
-	ATTR_MEDIA_CONTENT_ID,
-	ATTR_MEDIA_CONTENT_TYPE,
-	DOMAIN as DOMAIN_MP,
-)
-
-from homeassistant.components.media_player.const import (
-	MEDIA_TYPE_MUSIC,
-	SUPPORT_STOP,
-	SUPPORT_PLAY,
-	SUPPORT_PAUSE,
-	SUPPORT_PLAY_MEDIA,
-	SUPPORT_PREVIOUS_TRACK,
-	SUPPORT_NEXT_TRACK,
-	SUPPORT_VOLUME_MUTE,
- 	SUPPORT_VOLUME_SET,
-	SUPPORT_VOLUME_STEP,
-	SUPPORT_TURN_ON,
-	SUPPORT_TURN_OFF,
-	SUPPORT_SHUFFLE_SET,
-)
-
 from pytube import YouTube
+from ytmusicapi import YTMusic
 
-# Should be equal to the name of your component.
-DOMAIN = "ytube_music_player"
-
-SUPPORT_YTUBEMUSIC_PLAYER = (
-	SUPPORT_TURN_ON
-	| SUPPORT_TURN_OFF
-	| SUPPORT_PLAY
-	| SUPPORT_PAUSE
-	| SUPPORT_STOP
-	| SUPPORT_VOLUME_SET
-	| SUPPORT_VOLUME_STEP
-	| SUPPORT_VOLUME_MUTE
-	| SUPPORT_PREVIOUS_TRACK
-	| SUPPORT_NEXT_TRACK
-	| SUPPORT_SHUFFLE_SET
-)
-
-CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
-CONF_HEADER_PATH = 'header_path'
-CONF_SHUFFLE = 'shuffle'
-CONF_SHUFFLE_MODE = 'shuffle_mode'
-
-CONF_SELECT_SOURCE = 'select_source'
-CONF_SELECT_PLAYLIST = 'select_playlist'
-CONF_SELECT_SPEAKERS = 'select_speakers'
-
-DEFAULT_SELECT_SOURCE = DOMAIN + '_source'
-DEFAULT_SELECT_PLAYLIST = DOMAIN + '_playlist'
-DEFAULT_SELECT_SPEAKERS = DOMAIN + '_speakers'
-DEFAULT_HEADER_PATH = '/config/headers_auth.json'
-
-
-DEFAULT_SHUFFLE_MODE = 1
-DEFAULT_SHUFFLE = True
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
-	DOMAIN: vol.Schema({
-		vol.Required(CONF_USERNAME): cv.string,
-		vol.Required(CONF_PASSWORD): cv.string,
-		vol.Optional(CONF_DEVICE_ID): cv.string,
-		vol.Optional(CONF_RECEIVERS): cv.string,
-		vol.Optional(CONF_HEADER_PATH, default=DEFAULT_HEADER_PATH): cv.string,
-		vol.Optional(CONF_SELECT_SOURCE, default=DEFAULT_SELECT_SOURCE): cv.string,
-		vol.Optional(CONF_SELECT_PLAYLIST, default=DEFAULT_SELECT_PLAYLIST): cv.string,
-		vol.Optional(CONF_SELECT_SPEAKERS, default=DEFAULT_SELECT_SPEAKERS): cv.string,
-	})
-}, extra=vol.ALLOW_EXTRA)
-
-# Shortcut for the logger
 _LOGGER = logging.getLogger(__name__)
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-	""" Setup YTUBEMUSIC player. """
-	add_devices([yTubeMusicComponent(hass, config)])
-	return True
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+	"""Run setup via YAML."""
+	_LOGGER.error("Config via YAML")
+	if(config is not None):
+		add_entities([yTubeMusicComponent(hass, config)], True)
+
+async def async_setup_entry(hass, config, async_add_devices):
+	"""Run setup via Storage."""
+	_LOGGER.error("Config via Storage/UI currently not supported due to me not understanding asyncio")
+#	if(len(config.data) > 0):
+#		async_add_devices([yTubeMusicComponent(hass, config.data)], True)
+
 
 class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config):
-		from ytmusicapi import YTMusic
-
-
 		self.hass = hass
-		self._api = YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH))
 		self._name = DOMAIN
 		self._playlist = "input_select." + config.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST)
 		self._media_player = "input_select." + config.get(CONF_SELECT_SPEAKERS, DEFAULT_SELECT_SPEAKERS)
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
+
+		_LOGGER.error("YtubeMediaPlayer config: ")
+		_LOGGER.error("\tHeader path: " + config.get(CONF_HEADER_PATH))
+		_LOGGER.error("\tplaylist: " + self._playlist)
+		_LOGGER.error("\tmediaplayer: " + self._media_player)
+		_LOGGER.error("\tsource: " + self._source)
+		_LOGGER.error("\tspeakerlist: " + str(self._speakersList))
+
+#		try:
+		# geth nicht self._api= await self.hass.async_add_executor_job(partial(YTMusic, config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)))
+		# geht nicht self._api = asyncio.run_coroutine_threadsafe(YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)), hass.loop).result()
+		self._api = YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH))
+#		except:
+#			_LOGGER.error("===> YTMusic setup failed <===")
+#			return False
 
 		self._entity_ids = []  ## media_players - aka speakers
 		self._playlists = []
@@ -571,19 +501,23 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def media_play_pause(self, **kwargs):
 		"""Simulate play pause media player."""
 		if self._state == STATE_PLAYING:
+			self._allow_next = False
 			self.media_pause()
 		else:
+			self._allow_next = False
 			self.media_play()
 
 	def media_previous_track(self, **kwargs):
 		"""Send the previous track command."""
 		if self._playing:
 			self._next_track_no = max(self._next_track_no - 2, -1)
+			self._allow_next = False
 			self._get_track()
 
 	def media_next_track(self, **kwargs):
 		"""Send next track command."""
 		if self._playing:
+			self._allow_next = False
 			self._get_track()
 
 	def media_stop(self, **kwargs):

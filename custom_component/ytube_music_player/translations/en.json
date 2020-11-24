@@ -1,0 +1,34 @@
+{
+    "config": {
+        "title": "yTubeMediaPlayer",
+        "step": {
+            "user": {
+                "title": "yTubeMediaPlayer",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "cookie": "Enter cookie text, copied from browser",
+                    "header_path": "Path to store cookie data"
+                }
+            }
+        },
+        "error": {
+            "error_cookie": "Something with your cookie wasn't right."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "yTubeMediaPlayer",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "cookie": "Enter cookie text, copied from browser",
+                    "header_path": "Path to store cookie data"
+                }
+            }
+        },
+        "error": {
+            "error_cookie": "Something with your cookie wasn't right."
+        }
+
+    }
+}
