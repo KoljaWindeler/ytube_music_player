@@ -1,5 +1,5 @@
 """
-Attempting to support Google Music in Home Assistant
+Attempting to support yTube Music in Home Assistant
 """
 import asyncio
 import logging
@@ -378,7 +378,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				# we've reached the end of the playlist
 				# reset the inner playlist counter, call _update_playlist to update lib
 				self._next_track_no = 0
-				self._update_playlists(play=False)
+				self._load_playlist(play=False)
 		try:
 			_track = self._tracks[self._next_track_no]
 		except IndexError:

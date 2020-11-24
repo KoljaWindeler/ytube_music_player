@@ -5,7 +5,8 @@
   "config_flow": true,
   "requirements": [
     "ytmusicapi",
-    "pytube"
+    "pytube",
+    "integrationhelper"
   ],
   "dependencies": [],
   "codeowners": [

@@ -1,8 +1,6 @@
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-import requests
-import traceback
 import logging
 import datetime
 from collections import OrderedDict
