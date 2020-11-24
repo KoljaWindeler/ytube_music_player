@@ -53,7 +53,7 @@ custom_components/ytube_music_player/const.py
 
 You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers
 
-Basic steps for grabbing:
+**1. Basic steps for grabbing**
 1. Open the development tools (I've used google chrome) [Crtl+Shift+I]
 2. Open the Network tab
 3. Open https://music.youtube.com, log out, log in
@@ -61,9 +61,10 @@ Basic steps for grabbing:
 5. Go to "headers" -> "request headers" and copy everything starting at "accept: */*" (mark with a mouse and copy to clipboard)
 
 It should look like the screenshot below
+
 ![Cookie](cookie.png)
 
-The easiest way to prcocede is to convert is to use the config flow of homeassistant
+**2. The easiest way to prcocede is to convert is to use the config flow of homeassistant**
 1. Open Settings -> Integrations -> "add integration" -> "YouTube Music Player"
 2. Paste the cookie into the first field
 3. Make sure that the path below is valif for your environment. Docker uses /config/ but ymmv.
@@ -86,7 +87,7 @@ https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/packages
 into you /config/packages folder (see https://www.home-assistant.io/docs/configuration/packages/)
 
 Or copy this into your configuration.yaml:
-`
+```yaml
 media_player:
   - platform: ytube_music_player
     # adapt the file location if needed. this has to match the file path that was
@@ -116,4 +117,4 @@ input_select:
     icon: mdi:playlist-music
     options: # don't change
     - "loading"
-`
+```
