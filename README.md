@@ -61,7 +61,7 @@ Basic steps for grabbing:
 5. go to "headers" -> "request headers" and copy everything starting at "accept: */*" (mark with a mouse and copy to clipboard)
 
 It should look like the screenshot below
-![Cookie](get_cookie.png)
+![Cookie](cookie.png)
 
 The easiest way to prcocede is to convert is to use the config flow of homeassistant
 1. Open Settings -> Integrations -> "add integration" -> "YouTube Music Player"
