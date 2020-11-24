@@ -1,6 +1,6 @@
 # yTube Music Player
 
-Adds a mediaplayer to Home Assistant that can stream tracks from a playlist to a media player
+Adds a mediaplayer to Home Assistant that can stream tracks from a playlist to a media player.
 
 **This component will set up the following platforms.**
 
@@ -118,3 +118,5 @@ input_select:
     options: # don't change
     - "loading"
 ```
+## Credits
+This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/homeassistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)
