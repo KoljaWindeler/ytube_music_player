@@ -8,7 +8,7 @@ import random
 import pickle
 import os.path
 import random
-from datetime import timedelta
+import datetime
 
 from .const import *
 import voluptuous as vol
@@ -70,6 +70,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes = {}
 		self._next_track_no = 0
 		self._allow_next = False
+		self._last_auto_advance = datetime.datetime.now()
 
 		hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self._update_sources)
 		hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self._get_speakers)
@@ -240,7 +241,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
 			return
-
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._entity_ids)
 
@@ -257,14 +257,20 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		#_LOGGER.error(self._entity_ids)
 		#_LOGGER.error(" to ")
 		#_LOGGER.error(_player.state)
-		#_LOGGER.error(_player.attributes['media_position'])
-
+		#try:
+		#	_LOGGER.error(_player.attributes['media_position'])
+		#except:
+		#	pass
+	
 		if 'media_position' in _player.attributes:
 			if _player.state == 'playing' and _player.attributes['media_position']>0:
 				self._allow_next = True
-		if _player.state == 'idle' and self._allow_next:
-			self._allow_next = False
-			self._get_track()
+		if _player.state == 'idle':
+			if self._allow_next:
+				if (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10:
+					self._allow_next = False
+					self._last_auto_advance = datetime.datetime.now()
+					self._get_track()
 		elif _player.state == 'off':
 			self._state = STATE_OFF
 			self.turn_off()
@@ -272,7 +278,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" Set new volume if it has been changed on the _player """
 		if 'volume_level' in _player.attributes:
 			self._volume = round(_player.attributes['volume_level'],2)
-
 		self.schedule_update_ha_state()
 
 	def _ytubemusic_play_media(self, event):
@@ -493,7 +498,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def media_pause(self, **kwargs):
 		""" Send media pause command to media player """
 		self._state = STATE_PAUSED
-		_LOGGER.error(" PAUSE ")
+		#_LOGGER.error(" PAUSE ")
 		self.schedule_update_ha_state()
 		data = {ATTR_ENTITY_ID: self._entity_ids}
 		self.hass.services.call(DOMAIN_MP, 'media_pause', data)
