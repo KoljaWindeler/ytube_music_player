@@ -9,6 +9,7 @@ import pickle
 import os.path
 import random
 import datetime
+from urllib.parse import unquote
 
 from .const import *
 import voluptuous as vol
@@ -16,11 +17,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.condition import state
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.event import call_later
+from homeassistant.helpers.storage import STORAGE_DIR
 
 import homeassistant.components.input_select as input_select
 
 from pytube import YouTube
+from pytube import request
+from pytube import extract
+from pytube.cipher import Cipher
 from ytmusicapi import YTMusic
+
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,8 +54,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
 
+		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
+
 		_LOGGER.debug("YtubeMediaPlayer config: ")
-		_LOGGER.debug("\tHeader path: " + config.get(CONF_HEADER_PATH))
+		_LOGGER.debug("\tHeader path: " + config.get(CONF_HEADER_PATH, default_header_file))
 		_LOGGER.debug("\tplaylist: " + self._playlist)
 		_LOGGER.debug("\tmediaplayer: " + self._media_player)
 		_LOGGER.debug("\tsource: " + self._source)
@@ -57,7 +66,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 #		try:
 		# geth nicht self._api= await self.hass.async_add_executor_job(partial(YTMusic, config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)))
 		# geht nicht self._api = asyncio.run_coroutine_threadsafe(YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)), hass.loop).result()
-		self._api = YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH))
+		self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+		self._js = ""
+		self._get_cipher('BB2mjBuAtiQ')
+#		embed_url = f"https://www.youtube.com/embed/D7oPc6PNCZ0"
+
 #		except:
 #			_LOGGER.error("===> YTMusic setup failed <===")
 #			return False
@@ -236,6 +249,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._entity_ids = _entity_ids
 		return True
 
+	def _get_cipher(self, videoId):
+		embed_url = "https://www.youtube.com/embed/"+videoId
+		embed_html = request.get(url=embed_url)
+		js_url = extract.js_url(embed_html)
+		self._js = request.get(js_url)
+		self._cipher = Cipher(js=self._js)
+		#2do some sort of check if tis worked
+
 
 	def _sync_player(self, entity_id=None, old_state=None, new_state=None):
 		""" Perform actions based on the state of the selected (Speakers) media_player """
@@ -400,6 +421,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			uid = _track['videoId']
 		else:
 			_LOGGER.error("Failed to get ID for track: (%s)", _track)
+			_LOGGER.error(_track)
 			if retry < 1:
 				self._turn_off_media_player()
 				return
@@ -424,20 +446,65 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		else:
 			self._track_album_cover = None
 		self._track_artist_cover = None
-		""" Get the stream URL and play on media_player """
+		"""@@@ Get the stream URL and play on media_player @@@"""
+		_url = ''
 		try:
-			_url = YouTube('https://www.youtube.com/watch?v='+_track['videoId']).streams.filter(only_audio=True).order_by('abr').last().url
-			#_LOGGER.error(self._api.get_song(_track['videoId']))
-			#_LOGGER.error("vs")
+			_LOGGER.debug("-- try to find streaming url --")
+			streamingData=self._api.get_song(_track['videoId'])['streamingData']
+			if('adaptiveFormats' in streamingData):
+				streamingData = streamingData['adaptiveFormats']
+			elif('formats' in streamingData): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
+				streamingData = streamingData['formats']
+			streamId = 0
+			# try to find audio only stream
+			for i in range(0,len(streamingData)):
+				if(streamingData[i]['mimeType'].startswith('audio/mp4')):
+					streamId = i
+					break
+				elif(streamingData[i]['mimeType'].startswith('audio')):
+					streamId = i
+			sigCipher_ch = streamingData[streamId]['signatureCipher']
+			sigCipher_ex = sigCipher_ch.split('&')
+			res = dict({'s': '', 'url': ''})
+			for sig in sigCipher_ex:
+				for key in res:
+					if(sig.find(key+"=")>=0):
+						res[key]=unquote(sig[len(key+"="):])
+			# I'm just not sure if the original video from the init will stay online forever
+			# in case it's down the player might not load and thus we won't have a javascript loaded
+			# so if that happens: we try with this url, might work better (at least the file should be online)
+			# the only trouble i could see is that this video is private and thus also won't load the player .. 
+			if(self._js == ""):
+				self._get_cipher(_track['videoId'])
+			signature = self._cipher.get_signature(ciphered_signature=res['s'])
+			_url = res['url'] + "&sig=" + signature
+
 		except Exception as err:
-			_LOGGER.error("Failed to get URL for track: (%s)", uid)
-			_LOGGER.error(err)
-			if retry < 1:
-				self._turn_off_media_player()
-				return
-			else:
-				_LOGGER.error("Retry with: (%i)", retry)
-			return self._get_track(retry=retry-1)
+			_LOGGER.error("Failed to get own(!) URL for track, further details below. Will not try YouTube method")
+			_LOGGER.error(traceback.format_exc())
+
+		# backup: run youtube stack, only if we failed
+		if(_url == ""):
+			try:
+				streams = YouTube('https://www.youtube.com/watch?v='+_track['videoId']).streams
+				streams_audio = streams.filter(only_audio=True)
+				if(len(streams_audio)):
+					_url = streams_audio.order_by('abr').last().url
+				else:
+					_url = streams.order_by('abr').last().url
+				_LOGGER.error("ultimatly")
+				_LOGGER.error(_url)
+
+			except Exception as err:
+				_LOGGER.error(traceback.format_exc())
+				_LOGGER.error("Failed to get URL for track: (%s)", uid)
+				_LOGGER.error(err)
+				if retry < 1:
+					self._turn_off_media_player()
+					return
+				else:
+					_LOGGER.error("Retry with: (%i)", retry)
+				return self._get_track(retry=retry-1)
 
 		self._state = STATE_PLAYING
 		self.schedule_update_ha_state()
@@ -447,10 +514,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			ATTR_ENTITY_ID: self._entity_ids
 			}
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
+		"""@@@ Get the stream URL and play on media_player @@@"""
 		#_LOGGER.error("register call later")
 		# just to make sure that we check the status of the media player to free the "go to next"
 		call_later(self.hass, 15, self._sync_player)
-
 
 
 	def play_media(self, media_type, media_id, _player=None, **kwargs):
