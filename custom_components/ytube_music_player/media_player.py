@@ -311,7 +311,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def _update_playlists(self, now=None):
 		""" Sync playlists from Google Music library """
 		self._playlist_to_index = {}
-		self._playlists = self._api.get_library_playlists()
+		self._playlists = self._api.get_library_playlists(limit = 99)
 		idx = -1
 		for playlist in self._playlists:
 			idx = idx + 1
@@ -426,8 +426,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_artist_cover = None
 		""" Get the stream URL and play on media_player """
 		try:
-			_url = YouTube('https://www.youtube.com/watch?v='+_track['videoId']).streams.last().url
-			# last is always audio only?
+			_url = YouTube('https://www.youtube.com/watch?v='+_track['videoId']).streams.filter(only_audio=True).order_by('abr').last().url
 			#_LOGGER.error(self._api.get_song(_track['videoId']))
 			#_LOGGER.error("vs")
 		except Exception as err:
