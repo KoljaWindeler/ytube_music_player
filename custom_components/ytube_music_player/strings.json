@@ -1,4 +1,5 @@
 {
+    "title": "yTubeMediaPlayer",
     "config": {
         "step": {
             "user": {
@@ -16,7 +17,6 @@
     "options": {
         "step": {
             "init": {
-                "title": "yTubeMediaPlayer",
                 "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
                     "cookie": "Enter cookie text, copied from browser",
