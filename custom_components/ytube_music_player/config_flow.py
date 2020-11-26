@@ -4,6 +4,8 @@ from homeassistant import config_entries
 import voluptuous as vol
 import logging
 from .const import *
+import os.path
+from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,14 +26,15 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 	async def async_step_user(self, user_input=None):   # pylint: disable=unused-argument
 		"""Provide the first page of the config flow."""
 		self._errors = {}
+		default_header_file = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 		if user_input is not None:
 			# there is user input, check and save if valid (see const.py)
-			self._errors = check_data(user_input)
+			self._errors = check_data(user_input,default_header_file)
 			if self._errors == {}:
 				self.data = user_input
 				return self.async_create_entry(title="yTubeMusic", data=user_input)
 		# no user input, or error. Show form
-		return self.async_show_form(step_id="user", data_schema=vol.Schema(create_form(user_input)), errors=self._errors)
+		return self.async_show_form(step_id="user", data_schema=vol.Schema(create_form(user_input,default_header_file)), errors=self._errors)
 
 	# TODO .. what is this good for?
 	async def async_step_import(self, user_input):  # pylint: disable=unused-argument
@@ -65,9 +68,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 	async def async_step_init(self, user_input=None):   # pylint: disable=unused-argument
 		"""Call this as first page."""
 		self._errors = {}
+		default_header_file = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 		if user_input is not None:
 			# there is user input, check and save if valid (see const.py)
-			self._errors = check_data(user_input)
+			self._errors = check_data(user_input,default_header_file)
 			if self._errors == {}:
 				self.data.update(user_input)
 				return self.async_create_entry(title="yTubeMusic", data=self.data)
@@ -76,4 +80,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 			# if we came straight from init
 			user_input = self.data
 		# no user input, or error. Show form
-		return self.async_show_form(step_id="init", data_schema=vol.Schema(create_form(user_input)), errors=self._errors)
+		return self.async_show_form(step_id="init", data_schema=vol.Schema(create_form(user_input,default_header_file)), errors=self._errors)
