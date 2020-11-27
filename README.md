@@ -76,7 +76,7 @@ It should look like the screenshot below
 
 Key | Type | Required | Default | Description
 -- | -- | -- | -- | --
-`header_pth` | `string` | `true` | `None` | The path of the header files from step 3 above
+`header_path` | `string` | `false` | `` | The path of the header files from step 3 above
 `speaker` | `string list` | `true` | `None` | List of speakers, see below in the example config
 
 ## Manual configuration 
@@ -90,9 +90,6 @@ Or copy this into your configuration.yaml:
 ```yaml
 media_player:
   - platform: ytube_music_player
-    # adapt the file location if needed. this has to match the file path that was
-    # speicified in the config flow
-    header_path: '/config/headers_auth.json'
     speakers:
       # if your speaker is called media_player.speaker123, add speaker123 here
       - speaker123
