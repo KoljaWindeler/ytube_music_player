@@ -13,7 +13,7 @@ Platform | Description
 
 ## Features
 - loads all your playlists from your YouTube Music account
-- can either play straigt from the playlist or create a radio based on the playlist
+- can either play straight from the playlist or create a radio based on the playlist
 - extracts url of the stream and forwards it to a generic mediaplayer
 - keeps auto_playing as long as it is turned on
 
@@ -21,21 +21,19 @@ Platform | Description
 
 ## HACS
 
-The easiest way to add this to your Homeassistant installation is using [HACS]. 
+The easiest way to add this to your Home Assistant installation is using [HACS](https://hacs.xyz/docs/basic/getting_started).
 
-It's recommended to restart Homeassistent directly after the installation without any change to the Configuration. 
-Homeassistent will install the dependencies during the next reboot. After that you can add and check the configuration without error messages. 
+It's recommended to restart Home Assistant directly after the installation without any change to the Configuration.
+Home Assistant will install the dependencies during the next reboot. After that you can add and check the configuration without error messages.
 This is nothing special to this Integration but the same for all custom components.
-
 
 ## Manual
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `kaco`.
+3. In the `custom_components` directory (folder) create a new folder called `ytube_music_player`.
 4. Download _all_ the files from the `custom_components/ytube_music_player/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
-6. Follow the instructions under [Configuration](#Configuration) below.
 
 Using your HA configuration directory (folder) as a starting point you should now also have this:
 
@@ -46,7 +44,6 @@ custom_components/ytube_music_player/manifest.json
 custom_components/ytube_music_player/media_player.py
 custom_components/ytube_music_player/config_flow.py
 custom_components/ytube_music_player/const.py
-
 ```
 
 # Setup
@@ -54,6 +51,7 @@ custom_components/ytube_music_player/const.py
 You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers
 
 **1. Basic steps for grabbing**
+
 1. Open the development tools (I've used google chrome) [Crtl+Shift+I]
 2. Open the Network tab
 3. Open https://music.youtube.com, log out, log in
@@ -64,29 +62,30 @@ It should look like the screenshot below
 
 ![Cookie](cookie.png)
 
-**2. The easiest way to prcocede is to convert is to use the config flow of homeassistant**
+**2. It is recommended to use the config flow of Home Assistant for converting and saving this file**
+
 1. Open Settings -> Integrations -> "add integration" -> "YouTube Music Player"
-2. Paste the cookie into the first field
-3. Make sure that the path below is valid for your environment. Docker uses /config/, but ymmv.
-4. Save, it will claim that it worked (hopefully) but you still have to add the configuration to you yaml! 
+2. Paste the cookie into the indicated field
+3. Save, it will claim that it worked (hopefully) but *you still have to add the configuration to you yaml!*
 (full storage based configuration isn't working yet)
 
 
 ## Configuration options
 
+Last step is simply the setup in yaml.
+
 Key | Type | Required | Default | Description
 -- | -- | -- | -- | --
-`header_path` | `string` | `false` | `` | The path of the header files from step 3 above
-`speaker` | `string list` | `true` | `None` | List of speakers, see below in the example config
+`speakers` | `string list` | `true` | `None` | List of speakers, see below in the example config
+`header_path` | `string` | `false` | `None` | Path to a manually created header file, if you did not use config_flow
 
-## Manual configuration 
+**Option 1:** You can download the existing package file. Don't forget to configure your speakers.
 
-Last step is simply the setup in yaml. 
-All you have to do is to download the already existing package file download 
-https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/package/ytube.yaml
-into you /config/packages folder (see https://www.home-assistant.io/docs/configuration/packages/)
+Download https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/package/ytube.yaml
+into your `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
 
-Or copy this into your configuration.yaml:
+**Option 2:** Copy the following into your configuration.yaml. Don't forget to configure your speakers.
+
 ```yaml
 media_player:
   - platform: ytube_music_player
@@ -115,5 +114,7 @@ input_select:
     options: # don't change
     - "loading"
 ```
+
 ## Credits
-This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/homeassistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)
+
+This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/Home Assistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)
