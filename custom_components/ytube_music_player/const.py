@@ -81,9 +81,11 @@ CONF_COOKIE = 'cookie'
 CONF_SELECT_SOURCE = 'select_source'
 CONF_SELECT_PLAYLIST = 'select_playlist'
 CONF_SELECT_SPEAKERS = 'select_speakers'
+CONF_SELECT_PLAYMODE = 'select_playmode'
 
 DEFAULT_SELECT_SOURCE = DOMAIN + '_source'
 DEFAULT_SELECT_PLAYLIST = DOMAIN + '_playlist'
+DEFAULT_SELECT_PLAYMODE = DOMAIN + '_playmode'
 DEFAULT_SELECT_SPEAKERS = DOMAIN + '_speakers'
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
 
@@ -100,6 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 		vol.Optional(CONF_HEADER_PATH, default=DEFAULT_HEADER_FILENAME): cv.string,
 		vol.Optional(CONF_SELECT_SOURCE, default=DEFAULT_SELECT_SOURCE): cv.string,
 		vol.Optional(CONF_SELECT_PLAYLIST, default=DEFAULT_SELECT_PLAYLIST): cv.string,
+		vol.Optional(CONF_SELECT_PLAYMODE, default=DEFAULT_SELECT_PLAYMODE): cv.string,
 		vol.Optional(CONF_SELECT_SPEAKERS, default=DEFAULT_SELECT_SPEAKERS): cv.string,
 	})
 }, extra=vol.ALLOW_EXTRA)
@@ -184,6 +187,7 @@ def ensure_config(user_input,path):
 	out[CONF_SHUFFLE_MODE] = DEFAULT_SHUFFLE_MODE
 	out[CONF_SELECT_SOURCE] = DEFAULT_SELECT_SOURCE
 	out[CONF_SELECT_PLAYLIST] = DEFAULT_SELECT_PLAYLIST
+	out[CONF_SELECT_PLAYMODE] = DEFAULT_SELECT_PLAYMODE
 	out[CONF_SELECT_SPEAKERS] = DEFAULT_SELECT_SPEAKERS
 
 	if user_input is not None:
@@ -199,6 +203,8 @@ def ensure_config(user_input,path):
 			out[CONF_SELECT_SOURCE] = user_input[CONF_SELECT_SOURCE]
 		if CONF_SELECT_PLAYLIST in user_input:
 			out[CONF_SELECT_PLAYLIST] = user_input[CONF_SELECT_PLAYLIST]
+		if CONF_SELECT_PLAYMODE in user_input:
+			out[CONF_SELECT_PLAYMODE] = user_input[CONF_SELECT_PLAYMODE]
 		if CONF_SELECT_SPEAKERS in user_input:
 			out[CONF_SELECT_SPEAKERS] = user_input[CONF_SELECT_SPEAKERS]
 	return out

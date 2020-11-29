@@ -117,6 +117,15 @@ input_select:
     icon: mdi:playlist-music
     options: # don't change
     - "loading"
+
+  ytube_music_player_playmode:
+    name: Playmode
+    icon: mdi:playlist-music
+    options: ## don't change
+    - "Shuffle"
+    - "Random"
+    - "Shuffle Random"
+    - "Direct"
 ```
 ## Credits
 This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/homeassistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)

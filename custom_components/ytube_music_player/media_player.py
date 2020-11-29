@@ -50,6 +50,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass = hass
 		self._name = DOMAIN
 		self._playlist = "input_select." + config.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST)
+		self._playMode = "input_select." + config.get(CONF_SELECT_PLAYMODE, DEFAULT_SELECT_PLAYMODE)
 		self._media_player = "input_select." + config.get(CONF_SELECT_SPEAKERS, DEFAULT_SELECT_SPEAKERS)
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
@@ -62,6 +63,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("\tmediaplayer: " + self._media_player)
 		_LOGGER.debug("\tsource: " + self._source)
 		_LOGGER.debug("\tspeakerlist: " + str(self._speakersList))
+		_LOGGER.debug("\playModes: " + str(self._playMode))
 
 #		try:
 		# geth nicht self._api= await self.hass.async_add_executor_job(partial(YTMusic, config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)))
@@ -93,7 +95,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
 		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 
-		self._unsub_tracker = None
 		self._playing = False
 		self._state = STATE_OFF
 		self._volume = 0.0
@@ -195,7 +196,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_player = self.hass.states.get(self._entity_ids)
 		data = {ATTR_ENTITY_ID: _player.entity_id}
 		if _player.state == STATE_OFF:
-			self._unsub_tracker = track_state_change(self.hass, _player.entity_id, self._sync_player)
+			self._allow_next = False
+			track_state_change(self.hass, _player.entity_id, self._sync_player)
+			track_state_change(self.hass, self._playMode, self._update_playmode)
 			self._turn_on_media_player(data)
 			#_LOGGER.error("subscribe to changes of "+_player.entity_id)
 			self._load_playlist()
@@ -282,7 +285,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		#	_LOGGER.error(_player.attributes['media_position'])
 		#except:
 		#	pass
-	
+
 		if 'media_position' in _player.attributes:
 			if _player.state == 'playing' and _player.attributes['media_position']>0:
 				self._allow_next = True
@@ -340,6 +343,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if len(name) < 1:
 				continue
 			self._playlist_to_index[name] = idx
+			#  the "your likes" playlist won't return a count of tracks
+			if not('count' in playlist):
+				extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
+				self._playlists[idx]['count'] = int(extra_info['duration'].replace(' songs',''))
 
 		playlists = list(self._playlist_to_index.keys())
 		self._attributes['playlists'] = playlists
@@ -372,19 +379,52 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("(%s) is not a valid input_select entity.", self._source)
 			return
 
-		my_radio = self._api.get_watch_playlist(playlistId=self._playlists[idx]['playlistId'])
+		my_radio = self._api.get_playlist(playlistId = self._playlists[idx]['playlistId'], limit = int(self._playlists[idx]['count']))['tracks']
+		#my_radio = self._api.get_watch_playlist(playlistId = self._playlists[idx]['playlistId'])#, limit = int(self._playlists[idx]['count']))
 		if _source.state != 'Playlist':
 			r_track = my_radio[random.randrange(0,len(my_radio)-1)]
 			self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])
 		else:
 			self._tracks = my_radio
+		_LOGGER.debug("New Track database loaded, contains "+str(len(self._tracks))+" Tracks")
 
 		self._total_tracks = len(self._tracks)
 		#self.log("Loading [{}] Tracks From: {}".format(len(self._tracks), _playlist_id))
+
+		# get current playmode
+		self._update_playmode()
+
 		if self._shuffle and self._shuffle_mode != 2:
 			random.shuffle(self._tracks)
 		if play:
 			self._play()
+
+	# called from HA when th user changes the input entry, will read selection to membervar
+	def _update_playmode(self, entity_id=None, old_state=None, new_state=None):
+		_LOGGER.debug("running update playmode")
+		if(entity_id == None):
+			_playmode = self.hass.states.get(self._playMode)
+		else:
+			_playmode = self.hass.states.get(entity_id)
+		if _playmode != None:
+			if(_playmode.state == "Shuffle"):
+				self._shuffle = True
+				self._shuffle_mode = 1
+			elif(_playmode.state == "Random"):
+				self._shuffle = True
+				self._shuffle_mode = 2
+			if(_playmode.state == "Shuffle Rnadom"):
+				self._shuffle = True
+				self._shuffle_mode = 3
+			if(_playmode.state == "Direct"):
+				self._shuffle = False
+				self._shuffle_mode = 0
+		self.set_shuffle(self._shuffle)
+		# if we've change the dropdown, reload the playlist and start playing
+		# else only change the mode
+		if(old_state != None and new_state != None):
+			self._allow_next = False # player will change to idle, avoid auto_advance
+			self._load_playlist(play = True)
 
 
 	def _play(self):
@@ -434,6 +474,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._track_name = None
 		if 'byline' in _track:
 			self._track_artist = _track['byline']
+		elif 'artists' in _track:
+			self._track_artist = _track['artists'][0]['name']
 		else:
 			self._track_artist = None
 		self._track_album_name = None
@@ -442,7 +484,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# thumbnail [0] is super tiny 32x32?
 			# thumbnail [0] is ok-ish
 			# thumbnail [0] is quite nice quality
-			self._track_album_cover = _album_art_ref[min(len(_album_art_ref)-1,2)]['url']
+			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
+		elif 'thumbnails' in _track:
+			_album_art_ref = _track['thumbnails']   ## returns a list
+			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
 		else:
 			self._track_album_cover = None
 		self._track_artist_cover = None
@@ -482,6 +527,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		except Exception as err:
 			_LOGGER.error("Failed to get own(!) URL for track, further details below. Will not try YouTube method")
 			_LOGGER.error(traceback.format_exc())
+			_LOGGER.error(_track['videoId'])
+			_LOGGER.error(self._api.get_song(_track['videoId']))
 
 		# backup: run youtube stack, only if we failed
 		if(_url == ""):

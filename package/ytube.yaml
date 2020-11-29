@@ -28,3 +28,11 @@ input_select:
     options: # don't change
     - "loading"
 
+  ytube_music_player_playmode:
+    name: Playmode
+    icon: mdi:playlist-music
+    options: ## Should be empty
+    - "Shuffle"
+    - "Random"
+    - "Shuffle Random"
+    - "Direct"
