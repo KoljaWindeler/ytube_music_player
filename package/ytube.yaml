@@ -2,7 +2,6 @@ media_player:
   - platform: ytube_music_player
     # adapt the file location if needed. this has to match the file path that was
     # speicified in the config flow
-    header_path: '/config/headers_auth.json' 
     speakers: 
       # if your speaker is called media_player.speaker123, add speaker123 here
       - speaker123
