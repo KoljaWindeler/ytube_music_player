@@ -55,7 +55,7 @@ from homeassistant.components.media_player.const import (
 # Should be equal to the name of your component.
 PLATFORM = "media_player"
 DOMAIN = "ytube_music_player"
-VERSION = "0.1.0"
+VERSION = "0.1.5"
 ISSUE_URL = "https://github.com/koljawindeler/ytube_music_player/issues"
 
 SUPPORT_YTUBEMUSIC_PLAYER = (

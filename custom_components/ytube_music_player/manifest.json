@@ -8,7 +8,8 @@
     "pytube",
     "integrationhelper"
   ],
-  "dependencies": [],
+  "dependencies": [
+    "persistent_notification"],
   "codeowners": [
     "@KoljaWindeler"
   ]

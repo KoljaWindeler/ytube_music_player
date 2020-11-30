@@ -63,19 +63,21 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("\tmediaplayer: " + self._media_player)
 		_LOGGER.debug("\tsource: " + self._source)
 		_LOGGER.debug("\tspeakerlist: " + str(self._speakersList))
-		_LOGGER.debug("\playModes: " + str(self._playMode))
+		_LOGGER.debug("\tplayModes: " + str(self._playMode))
 
-#		try:
-		# geth nicht self._api= await self.hass.async_add_executor_job(partial(YTMusic, config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)))
-		# geht nicht self._api = asyncio.run_coroutine_threadsafe(YTMusic(config.get(CONF_HEADER_PATH, DEFAULT_HEADER_PATH)), hass.loop).result()
-		self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+
+		if(os.path.exists(config.get(CONF_HEADER_PATH, default_header_file))):
+			self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+		else:
+			msg= "can't file header file at "+config.get(CONF_HEADER_PATH, default_header_file)
+			_LOGGER.error(msg)
+			data = {"title": "yTubeMediaPlayer error", "message": msg}
+			self.hass.services.call("persistent_notification","create", data)
+			self._api = None
+
 		self._js = ""
 		self._get_cipher('BB2mjBuAtiQ')
 #		embed_url = f"https://www.youtube.com/embed/D7oPc6PNCZ0"
-
-#		except:
-#			_LOGGER.error("===> YTMusic setup failed <===")
-#			return False
 
 		self._entity_ids = []  ## media_players - aka speakers
 		self._playlists = []
@@ -189,7 +191,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def turn_on(self, *args, **kwargs):
 		""" Turn on the selected media_player from input_select """
-		#_LOGGER.error("TURNON")
+		if(self._api == None):
+			_LOGGER.error("Can't start the player, no header file")
+			return
+		_LOGGER.debug("TURNON")
+
 		self._playing = False
 		if not self._update_entity_ids():
 			return
@@ -334,6 +340,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def _update_playlists(self, now=None):
 		""" Sync playlists from Google Music library """
+		if(self._api == None):
+			return
 		self._playlist_to_index = {}
 		self._playlists = self._api.get_library_playlists(limit = 99)
 		idx = -1
