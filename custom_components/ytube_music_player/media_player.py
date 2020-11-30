@@ -422,7 +422,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(_playmode.state == "Random"):
 				self._shuffle = True
 				self._shuffle_mode = 2
-			if(_playmode.state == "Shuffle Rnadom"):
+			if(_playmode.state == "Shuffle Random"):
 				self._shuffle = True
 				self._shuffle_mode = 3
 			if(_playmode.state == "Direct"):
