@@ -18,6 +18,7 @@ from homeassistant.helpers.condition import state
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.event import call_later
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers import device_registry
 
 import homeassistant.components.input_select as input_select
 
@@ -354,7 +355,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			#  the "your likes" playlist won't return a count of tracks
 			if not('count' in playlist):
 				extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
-				self._playlists[idx]['count'] = int(extra_info['duration'].replace(' songs',''))
+				self._playlists[idx]['count'] = int(extra_info['duration'].replace(' songs','').replace(',','').replace('.',''))
 
 		playlists = list(self._playlist_to_index.keys())
 		self._attributes['playlists'] = playlists
