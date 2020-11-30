@@ -64,7 +64,8 @@ It should look like the screenshot below
 
 **2. It is recommended to use the config flow of Home Assistant for converting and saving this file**
 
-1. Open Settings -> Integrations -> "add integration" -> "YouTube Music Player"
+*0. After you've installed this component and restarted Home Assistant please REFRESH the page, otherwise it might not show up in the list of integrations*
+1. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
 2. Paste the cookie into the indicated field
 3. Save, it will claim that it worked (hopefully) but *you still have to add the configuration to you yaml!*
 (full storage based configuration isn't working yet)
