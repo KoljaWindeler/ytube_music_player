@@ -56,7 +56,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
 
-		self._m3u_proxy = config.get(CONF_M3U_PROXY,'')
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 
 		_LOGGER.debug("YtubeMediaPlayer config: ")
@@ -212,27 +211,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 		_player = self.hass.states.get(self._entity_ids)
 		data = {ATTR_ENTITY_ID: _player.entity_id}
-		if _player.state == STATE_OFF:
-			self._allow_next = False
-			track_state_change(self.hass, _player.entity_id, self._sync_player)
-			track_state_change(self.hass, self._playMode, self._update_playmode)
-			self._turn_on_media_player(data)
-			#_LOGGER.error("subscribe to changes of "+_player.entity_id)
 
-			# display imidiatly a loading state to provide feedback to the user
-			self._track_name =  "loading..."
-			self._track_album_name = ""
-			self._track_artist =  ""
-			self._track_artist_cover =  None
-			self._track_album_cover = None
-			self._state = STATE_PLAYING # a bit early otherwise no info will be shown
-			self.schedule_update_ha_state()
+		self._allow_next = False
+		track_state_change(self.hass, _player.entity_id, self._sync_player)
+		track_state_change(self.hass, self._playMode, self._update_playmode)
+		self._turn_on_media_player(data)
+		#_LOGGER.error("subscribe to changes of ")
 
-			# grabbing data from API, might take a 1-3 sec
-			self._load_playlist()
-		elif _player.state != STATE_OFF:
-			self._turn_off_media_player(data)
-			call_later(self.hass, 1, self.turn_on)
+		self._get_cipher('BB2mjBuAtiQ')
+
+		# display imidiatly a loading state to provide feedback to the user
+		self._track_name =  "loading..."
+		self._track_album_name = ""
+		self._track_artist =  ""
+		self._track_artist_cover =  None
+		self._track_album_cover = None
+		self._state = STATE_PLAYING # a bit early otherwise no info will be shown
+		self.schedule_update_ha_state()
+
+		# grabbing data from API, might take a 1-3 sec
+		self._load_playlist()
 
 	def _turn_on_media_player(self, data=None):
 		"""Fire the on action."""
@@ -582,24 +580,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				else:
 					_LOGGER.error("Retry with: (%i)", retry)
 				return self._get_track(retry=retry-1)
-
-		# some mediaplayer have issues with the very long url format of ytubemusic
-		if(self._m3u_proxy != ""):
-			DEFAULT_M3U8_FILENAME = 'ytube.m3u8'
-			m3u8_fname = os.path.join(self.hass.config.path("www"),DEFAULT_M3U8_FILENAME)
-			try:
-				m3u8_handle = open(m3u8_fname,'w')
-			except:
-				_LOGGER.error("coundn't write playlist to "+m3u8_fname)
-				self._turn_off_media_player()
-				return
-			m3u8_handle.write(_url)
-			m3u8_handle.close()
-			if(not(self._m3u_proxy.endswith('/'))):
-				self._m3u_proxy += '/'
-			_url = self._m3u_proxy + "local/" + DEFAULT_M3U8_FILENAME
-			_LOGGER.debug("created playlist at "+m3u8_fname+" and will redirect to "+_url)
-
 
 		self._state = STATE_PLAYING
 		self.schedule_update_ha_state()
