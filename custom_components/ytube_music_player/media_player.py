@@ -218,6 +218,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			track_state_change(self.hass, self._playMode, self._update_playmode)
 			self._turn_on_media_player(data)
 			#_LOGGER.error("subscribe to changes of "+_player.entity_id)
+
+			# display imidiatly a loading state to provide feedback to the user
+			self._track_name =  "loading..."
+			self._track_album_name = ""
+			self._track_artist =  ""
+			self._track_artist_cover =  None
+			self._track_album_cover = None
+			self._state = STATE_PLAYING # a bit early otherwise no info will be shown
+			self.schedule_update_ha_state()
+
+			# grabbing data from API, might take a 1-3 sec
 			self._load_playlist()
 		elif _player.state != STATE_OFF:
 			self._turn_off_media_player(data)
@@ -454,6 +465,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def _get_track(self, entity_id=None, old_state=None, new_state=None, retry=3):
 		""" Get a track and play it from the track_queue. """
 		_LOGGER.info(" NEXT TRACK ")
+
+		""" grab next track from prefetched list """
 		_track = None
 		if self._shuffle and self._shuffle_mode != 1:
 			self._next_track_no = random.randrange(self._total_tracks) - 1
@@ -474,6 +487,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("_track is None!")
 			self._turn_off_media_player()
 			return
+
 		""" Find the unique track id. """
 		uid = ''
 		if 'videoId' in _track:
@@ -487,29 +501,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return self._get_track(retry=retry-1)
 
 		""" If available, get track information. """
+		self._track_album_name = None
+		self._track_artist_cover = None
+		self._track_name = None
+		self._track_artist = None
+		self._track_album_cover = None
 		if 'title' in _track:
 			self._track_name = _track['title']
-		else:
-			self._track_name = None
 		if 'byline' in _track:
 			self._track_artist = _track['byline']
 		elif 'artists' in _track:
 			self._track_artist = _track['artists'][0]['name']
-		else:
-			self._track_artist = None
-		self._track_album_name = None
 		if 'thumbnail' in _track:
-			_album_art_ref = _track['thumbnail']   ## returns a list
-			# thumbnail [0] is super tiny 32x32?
-			# thumbnail [0] is ok-ish
-			# thumbnail [0] is quite nice quality
+			_album_art_ref = _track['thumbnail']   ## returns a list,
+			# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
 			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
 		elif 'thumbnails' in _track:
 			_album_art_ref = _track['thumbnails']   ## returns a list
 			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
-		else:
-			self._track_album_cover = None
-		self._track_artist_cover = None
+		self.schedule_update_ha_state()
+
 		"""@@@ Get the stream URL and play on media_player @@@"""
 		_url = ''
 		try:
