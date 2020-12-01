@@ -56,6 +56,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
 
+		self._m3u_proxy = config.get(CONF_M3U_PROXY,'')
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 
 		_LOGGER.debug("YtubeMediaPlayer config: ")
@@ -108,6 +109,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_album_cover = None
 		self._track_artist_cover = None
 		self._attributes['_player_state'] = STATE_OFF
+
+#		asyncio.run_coroutine_threadsafe(self.test(), hass.loop)
+
+#	async def test(self):
+#		self._reg = await device_registry.async_get_registry(self.hass)
+#		reg = self._reg._data_to_save()
+#		for dev in reg.devices:
+#
+#		_LOGGER.error("called get registry")
 
 	@property
 	def name(self):
@@ -562,6 +572,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					_LOGGER.error("Retry with: (%i)", retry)
 				return self._get_track(retry=retry-1)
 
+		# some mediaplayer have issues with the very long url format of ytubemusic
+		if(self._m3u_proxy != ""):
+			DEFAULT_M3U8_FILENAME = 'ytube.m3u8'
+			m3u8_fname = os.path.join(self.hass.config.path("www"),DEFAULT_M3U8_FILENAME)
+			try:
+				m3u8_handle = open(m3u8_fname,'w')
+			except:
+				_LOGGER.error("coundn't write playlist to "+m3u8_fname)
+				self._turn_off_media_player()
+				return
+			m3u8_handle.write(_url)
+			m3u8_handle.close()
+			if(not(self._m3u_proxy.endswith('/'))):
+				self._m3u_proxy += '/'
+			_url = self._m3u_proxy + "local/" + DEFAULT_M3U8_FILENAME
+			_LOGGER.debug("created playlist at "+m3u8_fname+" and will redirect to "+_url)
+
+
 		self._state = STATE_PLAYING
 		self.schedule_update_ha_state()
 		data = {
@@ -570,6 +598,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			ATTR_ENTITY_ID: self._entity_ids
 			}
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
+
+
 		"""@@@ Get the stream URL and play on media_player @@@"""
 		#_LOGGER.error("register call later")
 		# just to make sure that we check the status of the media player to free the "go to next"
