@@ -374,7 +374,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			#  the "your likes" playlist won't return a count of tracks
 			if not('count' in playlist):
 				extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
-				self._playlists[idx]['count'] = int(extra_info['duration'].replace(' songs','').replace(',','').replace('.',''))
+				try:
+					self._playlists[idx]['count'] = max(25,int(''.join([x for x in extra_info['duration'] if x.isdigit()])))
+				except:
+					self._playlists[idx]['count'] = 25
 
 		playlists = list(self._playlist_to_index.keys())
 		self._attributes['playlists'] = playlists
