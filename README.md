@@ -77,7 +77,7 @@ Last step is simply the setup in yaml.
 
 Key | Type | Required | Default | Description
 -- | -- | -- | -- | --
-`speakers` | `string list` | `true` | `None` | List of speakers, see below in the example config
+`speakers` | `string list` | `false` | `None` | List of speakers (see below). All mediaplayer will be loaded into the list if this argument is left out. If one media_player is given still all available player will be added to the list, but the given media_player will be preselected. If two or more media_player are given only those will show up in the list
 `header_path` | `string` | `false` | `None` | Path to a manually created header file, if you did not use config_flow
 
 **Option 1:** You can download the existing package file. Don't forget to configure your speakers.
@@ -90,9 +90,9 @@ into your `packages` folder (see https://www.home-assistant.io/docs/configuratio
 ```yaml
 media_player:
   - platform: ytube_music_player
-    speakers:
-      # if your speaker is called media_player.speaker123, add speaker123 here
-      - speaker123
+# if your speaker is called media_player.speaker123, add speaker123 here to preselect it.
+#    speakers:
+#      - speaker123
 
 
 input_select:

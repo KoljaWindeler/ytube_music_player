@@ -1,3 +1,4 @@
+
 """
 Attempting to support yTube Music in Home Assistant
 """
@@ -20,7 +21,9 @@ from homeassistant.helpers.event import call_later
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers import device_registry
 
+from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.components.input_select as input_select
+import homeassistant.components.media_player as media_player
 
 from pytube import YouTube
 from pytube import request
@@ -355,8 +358,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		#self._update_songs()
 
 	def _get_speakers(self, now=None):
-		data = {"options": list(self._speakersList), "entity_id": self._media_player}
+		defaultPlayer = ''
+		try:
+			speakersList = list(self._speakersList)
+		except:
+			speakersList = list()
+		if(len(speakersList)<=1):
+			if(len(speakersList) == 1):
+				defaultPlayer = speakersList[0]
+			all_entities = self.hass.states.all()
+			for e in all_entities:
+				if(e.entity_id.startswith(media_player.DOMAIN)):
+					speakersList.append(e.entity_id.replace(media_player.DOMAIN+".",""))
+		speakersList = list(dict.fromkeys(speakersList))
+		data = {input_select.ATTR_OPTIONS: list(speakersList), ATTR_ENTITY_ID: self._media_player}
 		self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+		if(defaultPlayer!=''):
+			if(defaultPlayer in speakersList):
+				data = {input_select.ATTR_OPTION: defaultPlayer, ATTR_ENTITY_ID: self._media_player}
+				self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
+
 
 	def _update_playlists(self, now=None):
 		""" Sync playlists from Google Music library """
