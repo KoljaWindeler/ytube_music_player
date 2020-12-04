@@ -4,7 +4,7 @@
   "documentation": "https://github.com/KoljaWindeler/ytube_music_player",
   "config_flow": true,
   "requirements": [
-    "ytmusicapi",
+    "ytmusicapi==0.11.0",
     "pytube",
     "integrationhelper"
   ],
