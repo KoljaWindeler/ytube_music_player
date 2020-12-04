@@ -547,7 +547,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_url = ''
 		try:
 			_LOGGER.debug("-- try to find streaming url --")
-			streamingData=self._api.get_song(_track['videoId'])['streamingData']
+			streamingData=self._api.get_streaming_data(_track['videoId'])
 			if('adaptiveFormats' in streamingData):
 				streamingData = streamingData['adaptiveFormats']
 			elif('formats' in streamingData): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
@@ -560,21 +560,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					break
 				elif(streamingData[i]['mimeType'].startswith('audio')):
 					streamId = i
-			sigCipher_ch = streamingData[streamId]['signatureCipher']
-			sigCipher_ex = sigCipher_ch.split('&')
-			res = dict({'s': '', 'url': ''})
-			for sig in sigCipher_ex:
-				for key in res:
-					if(sig.find(key+"=")>=0):
-						res[key]=unquote(sig[len(key+"="):])
-			# I'm just not sure if the original video from the init will stay online forever
-			# in case it's down the player might not load and thus we won't have a javascript loaded
-			# so if that happens: we try with this url, might work better (at least the file should be online)
-			# the only trouble i could see is that this video is private and thus also won't load the player .. 
-			if(self._js == ""):
-				self._get_cipher(_track['videoId'])
-			signature = self._cipher.get_signature(ciphered_signature=res['s'])
-			_url = res['url'] + "&sig=" + signature
+			if(streamingData[streamId].get('url') is None):
+				sigCipher_ch = streamingData[streamId]['signatureCipher']
+				sigCipher_ex = sigCipher_ch.split('&')
+				res = dict({'s': '', 'url': ''})
+				for sig in sigCipher_ex:
+					for key in res:
+						if(sig.find(key+"=")>=0):
+							res[key]=unquote(sig[len(key+"="):])
+				# I'm just not sure if the original video from the init will stay online forever
+				# in case it's down the player might not load and thus we won't have a javascript loaded
+				# so if that happens: we try with this url, might work better (at least the file should be online)
+				# the only trouble i could see is that this video is private and thus also won't load the player .. 
+				if(self._js == ""):
+					self._get_cipher(_track['videoId'])
+				signature = self._cipher.get_signature(ciphered_signature=res['s'])
+				_url = res['url'] + "&sig=" + signature
+			else:
+				_url = streamingData[streamId]['url']
 
 		except Exception as err:
 			_LOGGER.error("Failed to get own(!) URL for track, further details below. Will not try YouTube method")
