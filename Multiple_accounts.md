@@ -4,8 +4,9 @@ It should be possible to use multipe accounts with the following steps:
 3. Repeat Step 1 (you can delete the component before, or just have two of them)
 4. Repeate Step 2
 5. Define the media_player and all input selects twice (source / playlist / speaker / playmode) and directly link them directly as shown below.
+_Suggestion: create two files in the package folder_
 
-## Player 1
+## Player1.yaml
 ```yaml
 media_player:
     ############## Koljas Player ##############
@@ -54,7 +55,7 @@ input_select:
 
 ```
 
-## Input_select
+## Player2.yaml
 ```yaml
 media_player:
     ############## Caros Player ##############
