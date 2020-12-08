@@ -368,7 +368,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				defaultPlayer = speakersList[0]
 			all_entities = self.hass.states.all()
 			for e in all_entities:
-				if(e.entity_id.startswith(media_player.DOMAIN)):
+				if(e.entity_id.startswith(media_player.DOMAIN) and not(e.entity_id.startswith(media_player.DOMAIN+"."+DOMAIN))):
 					speakersList.append(e.entity_id.replace(media_player.DOMAIN+".",""))
 		speakersList = list(dict.fromkeys(speakersList))
 		data = {input_select.ATTR_OPTIONS: list(speakersList), ATTR_ENTITY_ID: self._media_player}
