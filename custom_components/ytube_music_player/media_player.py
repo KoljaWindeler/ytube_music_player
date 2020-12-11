@@ -410,6 +410,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				except:
 					self._playlists[idx]['count'] = 25
 
+		if(len(self._playlists)==0):
+			self._playlist_to_index["No playlists found"] = 0
+
 		playlists = list(self._playlist_to_index.keys())
 		self._attributes['playlists'] = playlists
 
@@ -432,6 +435,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		idx = self._playlist_to_index.get(playlist)
 		if idx is None:
 			_LOGGER.error("playlist to index is none!")
+			self._turn_off_media_player()
+			return
+		if(len(self._playlists)==0):
+			_LOGGER.error("playlists empty")
 			self._turn_off_media_player()
 			return
 		self._tracks = None
