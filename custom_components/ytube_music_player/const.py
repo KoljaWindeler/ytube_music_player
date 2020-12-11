@@ -77,6 +77,7 @@ CONF_HEADER_PATH = 'header_path'
 CONF_SHUFFLE = 'shuffle'
 CONF_SHUFFLE_MODE = 'shuffle_mode'
 CONF_COOKIE = 'cookie'
+CONF_BRAND_ID = 'brand_id'
 
 CONF_SELECT_SOURCE = 'select_source'
 CONF_SELECT_PLAYLIST = 'select_playlist'

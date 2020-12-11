@@ -58,6 +58,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._media_player = "input_select." + config.get(CONF_SELECT_SPEAKERS, DEFAULT_SELECT_SPEAKERS)
 		self._source = "input_select." + config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE)
 		self._speakersList = config.get(CONF_RECEIVERS)
+		self._brand_id = str(config.get(CONF_BRAND_ID,""))
+		self._api = None
 
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 
@@ -69,15 +71,23 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("\tspeakerlist: " + str(self._speakersList))
 		_LOGGER.debug("\tplayModes: " + str(self._playMode))
 
-
-		if(os.path.exists(config.get(CONF_HEADER_PATH, default_header_file))):
-			self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
-		else:
-			msg= "can't file header file at "+config.get(CONF_HEADER_PATH, default_header_file)
+		try:
+			if(os.path.exists(config.get(CONF_HEADER_PATH, default_header_file))):
+				if(self._brand_id!=""):
+					_LOGGER.debug("using brand ID: "+self._brand_id)
+					self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file),self._brand_id)
+				else:
+					self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+			else:
+				msg= "can't file header file at "+config.get(CONF_HEADER_PATH, default_header_file)
+				_LOGGER.error(msg)
+				data = {"title": "yTubeMediaPlayer error", "message": msg}
+				self.hass.services.call("persistent_notification","create", data)
+		except:
+			msg= "Exception during login, e.g. login data are NOT correct"
 			_LOGGER.error(msg)
 			data = {"title": "yTubeMediaPlayer error", "message": msg}
 			self.hass.services.call("persistent_notification","create", data)
-			self._api = None
 
 		self._js = ""
 		self._get_cipher('BB2mjBuAtiQ')
