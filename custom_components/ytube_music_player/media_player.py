@@ -394,30 +394,37 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._api == None):
 			return
 		self._playlist_to_index = {}
-		self._playlists = self._api.get_library_playlists(limit = 99)
-		idx = -1
-		for playlist in self._playlists:
-			idx = idx + 1
-			name = playlist.get('title','')
-			if len(name) < 1:
-				continue
-			self._playlist_to_index[name] = idx
-			#  the "your likes" playlist won't return a count of tracks
-			if not('count' in playlist):
-				extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
-				try:
-					self._playlists[idx]['count'] = max(25,int(''.join([x for x in extra_info['duration'] if x.isdigit()])))
-				except:
-					self._playlists[idx]['count'] = 25
+		try:
+			self._playlists = self._api.get_library_playlists(limit = 99)
+			idx = -1
+			for playlist in self._playlists:
+				idx = idx + 1
+				name = playlist.get('title','')
+				if len(name) < 1:
+					continue
+				self._playlist_to_index[name] = idx
+				#  the "your likes" playlist won't return a count of tracks
+				if not('count' in playlist):
+					extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
+					try:
+						self._playlists[idx]['count'] = max(25,int(''.join([x for x in extra_info['duration'] if x.isdigit()])))
+					except:
+						self._playlists[idx]['count'] = 25
 
-		if(len(self._playlists)==0):
-			self._playlist_to_index["No playlists found"] = 0
+			if(len(self._playlists)==0):
+				self._playlist_to_index["No playlists found"] = 0
 
-		playlists = list(self._playlist_to_index.keys())
-		self._attributes['playlists'] = playlists
+			playlists = list(self._playlist_to_index.keys())
+			self._attributes['playlists'] = playlists
 
-		data = {"options": list(playlists), "entity_id": self._playlist}
-		self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+			data = {"options": list(playlists), "entity_id": self._playlist}
+			self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+		except:
+			self.exc()
+			msg= "Caught error while loading playlist. please log for details"
+			data = {"title": "yTubeMediaPlayer error", "message": msg}
+			self.hass.services.call("persistent_notification","create", data)
+
 
 
 	def _load_playlist(self, playlist=None, play=True):
@@ -762,3 +769,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.schedule_update_ha_state()
 		data = {ATTR_ENTITY_ID: self._entity_ids, "is_volume_muted": self._is_mute}
 		self.hass.services.call(DOMAIN_MP, 'volume_mute', data)
+
+	def exc(self):
+		"""Print nicely formated exception."""
+		_LOGGER.error("\n\n============= ytube_music_player Integration Error ================")
+		_LOGGER.error("unfortunately we hit an error, please open a ticket at")
+		_LOGGER.error("https://github.com/KoljaWindeler/ytube_music_player/issues")
+		_LOGGER.error("and paste the following output:\n")
+		_LOGGER.error(traceback.format_exc())
+		_LOGGER.error("\nthanks, Kolja")
+		_LOGGER.error("============= ytube_music_player Integration Error ================\n\n")
