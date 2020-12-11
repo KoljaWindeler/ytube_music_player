@@ -79,6 +79,7 @@ Key | Type | Required | Default | Description
 -- | -- | -- | -- | --
 `speakers` | `string list` | `false` | `None` | List of speakers (see below). All mediaplayer will be loaded into the list if this argument is left out. If one media_player is given still all available player will be added to the list, but the given media_player will be preselected. If two or more media_player are given only those will show up in the list
 `header_path` | `string` | `false` | `None` | Path to a manually created header file, if you did not use config_flow
+`brand_id` | `string` | `false` | `None` | YouTube Brand id, if needed
 
 **Option 1:** You can download the existing package file. Don't forget to configure your speakers.
 
