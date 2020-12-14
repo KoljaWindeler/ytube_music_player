@@ -132,6 +132,9 @@ input_boolean:
     name: "Countinuous playback"
 ```
 
+## Multiple accounts
+Not yet tested, but should work in general. Please have a look at https://github.com/KoljaWindeler/ytube_music_player/blob/main/Multiple_accounts.md
+
 ## Credits
 
 This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/Home Assistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)
