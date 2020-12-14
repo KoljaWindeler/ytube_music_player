@@ -124,6 +124,12 @@ input_select:
     - "Random"
     - "Shuffle Random"
     - "Direct"
+
+# Optional, defaults to true
+input_boolean:
+  ytube_music_player_playcontinuous:
+    initial: true
+    name: "Countinuous playback"
 ```
 
 ## Credits
