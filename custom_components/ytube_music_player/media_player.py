@@ -407,6 +407,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
 						self._playlists[idx]['count'] = max(25,int(''.join([x for x in extra_info['duration'] if x.isdigit()])))
 					except:
+						if('playlistId' in playlist):
+							_LOGGER.debug("Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
+						else:
+							_LOGGER.debug("Failed to get_playlist, no playlist ID")
+						self.exc()
 						self._playlists[idx]['count'] = 25
 
 			if(len(self._playlists)==0):
