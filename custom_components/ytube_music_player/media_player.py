@@ -77,9 +77,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if(os.path.exists(config.get(CONF_HEADER_PATH, default_header_file))):
 				if(self._brand_id!=""):
 					_LOGGER.debug("using brand ID: "+self._brand_id)
-					self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file),self._brand_id)
+					try:
+						self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file),self._brand_id)
+					except:
+						self._api = None
+						self.exc(resp="ytmusicapi")
 				else:
-					self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+					try:
+						self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+					except:
+						self._api = None
+						self.exc(resp="ytmusicapi")
+						return
 			else:
 				msg= "can't file header file at "+config.get(CONF_HEADER_PATH, default_header_file)
 				_LOGGER.error(msg)
@@ -334,7 +343,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif _player.state == 'off':
 			self._state = STATE_OFF
 			_LOGGER.debug("media player got turned off")
-			self.turn_off()
+			time.sleep(1)
+			_player = self.hass.states.get(self._entity_ids)
+			if(_player.state == 'off'):
+				_LOGGER.debug("media player still off")
+				self.turn_off()
 
 		""" Set new volume if it has been changed on the _player """
 		if 'volume_level' in _player.attributes:
@@ -393,7 +406,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 		self._playlist_to_index = {}
 		try:
-			self._playlists = self._api.get_library_playlists(limit = 99)
+			try:
+				self._playlists = self._api.get_library_playlists(limit = 99)
+			except:
+				self._api = None
+				self.exc(resp="ytmusicapi")
+				return
 			idx = -1
 			for playlist in self._playlists:
 				idx = idx + 1
@@ -411,7 +429,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							_LOGGER.debug("Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
 						else:
 							_LOGGER.debug("Failed to get_playlist, no playlist ID")
-						self.exc()
+						self.exc(resp="ytmusicapi")
 						self._playlists[idx]['count'] = 25
 
 			if(len(self._playlists)==0):
@@ -458,11 +476,21 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("(%s) is not a valid input_select entity.", self._select_source)
 			return
 
-		my_radio = self._api.get_playlist(playlistId = self._playlists[idx]['playlistId'], limit = int(self._playlists[idx]['count']))['tracks']
-		#my_radio = self._api.get_watch_playlist(playlistId = self._playlists[idx]['playlistId'])#, limit = int(self._playlists[idx]['count']))
+		try:
+			my_radio = self._api.get_playlist(playlistId = self._playlists[idx]['playlistId'], limit = int(self._playlists[idx]['count']))['tracks']
+		except:
+			self._api = None
+			self.exc(resp="ytmusicapi")
+			return
+		
 		if _source.state != 'Playlist':
 			r_track = my_radio[random.randrange(0,len(my_radio)-1)]
-			self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])
+			try:
+				self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])
+			except:
+				self._api = None
+				self.exc(resp="ytmusicapi")
+				return
 		else:
 			self._tracks = my_radio
 		_LOGGER.debug("New Track database loaded, contains "+str(len(self._tracks))+" Tracks")
@@ -487,7 +515,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._playContinuous = True
 			else:
 				self._playContinuous = False
-			_LOGGER.debug("self._playContinuous="+str(self._playContinuous))
 		except:
 			_LOGGER.debug("Selection field "+self._select_playContinuous+" not found, skipping")
 
@@ -625,7 +652,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_url = ""
 		try:
 			_LOGGER.debug("-- try to find URL on our own --")
-			streamingData=self._api.get_streaming_data(videoId)
+			try:
+				streamingData=self._api.get_streaming_data(videoId)
+			except:
+				self._api = None
+				self.exc(resp="ytmusicapi")
+				return
 			if('adaptiveFormats' in streamingData):
 				streamingData = streamingData['adaptiveFormats']
 			elif('formats' in streamingData): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
@@ -663,7 +695,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("Failed to get own(!) URL for track, further details below. Will not try YouTube method")
 			_LOGGER.error(traceback.format_exc())
 			_LOGGER.error(videoId)
-			_LOGGER.error(self._api.get_song(videoId))
+			try:
+				_LOGGER.error(self._api.get_song(videoId))
+			except:
+				self._api = None
+				self.exc(resp="ytmusicapi")
+				return
 
 		# backup: run youtube stack, only if we failed
 		if(_url == ""):
@@ -807,11 +844,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		data = {ATTR_ENTITY_ID: self._entity_ids, "is_volume_muted": self._is_mute}
 		self.hass.services.call(DOMAIN_MP, 'volume_mute', data)
 
-	def exc(self):
+	def exc(self, resp="self"):
 		"""Print nicely formated exception."""
 		_LOGGER.error("\n\n============= ytube_music_player Integration Error ================")
-		_LOGGER.error("unfortunately we hit an error, please open a ticket at")
-		_LOGGER.error("https://github.com/KoljaWindeler/ytube_music_player/issues")
+		if(resp=="self"):
+			_LOGGER.error("unfortunately we hit an error, please open a ticket at")
+			_LOGGER.error("https://github.com/KoljaWindeler/ytube_music_player/issues")
+		else:
+			_LOGGER.error("unfortunately we hit an error in the sub api, please open a ticket at")
+			_LOGGER.error("https://github.com/sigma67/ytmusicapi/issues")
 		_LOGGER.error("and paste the following output:\n")
 		_LOGGER.error(traceback.format_exc())
 		_LOGGER.error("\nthanks, Kolja")
