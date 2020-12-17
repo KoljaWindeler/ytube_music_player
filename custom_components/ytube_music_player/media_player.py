@@ -490,7 +490,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if _source.state != 'Playlist':
 			r_track = my_radio[random.randrange(0,len(my_radio)-1)]
 			try:
-				self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])
+				self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])['tracks']
 			except:
 				self._api = None
 				self.exc(resp="ytmusicapi")
