@@ -29,7 +29,7 @@ from pytube import YouTube
 from pytube import request
 from pytube import extract
 from pytube.cipher import Cipher
-from ytmusicapi import YTMusic
+import ytmusicapi
 
 
 
@@ -78,13 +78,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(self._brand_id!=""):
 					_LOGGER.debug("using brand ID: "+self._brand_id)
 					try:
-						self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file),self._brand_id)
+						self._api = ytmusicapi.YTMusic(config.get(CONF_HEADER_PATH, default_header_file),self._brand_id)
+						_LOGGER.debug("\tYouTube Api version: "+str(ytmusicapi.__version__))
 					except:
 						self._api = None
 						self.exc(resp="ytmusicapi")
 				else:
 					try:
-						self._api = YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+						self._api = ytmusicapi.YTMusic(config.get(CONF_HEADER_PATH, default_header_file))
+						_LOGGER.debug("\tYouTube Api version: "+str(ytmusicapi.__version__))
 					except:
 						self._api = None
 						self.exc(resp="ytmusicapi")
@@ -355,7 +357,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.schedule_update_ha_state()
 
 	def _ytubemusic_play_media(self, event):
-
 		_speak = event.data.get('speakers')
 		_source = event.data.get('source')
 		_media = event.data.get('name')
@@ -423,7 +424,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if not('count' in playlist):
 					try:
 						extra_info = self._api.get_playlist(playlistId=playlist['playlistId'])
-						self._playlists[idx]['count'] = max(25,int(''.join([x for x in extra_info['duration'] if x.isdigit()])))
+						if('trackCount' in extra_info):
+							self._playlists[idx]['count'] = int(extra_info['trackCount'])
+						else:
+							self._playlists[idx]['count'] = 25
 					except:
 						if('playlistId' in playlist):
 							_LOGGER.debug("Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
