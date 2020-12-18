@@ -25,6 +25,8 @@ from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 
+from .browse_media import build_item_response, library_payload
+
 from pytube import YouTube
 from pytube import request
 from pytube import extract
@@ -218,11 +220,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def turn_on(self, *args, **kwargs):
+		_LOGGER.debug("TURNON")
 		""" Turn on the selected media_player from input_select """
 		if(self._api == None):
 			_LOGGER.error("Can't start the player, no header file")
 			return
-		_LOGGER.debug("TURNON")
 
 		self._playing = False
 		if not self._update_entity_ids():
@@ -253,6 +255,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._load_playlist()
 
 	def _turn_on_media_player(self, data=None):
+		_LOGGER.debug("_turn_on_media_player")
 		"""Fire the on action."""
 		if data is None:
 			data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -263,7 +266,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def turn_off(self, entity_id=None, old_state=None, new_state=None, **kwargs):
 		""" Turn off the selected media_player """
-		_LOGGER.debug("received turn off command")
+		_LOGGER.debug("turn_off")
 		self._playing = False
 		self._track_name = None
 		self._track_artist = None
@@ -275,6 +278,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._turn_off_media_player(data)
 
 	def _turn_off_media_player(self, data=None):
+		_LOGGER.debug("_turn_off_media_player")
 		"""Fire the off action."""
 		self._playing = False
 		self._state = STATE_OFF
@@ -286,6 +290,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _update_entity_ids(self):
+		_LOGGER.debug("_update_entity_ids")
 		""" sets the current media_player from input_select """
 		media_player = self.hass.states.get(self._select_mediaPlayer) # Example: self.hass.states.get(input_select.gmusic_player_speakers)
 		if media_player is None:
@@ -300,6 +305,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return True
 
 	def _get_cipher(self, videoId):
+		_LOGGER.debug("_get_cipher")
 		embed_url = "https://www.youtube.com/embed/"+videoId
 		embed_html = request.get(url=embed_url)
 		js_url = extract.js_url(embed_html)
@@ -309,6 +315,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _sync_player(self, entity_id=None, old_state=None, new_state=None):
+		_LOGGER.debug("_sync_player")
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
 			return
@@ -357,6 +364,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.schedule_update_ha_state()
 
 	def _ytubemusic_play_media(self, event):
+		_LOGGER.debug("_ytubemusic_play_media")
 		_speak = event.data.get('speakers')
 		_source = event.data.get('source')
 		_media = event.data.get('name')
@@ -374,12 +382,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.play_media(_source, _media, _speak)
 
 	def _update_sources(self, now=None):
-		_LOGGER.debug("Load source lists")
+		_LOGGER.debug("_update_sources")
 		self._update_playlists()
 		#self._update_library()
 		#self._update_songs()
 
 	def _get_speakers(self, now=None):
+		_LOGGER.debug("_get_speakers")
 		defaultPlayer = ''
 		try:
 			speakersList = list(self._speakersList)
@@ -402,6 +411,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _update_playlists(self, now=None):
+		_LOGGER.debug("_update_playlists")
 		""" Sync playlists from Google Music library """
 		if(self._api == None):
 			return
@@ -453,7 +463,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _load_playlist(self, playlist=None, play=True):
-		_LOGGER.info("Reloading Playlist!")
+		_LOGGER.debug("_load_playlist")
 		""" Load selected playlist to the track_queue """
 		if not self._update_entity_ids():
 			return
@@ -512,7 +522,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	# called from HA when th user changes the input entry, will read selection to membervar
 	def _update_playmode(self, entity_id=None, old_state=None, new_state=None):
-		_LOGGER.debug("running update playmode")
+		_LOGGER.debug("_update_playmode")
 		
 		try:
 			if(self.hass.states.get(self._select_playContinuous).state=="on"):
@@ -549,13 +559,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _play(self):
+		_LOGGER.debug("_play")
 		self._playing = True
 		self._next_track_no = -1
 		self._get_track()
 
 	def _get_track(self, entity_id=None, old_state=None, new_state=None, retry=3):
+		_LOGGER.debug("_get_track")
 		""" Get a track and play it from the track_queue. """
-		_LOGGER.info(" NEXT TRACK ")
 
 		""" grab next track from prefetched list """
 		_track = None
@@ -653,6 +664,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def get_url(self, videoId, retry=False):
+		_LOGGER.debug("get_url")
 		_url = ""
 		try:
 			_LOGGER.debug("-- try to find URL on our own --")
@@ -727,6 +739,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def play_media(self, media_type, media_id, _player=None, **kwargs):
+		_LOGGER.debug("play_media")
 		if not self._update_entity_ids():
 			return
 
@@ -756,6 +769,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("self._state is: (%s).", self._state)
 
 	def media_play(self, entity_id=None, old_state=None, new_state=None, **kwargs):
+		_LOGGER.debug("media_play")
 		"""Send play command."""
 		if self._state == STATE_PAUSED:
 			self._state = STATE_PLAYING
@@ -768,6 +782,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._load_playlist()
 
 	def media_pause(self, **kwargs):
+		_LOGGER.debug("media_pause")
 		""" Send media pause command to media player """
 		self._state = STATE_PAUSED
 		#_LOGGER.error(" PAUSE ")
@@ -776,6 +791,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass.services.call(DOMAIN_MP, 'media_pause', data)
 
 	def media_play_pause(self, **kwargs):
+		_LOGGER.debug("media_play_pause")
 		"""Simulate play pause media player."""
 		if self._state == STATE_PLAYING:
 			self._allow_next = False
@@ -861,3 +877,25 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.error(traceback.format_exc())
 		_LOGGER.error("\nthanks, Kolja")
 		_LOGGER.error("============= ytube_music_player Integration Error ================\n\n")
+
+
+	async def async_browse_media(self, media_content_type=None, media_content_id=None):
+		"""Implement the websocket media browsing helper."""
+		_LOGGER.debug("async_browse_media")
+
+		if media_content_type in [None, "library"]:
+			return await self.hass.async_add_executor_job(library_payload, self._api)
+
+		payload = {
+			"search_type": media_content_type,
+			"search_id": media_content_id,
+		}
+
+		_LOGGER.error("wir machen jetzt build_item_response")
+		_LOGGER.error(payload)
+		response = await build_item_response(self._api, payload)
+		if response is None:
+			raise BrowseError(
+				f"Media not found: {media_content_type} / {media_content_id}"
+			)
+		return response

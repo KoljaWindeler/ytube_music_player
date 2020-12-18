@@ -34,10 +34,10 @@ from homeassistant.components.media_player import (
 	ATTR_MEDIA_CONTENT_ID,
 	ATTR_MEDIA_CONTENT_TYPE,
 	DOMAIN as DOMAIN_MP,
+
 )
 
 from homeassistant.components.media_player.const import (
-	MEDIA_TYPE_MUSIC,
 	SUPPORT_STOP,
 	SUPPORT_PLAY,
 	SUPPORT_PAUSE,
@@ -50,6 +50,8 @@ from homeassistant.components.media_player.const import (
 	SUPPORT_TURN_ON,
 	SUPPORT_TURN_OFF,
 	SUPPORT_SHUFFLE_SET,
+	SUPPORT_BROWSE_MEDIA,
+	MEDIA_TYPE_MUSIC,
 )
 
 # Should be equal to the name of your component.
@@ -70,7 +72,10 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 	| SUPPORT_PREVIOUS_TRACK
 	| SUPPORT_NEXT_TRACK
 	| SUPPORT_SHUFFLE_SET
+	| SUPPORT_BROWSE_MEDIA
 )
+
+
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
 CONF_HEADER_PATH = 'header_path'
