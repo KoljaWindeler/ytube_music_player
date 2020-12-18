@@ -2,28 +2,7 @@
 import logging
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_SEASON,
-    MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_TVSHOW,
-)
+from .const import *
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
@@ -55,6 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 LIB_PLAYLIST = 'library_playlists'
 LIB_ALBUM = 'library_albums'
+LIB_TRACKS = 'library_tracks'
 BROWSER_LIMIT = 25
 
 
@@ -64,9 +44,6 @@ class UnknownMediaType(BrowseError):
 
 async def build_item_response(media_library, payload):
     """Create response payload for the provided media query."""
-    _LOGGER.error("jetzt gehts hier weiter, oder? ")
-    _LOGGER.error(payload)
-
     search_id = payload["search_id"]
     search_type = payload["search_type"]
 
@@ -76,28 +53,27 @@ async def build_item_response(media_library, payload):
 
     properties = ["thumbnail"]
     
-    if search_type == LIB_PLAYLIST: # kolja
+    if search_type == LIB_PLAYLIST:
         media = media_library.get_library_playlists(limit=BROWSER_LIMIT)
         title = "User Playlists"
-    elif search_type == MEDIA_TYPE_PLAYLIST: #kolja
+    elif search_type == MEDIA_TYPE_PLAYLIST:
         res = media_library.get_playlist(playlistId = search_id)
         media = res['tracks']
         title = res['title']
-    elif search_type == LIB_ALBUM: #kolja
+    elif search_type == LIB_ALBUM:
         media = media_library.get_library_albums(limit=BROWSER_LIMIT)
         title = "User Albums"
-    elif search_type == MEDIA_TYPE_ALBUM: #kolja
+    elif search_type == MEDIA_TYPE_ALBUM:
         res = media_library.get_album(browseId = search_id)
         media = res['tracks']
         title = res['title']
-
- 
+    elif search_type == LIB_TRACKS:
+        media = media_library.get_library_songs()
+        title = "User Songs"
 
     if media is None:
         return None
 
-    _LOGGER.error("so, nun sind wir hier, haben die liste der playlists geladen .. schoen")
-    _LOGGER.error(media)
     children = []
     for item in media:
         try:
@@ -105,8 +81,6 @@ async def build_item_response(media_library, payload):
         except UnknownMediaType:
             pass
 
-    if search_type in (MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE) and search_id == "":
-        children.sort(key=lambda x: x.title.replace("The ", "", 1), reverse=False)
 
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
@@ -135,8 +109,6 @@ def item_payload(item, media_library):
 
     Used by async_browse_media.
     """
-    _LOGGER.error("running item payload")
-    _LOGGER.error(item)
 
     media_class = None
     title = ""
@@ -156,6 +128,9 @@ def item_payload(item, media_library):
         can_expand = True
     elif "videoId" in item: #kolja
         title = f"{item['title']}"
+        artist = item["artists"][0]["name"]
+        title = artist +" - "+title
+
         media_class = MEDIA_CLASS_TRACK
         thumbnail = item['thumbnails'][-1]['url']
         media_content_type = MEDIA_TYPE_TRACK
@@ -189,6 +164,8 @@ def item_payload(item, media_library):
             _LOGGER.debug("Unknown media type received: %s", media_content_type)
             raise UnknownMediaType from err
 
+    _LOGGER.debug(title+' / '+media_class+' / '+media_content_id+' / '+media_content_type+' / '+str(can_play))
+
     return BrowseMedia(
         title=title,
         media_class=media_class,
@@ -206,7 +183,6 @@ def library_payload(media_library):
 
     Used by async_browse_media.
     """
-    _LOGGER.error("library_payload function called")
 
     library_info = BrowseMedia(
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -219,8 +195,9 @@ def library_payload(media_library):
     )
 
     library = {
-        LIB_PLAYLIST: "User Playlists",
-        LIB_ALBUM: "User Albums",
+        LIB_PLAYLIST: "Playlists",
+        LIB_ALBUM: "Albums",
+        LIB_TRACKS: "Tracks",
     }
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(
