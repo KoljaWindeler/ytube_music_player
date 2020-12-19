@@ -138,6 +138,12 @@ ERROR_COOKIE = 'error_cookie'
 ERROR_AUTH_USER = 'error_auth_user'
 ERROR_GENERIC = 'error_generic'
 
+PLAYMODE_SHUFFLE = "Shuffle"
+PLAYMODE_RANDOM = "Random"
+PLAYMODE_SHUFFLE_RANDOM = "Shuffle Random"
+PLAYMODE_DIRECT = "Direct"
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 	DOMAIN: vol.Schema({
 		vol.Optional(CONF_RECEIVERS): cv.string,

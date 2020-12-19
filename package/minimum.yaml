@@ -1,0 +1,5 @@
+media_player:
+  - platform: ytube_music_player
+    # if your speaker is called media_player.speaker123, set it to speaker123 
+    speakers:
+      - speaker123

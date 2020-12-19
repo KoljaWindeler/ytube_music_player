@@ -164,7 +164,7 @@ def item_payload(item, media_library):
             _LOGGER.debug("Unknown media type received: %s", media_content_type)
             raise UnknownMediaType from err
 
-    _LOGGER.debug(title+' / '+media_class+' / '+media_content_id+' / '+media_content_type+' / '+str(can_play))
+    #_LOGGER.debug(title+' / '+media_class+' / '+media_content_id+' / '+media_content_type+' / '+str(can_play))
 
     return BrowseMedia(
         title=title,

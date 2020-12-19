@@ -1,0 +1,40 @@
+media_player:
+  - platform: ytube_music_player
+    # if your speaker is called media_player.speaker123, add speaker123 here to preselect it.
+    # speakers:
+    #   - speaker123
+
+
+input_select:
+  ytube_music_player_source:
+    name: Source
+    icon: mdi:music-box-multiple
+    options: # don't change
+    - "Playlist Radio"
+    - "Playlist"
+
+  ytube_music_player_speakers:
+    name: Speakers
+    icon: mdi:speaker
+    options: # don't change
+    - "loading"
+
+  ytube_music_player_playlist:
+    name: Playlist
+    icon: mdi:playlist-music
+    options: # don't change
+    - "loading"
+
+  ytube_music_player_playmode:
+    name: Playmode
+    icon: mdi:playlist-music
+    options: ## Should be empty
+    - "Shuffle"
+    - "Random"
+    - "Shuffle Random"
+    - "Direct"
+
+input_boolean:
+   ytube_music_player_playcontinuous:
+     initial: true
+     name: "Countinuous playback"
