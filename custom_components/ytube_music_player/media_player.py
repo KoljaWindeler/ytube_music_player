@@ -215,6 +215,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return self._shuffle
 
 	@property
+	def repeat(self):
+		"""Return current repeat mode."""
+		if(self._playContinuous):
+			return REPEAT_MODE_ALL
+		return REPEAT_MODE_OFF
+
+	def set_repeat(self, repeat: str):
+		_LOGGER.debug("set_repleat: "+repeat)
+		"""Set repeat mode."""
+		data = {ATTR_ENTITY_ID: self._select_playContinuous}
+		if repeat != REPEAT_MODE_OFF:
+			self._playContinuous = True
+			self.hass.services.call(DOMAIN_IB, IB_ON, data)
+		else:
+			self._playContinuous = False
+			self.hass.services.call(DOMAIN_IB, IB_OFF, data)
+
+	@property
 	def volume_level(self):
 	  """ Volume level of the media player (0..1). """
 	  return self._volume
@@ -505,6 +523,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# get current playmode
 		self._update_playmode()
 
+		# mode 1 and 3 will shuffle the playlist after generation
 		if self._shuffle and self._shuffle_mode != 2:
 			random.shuffle(self._tracks)
 		
@@ -558,7 +577,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" Get a track and play it from the track_queue. """
 		""" grab next track from prefetched list """
 		_track = None
-		if self._shuffle and self._shuffle_mode != 1:
+		if self._shuffle and self._shuffle_mode != 1: #1 will use the list as is (shuffled). 2 and 3 will also take songs randomized
 			self._next_track_no = random.randrange(len(self._tracks)) - 1
 		else:
 			self._next_track_no = self._next_track_no + 1
@@ -840,6 +859,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass.services.call(DOMAIN_MP, 'media_stop', data)
 
 	def set_shuffle(self, shuffle):
+		_LOGGER.debug("set_shuffle: "+str(shuffle))
 		self._shuffle = shuffle
 		if self._shuffle_mode == 1:
 			self._attributes['shuffle_mode'] = 'Shuffle'
@@ -850,6 +870,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		else:
 			self._attributes['shuffle_mode'] = self._shuffle_mode
 		return self.schedule_update_ha_state()
+
 
 	def set_volume_level(self, volume):
 		"""Set volume level."""
