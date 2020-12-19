@@ -54,7 +54,7 @@ You need to grab and convert a cookie from youTube Music. This is described in h
 
 1. Open the development tools (I've used google chrome) [Crtl+Shift+I]
 2. Open the Network tab
-3. Open https://music.youtube.com, log out, log in
+3. Open https://music.youtube.com, log out, log in, browse a bit around like clicking on the library in the top menu
 4. Search for "/browse" (for me only one item shows up) [If you can't find it: I had issues with ubuntu, worked instantly with windows]
 5. Go to "headers" -> "request headers" and copy everything starting at "accept: */*" (mark with a mouse and copy to clipboard)
 
