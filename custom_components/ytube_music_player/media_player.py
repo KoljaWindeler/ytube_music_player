@@ -757,7 +757,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
 
 		### get lyrics after playback started ###
-		self._attributes['lyrics'] = 'not available'
+		self._attributes['lyrics'] = 'No lyrics available'
 		try:
 			l_id = self._api.get_watch_playlist(videoId=_track['videoId'])
 			if 'lyrics' in l_id:
@@ -1052,7 +1052,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			"search_id": media_content_id,
 		}
 
-		response = await build_item_response(self._api, payload)
+		response = await build_item_response(self.hass, self._api, payload)
 		if response is None:
 			raise BrowseError(
 				f"Media not found: {media_content_type} / {media_content_id}"

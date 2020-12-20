@@ -1,19 +1,29 @@
 """Support for media browsing."""
 import logging
 
-from homeassistant.components.media_player import BrowseError, BrowseMedia
 from .const import *
+from homeassistant.components.media_player import BrowseError, BrowseMedia
+
+LIB_PLAYLIST = 'library_playlists'
+LIB_ALBUM = 'library_albums'
+LIB_TRACKS = 'library_tracks'
+BROWSER_LIMIT = 25
+
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
     MEDIA_TYPE_ARTIST,
     MEDIA_TYPE_TRACK,
+    MEDIA_TYPE_PLAYLIST,
+    LIB_TRACKS,
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
     MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
+    LIB_ALBUM: MEDIA_CLASS_ALBUM,
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    LIB_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
 }
@@ -32,17 +42,11 @@ CHILD_TYPE_MEDIA_CLASS = {
 
 _LOGGER = logging.getLogger(__name__)
 
-LIB_PLAYLIST = 'library_playlists'
-LIB_ALBUM = 'library_albums'
-LIB_TRACKS = 'library_tracks'
-BROWSER_LIMIT = 25
-
-
 class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def build_item_response(media_library, payload):
+async def build_item_response(hass, media_library, payload):
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -50,25 +54,23 @@ async def build_item_response(media_library, payload):
     thumbnail = None
     title = None
     media = None
-
-    properties = ["thumbnail"]
     
     if search_type == LIB_PLAYLIST:
-        media = media_library.get_library_playlists(limit=BROWSER_LIMIT)
+        media = await hass.async_add_executor_job(media_library.get_library_playlists,BROWSER_LIMIT)
         title = "User Playlists"
     elif search_type == MEDIA_TYPE_PLAYLIST:
-        res = media_library.get_playlist(playlistId = search_id)
+        res = await hass.async_add_executor_job(media_library.get_playlist,search_id, BROWSER_LIMIT)
         media = res['tracks']
         title = res['title']
     elif search_type == LIB_ALBUM:
-        media = media_library.get_library_albums(limit=BROWSER_LIMIT)
+        media = await hass.async_add_executor_job(media_library.get_library_albums, BROWSER_LIMIT)
         title = "User Albums"
     elif search_type == MEDIA_TYPE_ALBUM:
-        res = media_library.get_album(browseId = search_id)
+        res = await hass.async_add_executor_job(media_library.get_album,search_id)
         media = res['tracks']
         title = res['title']
     elif search_type == LIB_TRACKS:
-        media = media_library.get_library_songs()
+        media = await hass.async_add_executor_job(media_library.get_library_songs)
         title = "User Songs"
 
     if media is None:
@@ -76,10 +78,10 @@ async def build_item_response(media_library, payload):
 
     children = []
     for item in media:
-        try:
-            children.append(item_payload(item, media_library))
-        except UnknownMediaType:
-            pass
+        #try:
+        children.append(item_payload(item, media_library))
+        #except UnknownMediaType:
+        #    pass
 
 
     response = BrowseMedia(
@@ -128,9 +130,13 @@ def item_payload(item, media_library):
         can_expand = True
     elif "videoId" in item: #kolja
         title = f"{item['title']}"
-        artist = item["artists"][0]["name"]
+        if(isinstance(item["artists"],str)):
+            artist = item["artists"]
+        elif(isinstance(item["artists"],list)):
+            artist = item["artists"][0]["name"]
+        else:
+            artist = ""
         title = artist +" - "+title
-
         media_class = MEDIA_CLASS_TRACK
         thumbnail = item['thumbnails'][-1]['url']
         media_content_type = MEDIA_TYPE_TRACK
