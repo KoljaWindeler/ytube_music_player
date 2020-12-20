@@ -4,11 +4,6 @@ import logging
 from .const import *
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 
-LIB_PLAYLIST = 'library_playlists'
-LIB_ALBUM = 'library_albums'
-LIB_TRACKS = 'library_tracks'
-BROWSER_LIMIT = 25
-
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
@@ -16,6 +11,7 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_TRACK,
     MEDIA_TYPE_PLAYLIST,
     LIB_TRACKS,
+    HISTORY,
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
@@ -24,6 +20,7 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
     MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     LIB_PLAYLIST: MEDIA_CLASS_PLAYLIST,
+    HISTORY: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
 }
@@ -72,16 +69,20 @@ async def build_item_response(hass, media_library, payload):
     elif search_type == LIB_TRACKS:
         media = await hass.async_add_executor_job(media_library.get_library_songs)
         title = "User Songs"
+    elif search_type == HISTORY:
+        search_id = HISTORY
+        title = "Last played songs"
+        media = await hass.async_add_executor_job(media_library.get_history)
 
     if media is None:
         return None
 
     children = []
     for item in media:
-        #try:
-        children.append(item_payload(item, media_library))
-        #except UnknownMediaType:
-        #    pass
+        try:
+            children.append(item_payload(item, media_library))
+        except UnknownMediaType:
+            pass
 
 
     response = BrowseMedia(
@@ -204,6 +205,7 @@ def library_payload(media_library):
         LIB_PLAYLIST: "Playlists",
         LIB_ALBUM: "Albums",
         LIB_TRACKS: "Tracks",
+        HISTORY: "History",
     }
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(

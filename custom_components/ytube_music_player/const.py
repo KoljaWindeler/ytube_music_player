@@ -143,6 +143,12 @@ PLAYMODE_RANDOM = "Random"
 PLAYMODE_SHUFFLE_RANDOM = "Shuffle Random"
 PLAYMODE_DIRECT = "Direct"
 
+LIB_PLAYLIST = 'library_playlists'
+LIB_ALBUM = 'library_albums'
+LIB_TRACKS = 'library_tracks'
+HISTORY = 'history'
+BROWSER_LIMIT = 25
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 	DOMAIN: vol.Schema({

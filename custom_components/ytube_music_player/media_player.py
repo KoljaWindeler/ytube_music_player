@@ -882,6 +882,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._tracks = self._api.get_album(browseId=media_id)['tracks']
 		elif(media_type == MEDIA_TYPE_TRACK):
 			self._tracks = [self._api.get_song(videoId=media_id)]
+		elif(media_id == HISTORY):
+			self._tracks = self._api.get_history()
 		else:
 			_LOGGER.debug("error during fetching play_media, turning off")
 			self.turn_off()
