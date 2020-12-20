@@ -12,6 +12,7 @@ PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_PLAYLIST,
     LIB_TRACKS,
     HISTORY,
+    USER_TRACKS,
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
@@ -21,6 +22,7 @@ CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
     MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     LIB_PLAYLIST: MEDIA_CLASS_PLAYLIST,
     HISTORY: MEDIA_CLASS_PLAYLIST,
+    USER_TRACKS: MEDIA_CLASS_PLAYLIST,
     MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
     MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
 }
@@ -70,9 +72,13 @@ async def build_item_response(hass, media_library, payload):
         media = await hass.async_add_executor_job(media_library.get_library_songs)
         title = "User Songs"
     elif search_type == HISTORY:
+        media = await hass.async_add_executor_job(media_library.get_history)
         search_id = HISTORY
         title = "Last played songs"
-        media = await hass.async_add_executor_job(media_library.get_history)
+    elif search_type == USER_TRACKS:
+        media = await hass.async_add_executor_job(media_library.get_library_upload_songs)
+        search_id = USER_TRACKS
+        title = "Uploaded songs"
 
     if media is None:
         return None
@@ -131,13 +137,14 @@ def item_payload(item, media_library):
         can_expand = True
     elif "videoId" in item: #kolja
         title = f"{item['title']}"
-        if(isinstance(item["artists"],str)):
-            artist = item["artists"]
-        elif(isinstance(item["artists"],list)):
-            artist = item["artists"][0]["name"]
-        else:
+        if("artists" in item):
             artist = ""
-        title = artist +" - "+title
+            if(isinstance(item["artists"],str)):
+                artist = item["artists"]
+            elif(isinstance(item["artists"],list)):
+                artist = item["artists"][0]["name"]
+            if(artist):
+                title = artist +" - "+title
         media_class = MEDIA_CLASS_TRACK
         thumbnail = item['thumbnails'][-1]['url']
         media_content_type = MEDIA_TYPE_TRACK
@@ -206,6 +213,7 @@ def library_payload(media_library):
         LIB_ALBUM: "Albums",
         LIB_TRACKS: "Tracks",
         HISTORY: "History",
+        USER_TRACKS: "Uploaded Tracks",
     }
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(

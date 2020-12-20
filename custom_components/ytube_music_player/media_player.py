@@ -411,21 +411,25 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def extract_info(self, _track):
 		""" If available, get track information. """
 		info = dict()
-		info['track_album_name'] = None
-		info['track_artist_cover'] = None
-		info['track_name'] = None
-		info['track_artist'] = None
-		info['track_album_cover'] = None
+		info['track_album_name'] = ""
+		info['track_artist_cover'] = ""
+		info['track_name'] = ""
+		info['track_artist'] = ""
+		info['track_album_cover'] = ""
 
 		if 'title' in _track:
 			info['track_name'] = _track['title']
 		if 'byline' in _track:
 			info['track_artist'] = _track['byline']
 		elif 'artists' in _track:
-			if 'name' in _track['artists'][0]:
-				info['track_artist'] = _track['artists'][0]['name']
-			else:
-				info['track_artist'] = _track['artists'][0]
+			info['track_artist'] = ""
+			if(isinstance(_track["artists"],str)):
+				info['track_artist'] = _track["artists"]
+			elif(isinstance(_track["artists"],list)):
+				if 'name' in _track['artists'][0]:
+					info['track_artist'] = _track['artists'][0]['name']
+				else:
+					info['track_artist'] = _track['artists'][0]
 		if 'thumbnail' in _track:
 			_album_art_ref = _track['thumbnail']   ## returns a list,
 			if 'thumbnails' in _album_art_ref:
@@ -884,6 +888,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._tracks = [self._api.get_song(videoId=media_id)]
 		elif(media_id == HISTORY):
 			self._tracks = self._api.get_history()
+		elif(media_id == USER_TRACKS):
+			self._tracks = self._api.get_library_upload_songs(limit=999)
 		else:
 			_LOGGER.debug("error during fetching play_media, turning off")
 			self.turn_off()

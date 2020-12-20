@@ -146,6 +146,7 @@ PLAYMODE_DIRECT = "Direct"
 LIB_PLAYLIST = 'library_playlists'
 LIB_ALBUM = 'library_albums'
 LIB_TRACKS = 'library_tracks'
+USER_TRACKS = 'user_tracks'
 HISTORY = 'history'
 BROWSER_LIMIT = 25
 
