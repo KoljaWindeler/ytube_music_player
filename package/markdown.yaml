@@ -1,0 +1,58 @@
+title: dev
+views:
+  - badges: null
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: 'custom:mini-media-player'
+            entity: media_player.ytube_music_player
+            artwork: cover
+            hide:
+              shuffle: false
+              icon_state: false
+          - type: entities
+            entities:
+              - entity: input_select.ytube_music_player_playlist
+              - entity: input_select.ytube_music_player_source
+              - entity: input_select.ytube_music_player_speakers
+            title: Kolja
+          - type: media-control
+            entity: media_player.keller_2
+          - type: media-control
+            entity: media_player.jkw_cast2
+      - type: vertical-stack
+        cards:
+          - type: markdown
+            content: >-
+              {% if is_state('media_player.ytube_music_player','playing')
+              %}{{state_attr("media_player.ytube_music_player", "media_artist") }} -
+              {{ state_attr("media_player.ytube_music_player", "media_title") }}{%
+              else %}Player off{% endif %}
+          - type: markdown
+            content: >-
+              {% if is_state('media_player.ytube_music_player','playing')
+              %}Currently playing track {{
+              state_attr("media_player.ytube_music_player", "current_track") }} of
+              {{ state_attr("media_player.ytube_music_player", "total_tracks") }}{%
+              else %}Player off{% endif %}     
+          - type: markdown
+            content: >-
+              {% if is_state('media_player.ytube_music_player','playing') %}{% for i
+              in range(0,state_attr("media_player.ytube_music_player",
+              "total_tracks")) %}
+               {% if i == state_attr("media_player.ytube_music_player",
+              "current_track") %}**{% endif %}\[{{i}}] {{
+              state_attr("media_player.ytube_music_player", "tracks")[i] }}{% if i
+              == state_attr("media_player.ytube_music_player", "current_track")
+              %}**{% endif %}
+
+              {%- endfor %}{% else %}Player off{% endif %}
+                  
+      - type: markdown
+        content: >-
+          {% if is_state('media_player.ytube_music_player','playing') %}{{
+          state_attr("media_player.ytube_music_player", "lyrics") }}{% else
+          %}Player off{% endif %}
+
+    path: default_view
+    title: Home

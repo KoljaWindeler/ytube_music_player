@@ -109,7 +109,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._get_cipher('BB2mjBuAtiQ')
 #		embed_url = f"https://www.youtube.com/embed/D7oPc6PNCZ0"
 
-		self._entity_ids = []  ## media_players - aka speakers
+		self._remote_player = []  ## media_players - aka speakers
 		self._playlists = []
 		self._playlist_to_index = {}
 		self._tracks = []
@@ -251,11 +251,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._started_by = "UI"
 		if not self._update_entity_ids():
 			return
-		_player = self.hass.states.get(self._entity_ids)
+		_player = self.hass.states.get(self._remote_player)
 		data = {ATTR_ENTITY_ID: _player.entity_id}
 
 		self._allow_next = False
-		track_state_change(self.hass, _player.entity_id, self._sync_player)
+		track_state_change(self.hass, self._remote_player, self._sync_player)
 		if(self._select_playMode!=""):
 			track_state_change(self.hass, self._select_playMode, self._update_playmode)
 		if(self._select_playContinuous!=""):
@@ -283,7 +283,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("_turn_on_media_player")
 		"""Fire the on action."""
 		if data is None:
-			data = {ATTR_ENTITY_ID: self._entity_ids}
+			data = {ATTR_ENTITY_ID: self._remote_player}
 		self._state = STATE_IDLE
 		self.schedule_update_ha_state()
 		self.hass.services.call(DOMAIN_MP, 'turn_on', data)
@@ -298,7 +298,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_album_name = None
 		self._track_album_cover = None
 
-		_player = self.hass.states.get(self._entity_ids)
+		_player = self.hass.states.get(self._remote_player)
 		data = {ATTR_ENTITY_ID: _player.entity_id}
 		self._turn_off_media_player(data)
 
@@ -310,7 +310,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_player_state'] = STATE_OFF
 		self.schedule_update_ha_state()
 		if data is None:
-			data = {ATTR_ENTITY_ID: self._entity_ids}
+			data = {ATTR_ENTITY_ID: self._remote_player}
 		self.hass.services.call(DOMAIN_MP, 'turn_off', data)
 
 
@@ -318,7 +318,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("_update_entity_ids")
 		""" sets the current media_player from input_select """
 		if(self._select_mediaPlayer == ""): # drop down for player does not exist
-			if(self._entity_ids == ""): # no preselected entity ID
+			if(self._remote_player == ""): # no preselected entity ID
 				return False
 			else:
 				return True
@@ -327,12 +327,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if media_player is None:
 				_LOGGER.error("(%s) is not a valid input_select entity.", self._select_mediaPlayer)
 				return False
-			_entity_ids = "media_player." + media_player.state
-			if self.hass.states.get(_entity_ids) is None:
+			_remote_player = "media_player." + media_player.state
+			if self.hass.states.get(_remote_player) is None:
 				_LOGGER.error("(%s) is not a valid media player.", media_player.state)
 				return False
-			# Example: self._entity_ids = media_player.bedroom_stereo
-			self._entity_ids = _entity_ids
+			# Example: self._remote_player = media_player.bedroom_stereo
+			self._remote_player = _remote_player
 		return True
 
 	def _get_cipher(self, videoId):
@@ -347,11 +347,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def _sync_player(self, entity_id=None, old_state=None, new_state=None):
 		_LOGGER.debug("_sync_player")
+		if(entity_id!=None and old_state!=None) and new_state!=None:
+			_LOGGER.debug(entity_id+": "+old_state.state+" -> "+new_state.state)
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
 			return
 		""" _player = The selected speakers """
-		_player = self.hass.states.get(self._entity_ids)
+		_player = self.hass.states.get(self._remote_player)
 
 		#""" Entire state of the _player, include attributes. """
 		# self._attributes['_player'] = _player
@@ -377,7 +379,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 #			_LOGGER.debug(old_state.state)
 #			_LOGGER.debug(new_state.state)
 #			time.sleep(1)
-#			_player = self.hass.states.get(self._entity_ids)
+#			_player = self.hass.states.get(self._remote_player)
 #			if(_player.state == 'off'):
 #				_LOGGER.debug("media player still off")
 #				self.turn_off()
@@ -404,6 +406,36 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("YTUBEMUSIC PLAY MEDIA")
 		_LOGGER.debug("Speakers: (%s) | Source: (%s) | Name: (%s)", _speak, _source, _media)
 		self.play_media(_source, _media, _speak)
+
+
+	def extract_info(self, _track):
+		""" If available, get track information. """
+		info = dict()
+		info['track_album_name'] = None
+		info['track_artist_cover'] = None
+		info['track_name'] = None
+		info['track_artist'] = None
+		info['track_album_cover'] = None
+
+		if 'title' in _track:
+			info['track_name'] = _track['title']
+		if 'byline' in _track:
+			info['track_artist'] = _track['byline']
+		elif 'artists' in _track:
+			if 'name' in _track['artists'][0]:
+				info['track_artist'] = _track['artists'][0]['name']
+			else:
+				info['track_artist'] = _track['artists'][0]
+		if 'thumbnail' in _track:
+			_album_art_ref = _track['thumbnail']   ## returns a list,
+			if 'thumbnails' in _album_art_ref:
+				_album_art_ref = _album_art_ref['thumbnails']
+			# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
+			info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+		elif 'thumbnails' in _track:
+			_album_art_ref = _track['thumbnails']   ## returns a list
+			info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+		return info
 
 
 	def _update_selects(self, now=None):
@@ -435,10 +467,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._select_mediaPlayer = ""
 			# if exactly one unit is provided, stick with it, if it existst
 			if(len(speakersList) == 1):
-				self._entity_ids = DOMAIN_MP+"."+speakersList[0]
-				_LOGGER.debug("Choosing "+self._entity_ids+" as player")
-				if(self.hass.states.get(self._entity_ids) is None):
-					self._entity_ids = ""
+				self._remote_player = DOMAIN_MP+"."+speakersList[0]
+				_LOGGER.debug("Choosing "+self._remote_player+" as player")
+				if(self.hass.states.get(self._remote_player) is None):
+					self._remote_player = ""
 		else:
 			defaultPlayer = ''
 			if(len(speakersList)<=1):
@@ -569,7 +601,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 		
 		if _source != 'Playlist':
-			r_track = my_radio[random.randrange(0,len(my_radio)-1)]
+			if(len(my_radio)>1):
+				r_track = my_radio[random.randrange(0,len(my_radio)-1)]
 			try:
 				self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])['tracks']
 			except:
@@ -579,6 +612,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		else:
 			self._tracks = my_radio
 		_LOGGER.debug("New Track database loaded, contains "+str(len(self._tracks))+" Tracks")
+		
 
 		#self.log("Loading [{}] Tracks From: {}".format(len(self._tracks), _playlist_id))
 
@@ -588,7 +622,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# mode 1 and 3 will shuffle the playlist after generation
 		if self._shuffle and self._shuffle_mode != 2:
 			random.shuffle(self._tracks)
+		self._tracks_to_attribute()
+
 		
+	def _tracks_to_attribute(self):
+		self._attributes['total_tracks'] = len(self._tracks)
+		self._attributes['tracks'] = []
+		for track in self._tracks:
+			info = self.extract_info(track)
+			self._attributes['tracks'].append(info['track_artist']+" - "+info['track_name'])
 
 	# called from HA when th user changes the input entry, will read selection to membervar
 	def _update_playmode(self, entity_id=None, old_state=None, new_state=None):
@@ -668,6 +710,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._turn_off_media_player()
 			return
 
+		self._attributes['current_track'] = self._next_track_no
+
 		""" Find the unique track id. """
 		uid = ''
 		if 'videoId' in _track:
@@ -680,31 +724,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				return
 			return self._get_track(retry=retry-1)
 
-		""" If available, get track information. """
-		self._track_album_name = None
-		self._track_artist_cover = None
-		self._track_name = None
-		self._track_artist = None
-		self._track_album_cover = None
-
-		if 'title' in _track:
-			self._track_name = _track['title']
-		if 'byline' in _track:
-			self._track_artist = _track['byline']
-		elif 'artists' in _track:
-			if 'name' in _track['artists'][0]:
-				self._track_artist = _track['artists'][0]['name']
-			else:
-				self._track_artist = _track['artists'][0]
-		if 'thumbnail' in _track:
-			_album_art_ref = _track['thumbnail']   ## returns a list,
-			if 'thumbnails' in _album_art_ref:
-				_album_art_ref = _album_art_ref['thumbnails']
-			# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
-			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
-		elif 'thumbnails' in _track:
-			_album_art_ref = _track['thumbnails']   ## returns a list
-			self._track_album_cover = _album_art_ref[len(_album_art_ref)-1]['url']
+		info = self.extract_info(_track)
+		self._track_album_name = info['track_album_name']
+		self._track_artist_cover = info['track_artist_cover']
+		self._track_name = info['track_name']
+		self._track_artist = info['track_artist']
+		self._track_album_cover = info['track_album_cover']
+		
 		self.schedule_update_ha_state()
 
 		"""@@@ Get the stream URL and play on media_player @@@"""
@@ -718,16 +744,28 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_LOGGER.error("Retry with: (%i)", retry)
 			return self._get_track(retry=retry-1)
 
-
+		### start playback ###
 		self._state = STATE_PLAYING
 		self.schedule_update_ha_state()
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
 			ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
-			ATTR_ENTITY_ID: self._entity_ids
+			ATTR_ENTITY_ID: self._remote_player
 			}
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
 
+		### get lyrics after playback started ###
+		self._attributes['lyrics'] = 'not available'
+		try:
+			l_id = self._api.get_watch_playlist(videoId=_track['videoId'])
+			if 'lyrics' in l_id:
+				lyrics = self._api.get_lyrics(browseId=l_id['lyrics'])
+				if lyrics['lyricsFound']:
+					self._attributes['lyrics'] = lyrics['lyrics']
+		except:
+			pass
+
+		### get header ... for further deveopment ###
 		try:
 			p1 = datetime.datetime.now()
 			status = request.head(_url)["content-type"]
@@ -735,6 +773,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.debug("Link status: "+str(status)+" loading time: "+str(t)+" sec")
 		except:
 			_LOGGER.error("Status code failed")
+
+		
 
 		"""@@@ Get the stream URL and play on media_player @@@"""
 		#_LOGGER.error("register call later")
@@ -849,8 +889,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			random.shuffle(self._tracks)
 			_LOGGER.debug("shuffle new tracklist")
 
+		self._tracks_to_attribute()
+
 		# get current player state, just to see if we have to stop before start
-		_player = self.hass.states.get(self._entity_ids)
+		_player = self.hass.states.get(self._remote_player)
 		
 		# make sure that the player, is on and idle
 		if self._playing == True:
@@ -873,7 +915,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if self._state == STATE_PAUSED:
 			self._state = STATE_PLAYING
 			self.schedule_update_ha_state()
-			data = {ATTR_ENTITY_ID: self._entity_ids}
+			data = {ATTR_ENTITY_ID: self._remote_player}
 			self.hass.services.call(DOMAIN_MP, 'media_play', data)
 		else:
 			self._play()
@@ -885,7 +927,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._state = STATE_PAUSED
 		#_LOGGER.error(" PAUSE ")
 		self.schedule_update_ha_state()
-		data = {ATTR_ENTITY_ID: self._entity_ids}
+		data = {ATTR_ENTITY_ID: self._remote_player}
 		self.hass.services.call(DOMAIN_MP, 'media_pause', data)
 
 	def media_play_pause(self, **kwargs):
@@ -921,7 +963,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_name = None
 		self._track_album_cover = None
 		self.schedule_update_ha_state()
-		data = {ATTR_ENTITY_ID: self._entity_ids}
+		data = {ATTR_ENTITY_ID: self._remote_player}
 		self.hass.services.call(DOMAIN_MP, 'media_stop', data)
 
 	def set_shuffle(self, shuffle):
@@ -931,6 +973,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# mode 1 and 3 will shuffle the playlist after generation
 		if(self._shuffle and self._shuffle_mode != 2):
 			random.shuffle(self._tracks)
+		self._tracks_to_attribute()
 
 		if self._shuffle_mode == 1:
 			self._attributes['shuffle_mode'] = PLAYMODE_SHUFFLE
@@ -956,7 +999,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def set_volume_level(self, volume):
 		"""Set volume level."""
 		self._volume = round(volume,2)
-		data = {ATTR_ENTITY_ID: self._entity_ids, 'volume_level': self._volume}
+		data = {ATTR_ENTITY_ID: self._remote_player, 'volume_level': self._volume}
 		self.hass.services.call(DOMAIN_MP, 'volume_set', data)
 		self.schedule_update_ha_state()
 
@@ -977,7 +1020,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		else:
 			self._is_mute = False
 		self.schedule_update_ha_state()
-		data = {ATTR_ENTITY_ID: self._entity_ids, "is_volume_muted": self._is_mute}
+		data = {ATTR_ENTITY_ID: self._remote_player, "is_volume_muted": self._is_mute}
 		self.hass.services.call(DOMAIN_MP, 'volume_mute', data)
 
 	def exc(self, resp="self"):
