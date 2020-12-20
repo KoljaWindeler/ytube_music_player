@@ -32,7 +32,7 @@ views:
             content: >-
               {% if is_state('media_player.ytube_music_player','playing')
               %}Currently playing track {{
-              state_attr("media_player.ytube_music_player", "current_track") }} of
+              state_attr("media_player.ytube_music_player", "current_track")+1 }} of
               {{ state_attr("media_player.ytube_music_player", "total_tracks") }}{%
               else %}Player off{% endif %}     
           - type: markdown
@@ -41,7 +41,7 @@ views:
               in range(0,state_attr("media_player.ytube_music_player",
               "total_tracks")) %}
                {% if i == state_attr("media_player.ytube_music_player",
-              "current_track") %}**{% endif %}\[{{i}}] {{
+              "current_track") %}**{% endif %}\[{{i+1}}] {{
               state_attr("media_player.ytube_music_player", "tracks")[i] }}{% if i
               == state_attr("media_player.ytube_music_player", "current_track")
               %}**{% endif %}
