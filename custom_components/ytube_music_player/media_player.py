@@ -366,6 +366,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("_sync_player")
 		if(entity_id!=None and old_state!=None) and new_state!=None:
 			_LOGGER.debug(entity_id+": "+old_state.state+" -> "+new_state.state)
+		else:
+			_LOGGER.debug(self._remote_player)
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
 			return
@@ -584,7 +586,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 
-	def _load_playlist(self, playlist=None, play=True):
+	def _load_playlist(self, playlist=None):
 		_LOGGER.debug("_load_playlist")
 		""" Load selected playlist to the track_queue """
 		if not self._update_entity_ids():
@@ -696,7 +698,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# else only change the mode
 		if(entity_id == self._select_playMode and old_state != None and new_state != None):
 			self._allow_next = False # player will change to idle, avoid auto_advance
-			self._load_playlist(play = True)
+			self._next_track_no = -1
+			self._load_playlist()
+			self._play()
 
 
 	def _play(self):
@@ -722,7 +726,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self._next_track_no = 0
 					# only reload playlist if we've been started from UI
 					if(self._started_by == "UI"):
-						self._load_playlist(play=False)
+						self._load_playlist()
 				else:
 					_LOGGER.info("End of playlist and playcontinuous is off")
 					self._turn_off_media_player()
@@ -912,6 +916,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._tracks = self._api.get_history()
 		elif(media_id == USER_TRACKS):
 			self._tracks = self._api.get_library_upload_songs(limit=999)
+		elif(media_type == CHANNEL):
+			self._load_playlist(playlist=media_id)
 		else:
 			_LOGGER.debug("error during fetching play_media, turning off")
 			self.turn_off()

@@ -147,6 +147,7 @@ LIB_PLAYLIST = 'library_playlists'
 LIB_ALBUM = 'library_albums'
 LIB_TRACKS = 'library_tracks'
 USER_TRACKS = 'user_tracks'
+CHANNEL = 'channel'
 HISTORY = 'history'
 BROWSER_LIMIT = 25
 
