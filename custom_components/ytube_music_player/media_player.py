@@ -368,14 +368,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.debug(entity_id+": "+old_state.state+" -> "+new_state.state)
 		else:
 			_LOGGER.debug(self._remote_player)
+		
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
 			return
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._remote_player)
-
-		#""" Entire state of the _player, include attributes. """
-		# self._attributes['_player'] = _player
 
 		""" entity_id of selected speakers. """
 		self._attributes['_player_id'] = _player.entity_id
@@ -383,27 +381,33 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" _player state - Example [playing -or- idle]. """
 		self._attributes['_player_state'] = _player.state
 
+		""" unlock allow next """
 		if 'media_position' in _player.attributes:
 			if _player.state == 'playing' and _player.attributes['media_position']>0:
 				self._allow_next = True
 		elif _player.state == 'playing': # fix for browser mod media_player not providing the 'media_position'
 			self._allow_next = True
-		if _player.state == 'idle':
+
+		""" auto next .. best cast: we have an old and a new state """
+		if(old_state!=None and new_state!=None):
+			# chromecast quite frequently change from playing to idle twice, so we need some kind of time guard
+			if(old_state.state == STATE_PLAYING and new_state.state == STATE_IDLE and (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10 ):
+				self._allow_next = False
+				self._last_auto_advance = datetime.datetime.now()
+				self._get_track()
+			# turn this player of when the remote_player was shut down
+			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE) and new_state.state == STATE_OFF):
+				self._state = STATE_OFF
+				_LOGGER.debug("media player got turned off")
+				self.turn_off()
+		# no states, lets rely on stuff like _allow_next
+		elif _player.state == 'idle':
 			if self._allow_next:
 				if (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10:
 					self._allow_next = False
 					self._last_auto_advance = datetime.datetime.now()
 					self._get_track()
-#		elif _player.state == 'off':
-#			self._state = STATE_OFF
-#			_LOGGER.debug("media player got turned off")
-#			_LOGGER.debug(old_state.state)
-#			_LOGGER.debug(new_state.state)
-#			time.sleep(1)
-#			_player = self.hass.states.get(self._remote_player)
-#			if(_player.state == 'off'):
-#				_LOGGER.debug("media player still off")
-#				self.turn_off()
+
 
 		""" Set new volume if it has been changed on the _player """
 		if 'volume_level' in _player.attributes:
@@ -705,6 +709,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def _play(self):
 		_LOGGER.debug("_play")
+		self._last_auto_advance = datetime.datetime.now() # avoid auto_advance
 		self._playing = True
 		self._next_track_no = -1
 		self._get_track() 
