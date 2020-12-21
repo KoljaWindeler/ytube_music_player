@@ -10,6 +10,15 @@ views:
             hide:
               shuffle: false
               icon_state: false
+            shortcuts:
+              columns: 4
+              buttons:
+                - name: My Likes
+                  type: channel
+                  id: Your Likes
+                - name: Caro
+                  type: channel
+                  id: Lala
           - type: entities
             entities:
               - entity: input_select.ytube_music_player_playlist
