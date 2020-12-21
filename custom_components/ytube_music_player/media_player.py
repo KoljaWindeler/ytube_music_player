@@ -94,6 +94,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						self._api = None
 						self.exc(resp="ytmusicapi")
 						return
+				if(self._api):
+					# test login
+					self._api.get_library_songs()
 			else:
 				msg= "can't file header file at "+config.get(CONF_HEADER_PATH, default_header_file)
 				_LOGGER.error(msg)
