@@ -243,30 +243,46 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def turn_on(self, *args, **kwargs):
 		_LOGGER.debug("TURNON")
 		""" Turn on the selected media_player from input_select """
-		if(self._api == None):
-			_LOGGER.error("Can't start the player, no header file")
+		if not self.prepare_play():
 			return
 
-		self._playing = False
 		self._started_by = "UI"
+		# grabbing data from API, might take a 1-3 sec
+		self._load_playlist()
+		self._play()
+
+	def prepare_play(self):
+		if(self._api == None):
+			_LOGGER.error("Can't start the player, no header file")
+			return False
+
+		# get _remote_player
 		if not self._update_entity_ids():
 			return
 		_player = self.hass.states.get(self._remote_player)
-		data = {ATTR_ENTITY_ID: _player.entity_id}
 
-		self._allow_next = False
+		# subscribe to changes
 		track_state_change(self.hass, self._remote_player, self._sync_player)
 		if(self._select_playMode!=""):
 			track_state_change(self.hass, self._select_playMode, self._update_playmode)
 		if(self._select_playContinuous!=""):
 			track_state_change(self.hass, self._select_playContinuous, self._update_playmode)
 		
-		self._turn_on_media_player(data)
-		#_LOGGER.error("subscribe to changes of ")
-
+		
+		# make sure that the player, is on and idle
+		if self._playing == True:
+			self.media_stop() 
+		elif self._playing == False and self._state == STATE_OFF:
+			if _player.state == STATE_OFF:
+				self._turn_on_media_player()
+		else:
+			_LOGGER.error("self._state is: (%s).", self._state)
+			
+		# update cipher
 		self._get_cipher('BB2mjBuAtiQ')
 
 		# display imidiatly a loading state to provide feedback to the user
+		self._allow_next = False
 		self._track_name =  "loading..."
 		self._track_album_name = ""
 		self._track_artist =  ""
@@ -274,10 +290,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_album_cover = None
 		self._state = STATE_PLAYING # a bit early otherwise no info will be shown
 		self.schedule_update_ha_state()
-
-		# grabbing data from API, might take a 1-3 sec
-		self._load_playlist()
-		self._play()
+		return True
 
 	def _turn_on_media_player(self, data=None):
 		_LOGGER.debug("_turn_on_media_player")
@@ -617,11 +630,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				return
 		else:
 			self._tracks = my_radio
-		_LOGGER.debug("New Track database loaded, contains "+str(len(self._tracks))+" Tracks")
 		
-
-		#self.log("Loading [{}] Tracks From: {}".format(len(self._tracks), _playlist_id))
-
+		if(isinstance(self._tracks,list)):
+			_LOGGER.debug("New Track database loaded, contains "+str(len(self._tracks))+" Tracks")
+		else:
+			self._tracks = []
+			_LOGGER.error("Fetching traccks failed! Check cookie")
+		
 		# get current playmode
 		self._update_playmode()
 
@@ -864,7 +879,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def play_media(self, media_type, media_id, _player=None, **kwargs):
-		_LOGGER.debug("play_media")
+		_LOGGER.debug("play_media, media_type: "+str(media_type)+", media_id: "+str(media_id))
 
 		# update the output mediaplayer from the drop down field
 		if not self._update_entity_ids():
@@ -899,19 +914,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			random.shuffle(self._tracks)
 			_LOGGER.debug("shuffle new tracklist")
 
+		self.prepare_play()
 		self._tracks_to_attribute()
-
-		# get current player state, just to see if we have to stop before start
-		_player = self.hass.states.get(self._remote_player)
-		
-		# make sure that the player, is on and idle
-		if self._playing == True:
-			self.media_stop() 
-		elif self._playing == False and self._state == STATE_OFF:
-			if _player.state == STATE_OFF:
-				self._turn_on_media_player()
-		else:
-			_LOGGER.error("self._state is: (%s).", self._state)
 
 		# grab track from tracks[] and forward to remote player
 		self._next_track_no = -1
