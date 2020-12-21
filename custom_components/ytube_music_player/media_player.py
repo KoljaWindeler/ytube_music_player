@@ -255,6 +255,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._play()
 
 	def prepare_play(self):
+		_LOGGER.debug("prepare_play")
 		if(self._api == None):
 			_LOGGER.error("Can't start the player, no header file")
 			return False
@@ -383,6 +384,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if 'media_position' in _player.attributes:
 			if _player.state == 'playing' and _player.attributes['media_position']>0:
 				self._allow_next = True
+		elif _player.state == 'playing': # fix for browser mod media_player not providing the 'media_position'
+			self._allow_next = True
 		if _player.state == 'idle':
 			if self._allow_next:
 				if (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10:
@@ -425,6 +428,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def extract_info(self, _track):
+		_LOGGER.debug("extract_info")
 		""" If available, get track information. """
 		info = dict()
 		info['track_album_name'] = ""
