@@ -12,9 +12,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
 	"""Provide Setup of platform."""
-	_LOGGER.info(
-		CC_STARTUP_VERSION.format(name=DOMAIN, version=VERSION, issue_link=ISSUE_URL)
-	)
 	return True
 
 
