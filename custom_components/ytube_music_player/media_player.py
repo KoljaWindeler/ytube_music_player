@@ -393,7 +393,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# chromecast quite frequently change from playing to idle twice, so we need some kind of time guard
 			if(old_state.state == STATE_PLAYING and new_state.state == STATE_IDLE and (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10 ):
 				self._allow_next = False
-				self._last_auto_advance = datetime.datetime.now()
 				self._get_track()
 			# turn this player of when the remote_player was shut down
 			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE) and new_state.state == STATE_OFF):
@@ -405,7 +404,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if self._allow_next:
 				if (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10:
 					self._allow_next = False
-					self._last_auto_advance = datetime.datetime.now()
 					self._get_track()
 
 
@@ -709,7 +707,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def _play(self):
 		_LOGGER.debug("_play")
-		self._last_auto_advance = datetime.datetime.now() # avoid auto_advance
 		self._playing = True
 		self._next_track_no = -1
 		self._get_track() 
@@ -790,6 +787,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			ATTR_ENTITY_ID: self._remote_player
 			}
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
+		self._last_auto_advance = datetime.datetime.now() # avoid auto_advance
 
 		### get lyrics after playback started ###
 		self._attributes['lyrics'] = 'No lyrics available'
