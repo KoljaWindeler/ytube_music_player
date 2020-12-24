@@ -139,4 +139,4 @@ Not yet tested, but should work in general. Please have a look at https://github
 
 ## Credits
 
-This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/Home Assistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and ytube (https://github.com/nficano/pytube)
+This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/HomeAssistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and pytube (https://github.com/nficano/pytube)
