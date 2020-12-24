@@ -23,6 +23,8 @@ Platform | Description
 
 The easiest way to add this to your Home Assistant installation is using [HACS](https://hacs.xyz/docs/basic/getting_started).
 
+To configure a new Custom Repository in HACS, click on the three dots at the top right and select `Custom repositories`. Once you have the custom repository menu open, paste the GitHub URL `https://github.com/KoljaWindeler/ytube_music_player/`, select `Integration`, hit `ADD`.
+
 It's recommended to restart Home Assistant directly after the installation without any change to the Configuration.
 Home Assistant will install the dependencies during the next reboot. After that you can add and check the configuration without error messages.
 This is nothing special to this Integration but the same for all custom components.
