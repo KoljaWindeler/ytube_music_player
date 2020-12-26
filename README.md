@@ -141,8 +141,11 @@ input_boolean:
 
 ## Shotcuts
 The screenshot below shows the mini-media-player from kalkih (https://github.com/kalkih/mini-media-player)
+
 ![mini-media-player](shortcuts.png)
-This mediaplayer offers shotcuts, which can be used to select a remote_player and playlist with a single click.
+
+This mediaplayer offers shotcuts, which can be used to select a remote_player and playlist with a single click:
+
 ```
 - type: 'custom:mini-media-player'
   entity: media_player.ytube_music_player
