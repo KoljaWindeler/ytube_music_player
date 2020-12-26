@@ -315,10 +315,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_artist = None
 		self._track_album_name = None
 		self._track_album_cover = None
-
-		_player = self.hass.states.get(self._remote_player)
-		data = {ATTR_ENTITY_ID: _player.entity_id}
-		self._turn_off_media_player(data)
+		self._turn_off_media_player()
 
 	def _turn_off_media_player(self, data=None):
 		_LOGGER.debug("_turn_off_media_player")
@@ -327,8 +324,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._state = STATE_OFF
 		self._attributes['_player_state'] = STATE_OFF
 		self.schedule_update_ha_state()
-		if data is None:
-			data = {ATTR_ENTITY_ID: self._remote_player}
+		data = {ATTR_ENTITY_ID: self._remote_player}
+		self.hass.services.call(DOMAIN_MP, 'media_stop', data)
 		self.hass.services.call(DOMAIN_MP, 'turn_off', data)
 
 
