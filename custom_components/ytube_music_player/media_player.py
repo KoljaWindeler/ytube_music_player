@@ -256,11 +256,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def prepare_play(self):
 		_LOGGER.debug("prepare_play")
 		if(self._api == None):
-			_LOGGER.error("Can't start the player, no header file")
+			_LOGGER.error("Can't start the player, no API (cookie not valid?)")
 			return False
 
 		# get _remote_player
-		if not self._update_entity_ids():
+		if not self._update_remote_player():
 			return
 		_player = self.hass.states.get(self._remote_player)
 
@@ -270,6 +270,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			track_state_change(self.hass, self._select_playMode, self._update_playmode)
 		if(self._select_playContinuous!=""):
 			track_state_change(self.hass, self._select_playContinuous, self._update_playmode)
+		if(self._select_mediaPlayer!=""):
+			track_state_change(self.hass, self._select_mediaPlayer, self.select_source)
 		
 		
 		# make sure that the player, is on and idle
@@ -330,8 +332,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass.services.call(DOMAIN_MP, 'turn_off', data)
 
 
-	def _update_entity_ids(self):
-		_LOGGER.debug("_update_entity_ids")
+	def _update_remote_player(self):
+		_LOGGER.debug("_update_remote_player")
 		""" sets the current media_player from input_select """
 		if(self._select_mediaPlayer == ""): # drop down for player does not exist
 			if(self._remote_player == ""): # no preselected entity ID
@@ -465,6 +467,39 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return info
 
 
+	def select_source(self, source=None):
+		_LOGGER.debug("select_source")
+		# shutdown old player if we're currently playimg
+		was_playing = self._playing
+		if(self._playing):
+			self.media_stop()
+		## get track position of old player TODO
+		## set player
+		if(source is not None):
+			self._remote_player = DOMAIN_MP+"."+source
+			_LOGGER.debug("Choosing "+self._remote_player+" as player")
+			## try to set drop down
+			if(self._select_mediaPlayer != ""):
+				if(not self.check_entity_exists(self._select_mediaPlayer)):
+					_LOGGER.debug("Drop down "+str(self._select_mediaPlayer)+" not found")
+				else:
+					data = {input_select.ATTR_OPTION: source, ATTR_ENTITY_ID: self._select_mediaPlayer}
+					self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
+		else:
+			# load from dropdown, if that fails, exit
+			if(not self._update_remote_player()):
+				_LOGGER.error("_update_remote_player failed")
+				return
+		## if playing, switch player
+		if(was_playing):
+			self.media_stop()
+			self._playing = True # was set to false in media_stop()
+			# don't call "_play" here, as that resets the playlist position
+			self._next_track_no = max(self._next_track_no-1,-1) # get track will increase the counter
+			self._get_track() 
+		## seek forward TODO
+
+
 	def _update_selects(self, now=None):
 		_LOGGER.debug("_update_selects")
 		# -- all others -- #
@@ -590,7 +625,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def _load_playlist(self, playlist=None):
 		_LOGGER.debug("_load_playlist")
 		# reload remote media_player
-		if not self._update_entity_ids():
+		if not self._update_remote_player():
 			return
 
 		# exit if we don't konw what to play
@@ -912,7 +947,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("play_media, media_type: "+str(media_type)+", media_id: "+str(media_id))
 
 		# update the output mediaplayer from the drop down field
-		if not self._update_entity_ids():
+		if not self._update_remote_player():
 			return
 
 		self._started_by = "Browser"
