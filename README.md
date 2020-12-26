@@ -10,12 +10,17 @@ Platform | Description
 
 ![Example](screenshot.png)
 
+With mini-media-player (https://github.com/kalkih/mini-media-player) ![mini-media-player](shortcuts.png)
+
+Also supports media_browser
+![media-browser](media_browser.png)
 
 ## Features
 - loads all your playlists from your YouTube Music account
 - can either play straight from the playlist or create a radio based on the playlist
 - extracts url of the stream and forwards it to a generic mediaplayer
 - keeps auto_playing as long as it is turned on
+- on the fly change of media_player (track will restart, but playlist will stick)
 
 # Installation
 
@@ -132,6 +137,37 @@ input_boolean:
   ytube_music_player_playcontinuous:
     initial: true
     name: "Countinuous playback"
+```
+
+## Shotcuts
+The screenshot below shows the mini-media-player from kalkih (https://github.com/kalkih/mini-media-player)
+![mini-media-player](shortcuts.png)
+This mediaplayer offers shotcuts, which can be used to select a remote_player and playlist with a single click.
+```
+- type: 'custom:mini-media-player'
+  entity: media_player.ytube_music_player
+  artwork: cover
+  hide:
+    shuffle: false
+    icon_state: false
+  shortcuts:
+    columns: 3
+    buttons:
+      - name: Badezimmer
+        type: source
+        id: badezimmer
+      - name: Keller
+        type: source
+        id: keller
+      - name: Laptop
+        type: source
+        id: bm_8e5f874f_8dfcb60f
+      - name: My Likes
+        type: channel
+        id: Your Likes
+      - name: Lala
+        type: channel
+        id: Lala
 ```
 
 ## Multiple accounts
