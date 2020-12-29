@@ -139,7 +139,7 @@ input_boolean:
     name: "Countinuous playback"
 ```
 
-## Shotcuts
+## Shortcuts
 The screenshot below shows the mini-media-player from kalkih (https://github.com/kalkih/mini-media-player)
 
 ![mini-media-player](shortcuts.png)
