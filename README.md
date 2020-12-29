@@ -173,6 +173,16 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
         id: Lala
 ```
 
+## Debug Information
+I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.ytube_music_player: debug
+```
+
+
 ## Multiple accounts
 Not yet tested, but should work in general. Please have a look at https://github.com/KoljaWindeler/ytube_music_player/blob/main/Multiple_accounts.md
 
