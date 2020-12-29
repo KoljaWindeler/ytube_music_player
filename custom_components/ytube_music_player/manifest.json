@@ -5,8 +5,8 @@
   "config_flow": true,
   "requirements": [
     "ytmusicapi==0.12.2",
-    "pytube",
-    "integrationhelper"
+    "pytube==10.0.0",
+    "integrationhelper==0.2.2"
   ],
   "dependencies": [
     "persistent_notification"],
