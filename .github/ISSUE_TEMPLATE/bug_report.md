@@ -2,10 +2,11 @@
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
+
 **Enable DEBUG Output**
 Please see: https://github.com/KoljaWindeler/ytube_music_player/#debug-information
 
