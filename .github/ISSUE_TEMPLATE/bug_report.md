@@ -10,7 +10,10 @@ assignees: ''
 Please see: https://github.com/KoljaWindeler/ytube_music_player/#debug-information
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+A clear and concise description of what the bug is, ideally a homeassistant log with debug enabled
+
+**Version**
+please provide the version you are using (see HACS)
 
 **To Reproduce**
 Steps to reproduce the behavior:
@@ -21,3 +24,5 @@ Steps to reproduce the behavior:
 
 **Additional context**
 Add any other context about the problem here.
+
+Thanks
