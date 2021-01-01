@@ -91,8 +91,7 @@ Key | Type | Required | Default | Description
 
 **Option 1:** You can download the existing package file. Don't forget to configure your speakers.
 
-Download https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/package/ytube.yaml
-into your `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
+Download one of the yaml configrations from the package folder into your local `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
 
 **Option 2:** Copy the following into your configuration.yaml. Don't forget to configure your speakers.
 
