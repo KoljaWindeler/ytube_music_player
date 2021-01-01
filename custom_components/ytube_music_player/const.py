@@ -82,6 +82,7 @@ from homeassistant.components.media_player.const import (
 	SUPPORT_BROWSE_MEDIA,
 	SUPPORT_REPEAT_SET,
 	SUPPORT_SELECT_SOURCE,
+	SUPPORT_SEEK,
 	MEDIA_TYPE_MUSIC,
 	REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,

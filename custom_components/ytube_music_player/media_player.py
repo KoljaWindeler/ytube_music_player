@@ -67,13 +67,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 		_LOGGER.debug("YtubeMediaPlayer config: ")
-		_LOGGER.debug("\tHeader path: " + self._header_file)
-		_LOGGER.debug("\tplaylist: " + self._select_playlist)
-		_LOGGER.debug("\tmediaplayer: " + self._select_mediaPlayer)
-		_LOGGER.debug("\tsource: " + self._select_source)
-		_LOGGER.debug("\tspeakerlist: " + str(self._speakersList))
-		_LOGGER.debug("\tplayModes: " + str(self._select_playMode))
-		_LOGGER.debug("\tplayContinuous: " + str(self._select_playContinuous))
+		_LOGGER.debug("- Header path: " + self._header_file)
+		_LOGGER.debug("- playlist: " + self._select_playlist)
+		_LOGGER.debug("- mediaplayer: " + self._select_mediaPlayer)
+		_LOGGER.debug("- source: " + self._select_source)
+		_LOGGER.debug("- speakerlist: " + str(self._speakersList))
+		_LOGGER.debug("- playModes: " + str(self._select_playMode))
+		_LOGGER.debug("- playContinuous: " + str(self._select_playContinuous))
 
 		self._brand_id = str(config.get(CONF_BRAND_ID,""))
 		self._api = None
@@ -116,14 +116,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def check_api(self):
 		_LOGGER.debug("check_api")
 		if(self._api == None):
-			_LOGGER.debug("no valid API, try to login")
+			_LOGGER.debug("- no valid API, try to login")
 			try:
 				if(os.path.exists(self._header_file)):
 					if(self._brand_id!=""):
-						_LOGGER.debug("using brand ID: "+self._brand_id)
+						_LOGGER.debug("- using brand ID: "+self._brand_id)
 						try:
 							self._api = ytmusicapi.YTMusic(self._header_file,self._brand_id)
-							_LOGGER.debug("\tYouTube Api version: "+str(ytmusicapi.__version__))
+							_LOGGER.debug("- YouTube Api version: "+str(ytmusicapi.__version__))
 						except:
 							self._api = None
 							self.exc(resp="ytmusicapi")
@@ -131,7 +131,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					else:
 						try:
 							self._api = ytmusicapi.YTMusic(self._header_file)
-							_LOGGER.debug("\tYouTube Api version: "+str(ytmusicapi.__version__))
+							_LOGGER.debug("- YouTube Api version: "+str(ytmusicapi.__version__))
 						except:
 							self._api = None
 							self.exc(resp="ytmusicapi")
@@ -390,7 +390,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(entity_id!=None and old_state!=None) and new_state!=None:
 			_LOGGER.debug(entity_id+": "+old_state.state+" -> "+new_state.state)
 			if(entity_id!=self._remote_player):
-				_LOGGER.debug("ignoring old player")
+				_LOGGER.debug("- ignoring old player")
 				return
 		else:
 			_LOGGER.debug(self._remote_player)
@@ -450,15 +450,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		if event.data['shuffle']:
 			self.set_shuffle(event.data.get('shuffle'))
-			_LOGGER.info("SHUFFLE: %s", self._shuffle)
+			_LOGGER.info("- SHUFFLE: %s", self._shuffle)
 
-		_LOGGER.debug("YTUBEMUSIC PLAY MEDIA")
-		_LOGGER.debug("Speakers: (%s) | Source: (%s) | Name: (%s)", _speak, _source, _media)
+		_LOGGER.debug("- Speakers: (%s) | Source: (%s) | Name: (%s)", _speak, _source, _media)
 		self.play_media(_source, _media, _speak)
 
 
 	def extract_info(self, _track):
-		_LOGGER.debug("extract_info")
+		#_LOGGER.debug("extract_info")
 		""" If available, get track information. """
 		info = dict()
 		info['track_album_name'] = ""
@@ -497,55 +496,66 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return self.select_source()
 
 	def select_source(self, source=None):
-		_LOGGER.debug("select_source")
+		_LOGGER.debug("select_source("+str(source)+")")
 		# shutdown old player if we're currently playimg
 		was_playing = self._playing
 		if(self._playing):
-			self.media_stop()
+			_LOGGER.debug("- was playing")
+			old_player = self.hass.states.get(self._remote_player)
+			self.media_stop(player=self._remote_player) # important to mention the player here explictly. We're going to change it and stuff runs async
 		## get track position of old player TODO
 		## set player
 		if(source is not None):
 			self._update_remote_player(remote_player=DOMAIN_MP+"."+source)
-			_LOGGER.debug("Choosing "+self._remote_player+" as player")
+			_LOGGER.debug("- Choosing "+self._remote_player+" as player")
 			## try to set drop down
 			if(self._select_mediaPlayer != ""):
 				if(not self.check_entity_exists(self._select_mediaPlayer)):
-					_LOGGER.debug("Drop down "+str(self._select_mediaPlayer)+" not found")
+					_LOGGER.debug("- Drop down "+str(self._select_mediaPlayer)+" not found")
 				else:
 					data = {input_select.ATTR_OPTION: source, ATTR_ENTITY_ID: self._select_mediaPlayer}
 					self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
 		else:
 			# load from dropdown, if that fails, exit
 			if(not self._update_remote_player()):
-				_LOGGER.error("_update_remote_player failed")
+				_LOGGER.error("- _update_remote_player failed")
 				return
 		## if playing, switch player
 		if(was_playing):
-			self.media_stop()
+			#self.media_stop()
 			self._playing = True # was set to false in media_stop()
 			# don't call "_play" here, as that resets the playlist position
 			self._next_track_no = max(self._next_track_no-1,-1) # get track will increase the counter
 			self._get_track() 
-		## seek forward TODO
+			# seek, if possible
+			new_player = self.hass.states.get(self._remote_player)
+			if (all(a in old_player.attributes for a in ('media_position','media_position_updated_at','media_duration')) and 'supported_features' in new_player.attributes):
+				if(new_player.attributes['supported_features'] | SUPPORT_SEEK):
+					now = datetime.datetime.now(datetime.timezone.utc)
+					delay = now - old_player.attributes['media_position_updated_at']
+					pos = delay.total_seconds() + old_player.attributes['media_position']
+					if pos < old_player.attributes['media_duration']:
+						data = {'seek_position': pos, ATTR_ENTITY_ID: self._remote_player}
+						self.hass.services.call(DOMAIN_MP, media_player.SERVICE_MEDIA_SEEK, data)
 
 
 	def _update_selects(self, now=None):
 		_LOGGER.debug("_update_selects")
 		# -- all others -- #
 		if(not self.check_entity_exists(self._select_playlist)):
-			_LOGGER.debug(str(self._select_playlist)+" not found")
+			_LOGGER.debug("- "+str(self._select_playlist)+" not found")
 			self._select_playlist = ""
 		if(not self.check_entity_exists(self._select_playMode)):
-			_LOGGER.debug(str(self._select_playMode)+" not found")
+			_LOGGER.debug("- "+str(self._select_playMode)+" not found")
 			self._select_playMode = ""
 		if(not self.check_entity_exists(self._select_playContinuous)):
-			_LOGGER.debug(str(self._select_playContinuous)+" not found")
+			_LOGGER.debug("- "+str(self._select_playContinuous)+" not found")
 			self._select_playContinuous = ""
 		if(not self.check_entity_exists(self._select_mediaPlayer)):
-			_LOGGER.debug(str(self._select_mediaPlayer)+" not found")
+			_LOGGER.debug("- "+str(self._select_mediaPlayer)+" not found")
 			self._select_mediaPlayer = ""
 		if(not self.check_entity_exists(self._select_source)):
-			_LOGGER.debug(str(self._select_source)+" not found")
+			_LOGGER.debug("- "+str(self._select_source)+" not found")
 			self._select_source = ""
 		# ----------- speaker -----#
 		try:
@@ -554,12 +564,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			speakersList = list()
 		# check if the drop down exists
 		if(not self.check_entity_exists(self._select_mediaPlayer)):
-			_LOGGER.debug("Drop down "+str(self._select_mediaPlayer)+" not found")
+			_LOGGER.debug("- Drop down "+str(self._select_mediaPlayer)+" not found")
 			self._select_mediaPlayer = ""
 			# if exactly one unit is provided, stick with it, if it existst
 			if(len(speakersList) == 1):
 				self._update_remote_player(remote_player=DOMAIN_MP+"."+speakersList[0])
-				_LOGGER.debug("Choosing "+self._remote_player+" as player")
+				_LOGGER.debug("- Choosing "+self._remote_player+" as player")
 		else:
 			defaultPlayer = ''
 			if(len(speakersList)<=1):
@@ -596,10 +606,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("_update_playlists")
 		""" Sync playlists from Google Music library """
 		if(self._api == None):
-			_LOGGER.debug("no api, exit")
+			_LOGGER.debug("- no api, exit")
 			return
 		if(self._select_playlist == ""):
-			_LOGGER.debug("no playlist select field, exit")
+			_LOGGER.debug("- no playlist select field, exit")
 			return
 
 		self._playlist_to_index = {}
@@ -627,9 +637,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							self._playlists[idx]['count'] = 25
 					except:
 						if('playlistId' in playlist):
-							_LOGGER.debug("Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
+							_LOGGER.debug("- Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
 						else:
-							_LOGGER.debug("Failed to get_playlist, no playlist ID")
+							_LOGGER.debug("- Failed to get_playlist, no playlist ID")
 						self.exc(resp="ytmusicapi")
 						self._playlists[idx]['count'] = 25
 
@@ -690,7 +700,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._select_source!=""):
 			_source = self.hass.states.get(self._select_source)
 			if _source is None:
-				_LOGGER.error("(%s) is not a valid input_select entity.", self._select_source)
+				_LOGGER.error("- (%s) is not a valid input_select entity.", self._select_source)
 				return
 			_source = _source.state
 		else:
@@ -761,7 +771,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				else:
 					self._playContinuous = False
 		except:
-			_LOGGER.debug("Selection field "+self._select_playContinuous+" not found, skipping")
+			_LOGGER.debug("- Selection field "+self._select_playContinuous+" not found, skipping")
 
 		try:
 			if(self._select_playMode!=""):
@@ -780,7 +790,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						self._shuffle = False
 				self.set_shuffle(self._shuffle)
 		except:
-			_LOGGER.debug("Selection field "+self._select_playMode+" not found, skipping")
+			_LOGGER.debug("- Selection field "+self._select_playMode+" not found, skipping")
 
 		# if we've change the dropdown, reload the playlist and start playing
 		# else only change the mode
@@ -806,7 +816,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._next_track_no = random.randrange(len(self._tracks)) - 1
 		else:
 			self._next_track_no = self._next_track_no + 1
-			_LOGGER.debug("Playing track nr "+str(self._next_track_no)+" / "+str(len(self._tracks)))
+			_LOGGER.debug("- Playing track nr "+str(self._next_track_no)+" / "+str(len(self._tracks)))
 			if self._next_track_no >= len(self._tracks):
 				# we've reached the end of the playlist
 				if(self._playContinuous):
@@ -816,18 +826,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if(self._started_by == "UI"):
 						self._load_playlist()
 				else:
-					_LOGGER.info("End of playlist and playcontinuous is off")
+					_LOGGER.info("- End of playlist and playcontinuous is off")
 					self._turn_off_media_player()
 					return
 		try:
 			_track = self._tracks[self._next_track_no]
 		except IndexError:
-			_LOGGER.error("Out of range! Number of tracks in track_queue == (%s)", len(self._tracks))
+			_LOGGER.error("- Out of range! Number of tracks in track_queue == (%s)", len(self._tracks))
 			self._api = None
 			self._turn_off_media_player()
 			return
 		if _track is None:
-			_LOGGER.error("_track is None!")
+			_LOGGER.error("- _track is None!")
 			self._turn_off_media_player()
 			return
 
@@ -838,7 +848,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if 'videoId' in _track:
 			uid = _track['videoId']
 		else:
-			_LOGGER.error("Failed to get ID for track: (%s)", _track)
+			_LOGGER.error("- Failed to get ID for track: (%s)", _track)
 			_LOGGER.error(_track)
 			if retry < 1:
 				self._turn_off_media_player()
@@ -858,11 +868,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_url = self.get_url(_track['videoId'])
 		if(_url == ""):
 			if retry < 1:
-				_LOGGER.debug("get track failed to return URL, turning off")
+				_LOGGER.debug("- get track failed to return URL, turning off")
 				self._turn_off_media_player()
 				return
 			else:
-				_LOGGER.error("Retry with: (%i)", retry)
+				_LOGGER.error("- Retry with: (%i)", retry)
 			return self._get_track(retry=retry-1)
 
 		### start playback ###
@@ -892,9 +902,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			p1 = datetime.datetime.now()
 			status = request.head(_url)["content-type"]
 			t = (datetime.datetime.now() - p1).total_seconds()
-			_LOGGER.debug("Link status: "+str(status)+" loading time: "+str(t)+" sec")
+			_LOGGER.debug("- Link status: "+str(status)+" loading time: "+str(t)+" sec")
 		except:
-			_LOGGER.error("Status code failed")
+			_LOGGER.error("- Status code failed")
 
 		
 
@@ -904,12 +914,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		call_later(self.hass, 15, self._sync_player)
 
 
-	def get_url(self, videoId, retry=False):
+	def get_url(self, videoId=None, retry=False):
 		_LOGGER.debug("get_url")
+		if(videoId==None):
+			_LOGGER.debug("videoId was None")
+			return ""
 		_url = ""
 		self.check_api()
 		try:
-			_LOGGER.debug("-- try to find URL on our own --")
+			_LOGGER.debug("- try to find URL on our own")
 			try:
 				streamingData=self._api.get_streaming_data(videoId)
 			except:
@@ -941,16 +954,16 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				# so if that happens: we try with this url, might work better (at least the file should be online)
 				# the only trouble i could see is that this video is private and thus also won't load the player .. 
 				if(self._js == ""):
-					self._get_cipher(_track['videoId'])
+					self._get_cipher(videoId)
 				signature = self._cipher.get_signature(ciphered_signature=res['s'])
 				_url = res['url'] + "&sig=" + signature
-				_LOGGER.debug("-- self decoded URL via cipher --")
+				_LOGGER.debug("- self decoded URL via cipher")
 			else:
 				_url = streamingData[streamId]['url']
-				_LOGGER.debug("-- found URL in api data --")
+				_LOGGER.debug("- found URL in api data")
 
 		except Exception as err:
-			_LOGGER.error("Failed to get own(!) URL for track, further details below. Will not try YouTube method")
+			_LOGGER.error("- Failed to get own(!) URL for track, further details below. Will not try YouTube method")
 			_LOGGER.error(traceback.format_exc())
 			_LOGGER.error(videoId)
 			try:
@@ -974,7 +987,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 			except Exception as err:
 				_LOGGER.error(traceback.format_exc())
-				_LOGGER.error("Failed to get URL for track: (%s)", uid)
+				_LOGGER.error("- Failed to get URL with YouTube methode")
 				_LOGGER.error(err)
 				return ""
 		return _url
@@ -1009,14 +1022,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._load_playlist(playlist=media_id)
 			self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 		else:
-			_LOGGER.debug("error during fetching play_media, turning off")
+			_LOGGER.debug("- error during fetching play_media, turning off")
 			self.turn_off()
 
 		# mode 1 and 3 shuffle the playlist after generation
 		if(isinstance(self._tracks,list)):
 			if self._shuffle and self._shuffle_mode != 2 and len(self._tracks)>1:
 				random.shuffle(self._tracks)
-				_LOGGER.debug("shuffle new tracklist")
+				_LOGGER.debug("- shuffle new tracklist")
 
 		self.prepare_play()
 		self._tracks_to_attribute()
@@ -1074,6 +1087,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	def media_stop(self, **kwargs):
 		"""Send stop command."""
+		_LOGGER.debug("media_stop")
 		self._state = STATE_IDLE
 		self._playing = False
 		self._track_artist = None
@@ -1081,8 +1095,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_name = None
 		self._track_album_cover = None
 		self.schedule_update_ha_state()
-		data = {ATTR_ENTITY_ID: self._remote_player}
+		if('player' in kwargs):
+			_LOGGER.debug("- player found")
+			data = {ATTR_ENTITY_ID: kwargs.get('player')}
+		else:
+			data = {ATTR_ENTITY_ID: self._remote_player}
 		self.hass.services.call(DOMAIN_MP, 'media_stop', data)
+		_LOGGER.debug("- media_stop -> "+self._remote_player)
 
 	def set_shuffle(self, shuffle):
 		_LOGGER.debug("set_shuffle: "+str(shuffle))
