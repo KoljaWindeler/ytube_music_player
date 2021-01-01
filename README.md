@@ -195,7 +195,10 @@ mode: single
 ```
 *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
 
-
+## Lyrics / Playlist
+The player attributes contain addition informations, like the playlist and if available the lyrics of the track
+![lyrics](lyrics.png)
+The yaml setup is available at package/markdown.yaml
 
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
