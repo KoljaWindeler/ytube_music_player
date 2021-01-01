@@ -173,6 +173,30 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
         id: Lala
 ```
 
+## Automations
+Play my **favourite** playlist in **random** mode on my **kitchen** speaker (kuche)
+```yaml
+alias: ytube morning routine
+sequence:
+  - service: media_player.select_source
+    data:
+      source: kuche
+      entity_id: media_player.ytube_music_player
+  - service: media_player.shuffle_set
+    data:
+      shuffle: true
+      entity_id: media_player.ytube_music_player
+  - service: media_player.play_media
+    data:
+      entity_id: media_player.ytube_music_player
+      media_content_id: PL6H6TfFpYvpersEdHECeWkocaPueTqieF
+      media_content_type: playlist
+mode: single
+```
+*You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
+
+
+
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
 ```yaml
