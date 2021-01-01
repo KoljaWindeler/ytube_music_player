@@ -47,6 +47,7 @@ Using your HA configuration directory (folder) as a starting point you should no
 ```text
 custom_components/ytube_music_player/translations/en.json
 custom_components/ytube_music_player/__init__.py
+custom_components/ytube_music_player/browse_media.py
 custom_components/ytube_music_player/manifest.json
 custom_components/ytube_music_player/media_player.py
 custom_components/ytube_music_player/config_flow.py
