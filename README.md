@@ -169,8 +169,8 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
         type: channel
         id: Your Likes
       - name: Lala
-        type: channel
-        id: Lala
+        type: playlist
+        id: PLZvjm51R8SGuxxxxxxx-A17Kp3jZfg6pg
 ```
 
 ## Automations
