@@ -174,7 +174,7 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
 ```
 
 ## Automations
-Play my **favourite** playlist in **random** mode on my **kitchen** speaker (kuche)
+Play my **favorite** playlist in **random** mode on my **kitchen** speaker (kuche)
 ```yaml
 alias: ytube morning routine
 sequence:
