@@ -20,7 +20,7 @@ Also supports media_browser
 - can either play straight from the playlist or create a radio based on the playlist
 - extracts url of the stream and forwards it to a generic mediaplayer
 - keeps auto_playing as long as it is turned on
-- on the fly change of media_player (track will restart, but playlist will stick)
+- on the fly change of media_player (playlist will stay the same, and position in track will be submitted to next player)
 
 # Installation
 
