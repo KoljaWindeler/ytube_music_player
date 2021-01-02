@@ -47,6 +47,7 @@ Using your HA configuration directory (folder) as a starting point you should no
 ```text
 custom_components/ytube_music_player/translations/en.json
 custom_components/ytube_music_player/__init__.py
+custom_components/ytube_music_player/browse_media.py
 custom_components/ytube_music_player/manifest.json
 custom_components/ytube_music_player/media_player.py
 custom_components/ytube_music_player/config_flow.py
@@ -90,8 +91,7 @@ Key | Type | Required | Default | Description
 
 **Option 1:** You can download the existing package file. Don't forget to configure your speakers.
 
-Download https://raw.githubusercontent.com/KoljaWindeler/ytube_music_player/main/package/ytube.yaml
-into your `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
+Download one of the yaml configrations from the package folder into your local `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
 
 **Option 2:** Copy the following into your configuration.yaml. Don't forget to configure your speakers.
 
@@ -195,7 +195,10 @@ mode: single
 ```
 *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
 
-
+## Lyrics / Playlist
+The player attributes contain addition informations, like the playlist and if available the lyrics of the track
+![lyrics](lyrics.png)
+The yaml setup is available at package/markdown.yaml
 
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
