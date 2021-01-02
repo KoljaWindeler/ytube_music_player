@@ -484,10 +484,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if 'thumbnails' in _album_art_ref:
 				_album_art_ref = _album_art_ref['thumbnails']
 			# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
-			info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+			if isinstance(_album_art_ref,list):
+				info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
 		elif 'thumbnails' in _track:
 			_album_art_ref = _track['thumbnails']   ## returns a list
-			info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+			if isinstance(_album_art_ref,list):
+				info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
 		return info
 
 
@@ -1021,6 +1023,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(media_type == CHANNEL):
 			self._load_playlist(playlist=media_id)
 			self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
+		elif(media_type == USER_ALBUM):
+			self._tracks = self._api.get_library_upload_album(browseId=media_id)['tracks']
+		elif(media_type == USER_ARTIST):
+			self._tracks = self._api.get_library_upload_artist(browseId=media_id)
+
 		else:
 			_LOGGER.debug("- error during fetching play_media, turning off")
 			self.turn_off()

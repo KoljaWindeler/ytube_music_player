@@ -7,7 +7,9 @@ from homeassistant.components.media_player import BrowseError, BrowseMedia
 
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
+    USER_ALBUM,
     MEDIA_TYPE_ARTIST,
+    USER_ARTIST,
     MEDIA_TYPE_TRACK,
     MEDIA_TYPE_PLAYLIST,
     LIB_TRACKS,
@@ -54,31 +56,51 @@ async def build_item_response(hass, media_library, payload):
     title = None
     media = None
     
-    if search_type == LIB_PLAYLIST:
+    if search_type == LIB_PLAYLIST: # playlist OVERVIEW
         media = await hass.async_add_executor_job(media_library.get_library_playlists,BROWSER_LIMIT)
-        title = "User Playlists"
+        title = "Library Playlists" # single playlist
     elif search_type == MEDIA_TYPE_PLAYLIST:
         res = await hass.async_add_executor_job(media_library.get_playlist,search_id, BROWSER_LIMIT)
         media = res['tracks']
         title = res['title']
-    elif search_type == LIB_ALBUM:
+    elif search_type == LIB_ALBUM: # album OVERVIEW
         media = await hass.async_add_executor_job(media_library.get_library_albums, BROWSER_LIMIT)
-        title = "User Albums"
-    elif search_type == MEDIA_TYPE_ALBUM:
+        title = "Library Albums"
+    elif search_type == MEDIA_TYPE_ALBUM: # single album (NOT uploaded)
         res = await hass.async_add_executor_job(media_library.get_album,search_id)
         media = res['tracks']
         title = res['title']
-    elif search_type == LIB_TRACKS:
+    elif search_type == LIB_TRACKS: # liked songs (direct list, NOT uploaded)
         media = await hass.async_add_executor_job(media_library.get_library_songs)
-        title = "User Songs"
-    elif search_type == HISTORY:
+        title = "Library Songs"
+    elif search_type == HISTORY: # history songs (direct list)
         media = await hass.async_add_executor_job(media_library.get_history)
         search_id = HISTORY
         title = "Last played songs"
-    elif search_type == USER_TRACKS:
-        media = await hass.async_add_executor_job(media_library.get_library_upload_songs)
+    elif search_type == USER_TRACKS: 
+        media = await hass.async_add_executor_job(media_library.get_library_upload_songs,BROWSER_LIMIT)
         search_id = USER_TRACKS
         title = "Uploaded songs"
+    elif search_type == USER_ALBUMS:
+        media = await hass.async_add_executor_job(media_library.get_library_upload_albums,BROWSER_LIMIT)
+        for i in media:
+            i['type'] = USER_ALBUM
+        title = "Uploaded Albums"
+    elif search_type == USER_ALBUM:
+        res = await hass.async_add_executor_job(media_library.get_library_upload_album,search_id)
+        media = res['tracks']
+        title = res['title']
+    elif search_type == USER_ARTISTS:
+        media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
+        title = "Uploaded Artists"
+    elif search_type == USER_ARTIST:
+        media = await hass.async_add_executor_job(media_library.get_library_upload_artist,search_id)
+        title = "Uploaded Artist"
+        if(isinstance(media,list)):
+            if('artist' in media[0]):
+                if(isinstance(media[0]['artist'],list)):
+                    if('name' in media[0]['artist'][0]):
+                        title = media[0]['artist'][0]['name']
 
     if media is None:
         return None
@@ -86,7 +108,7 @@ async def build_item_response(hass, media_library, payload):
     children = []
     for item in media:
         try:
-            children.append(item_payload(item, media_library))
+            children.append(item_payload(item, media_library,search_type))
         except UnknownMediaType:
             pass
 
@@ -112,12 +134,16 @@ async def build_item_response(hass, media_library, payload):
     return response
 
 
-def item_payload(item, media_library):
+def item_payload(item, media_library,search_type):
     """
     Create response payload for a single media item.
 
     Used by async_browse_media.
     """
+    _LOGGER.debug('item_payload')
+    #_LOGGER.debug(item)
+    #_LOGGER.debug(search_type)
+
 
     media_class = None
     title = ""
@@ -127,7 +153,7 @@ def item_payload(item, media_library):
     can_expand = False
     thumbnail = ""
 
-    if "playlistId" in item: #kolja
+    if "playlistId" in item: #playlist
         title = f"{item['title']}"
         media_class = MEDIA_CLASS_PLAYLIST
         thumbnail = item['thumbnails'][-1]['url']
@@ -135,7 +161,7 @@ def item_payload(item, media_library):
         media_content_id = f"{item['playlistId']}"
         can_play = True
         can_expand = True
-    elif "videoId" in item: #kolja
+    elif "videoId" in item: #tracks
         title = f"{item['title']}"
         if("artists" in item):
             artist = ""
@@ -146,20 +172,31 @@ def item_payload(item, media_library):
             if(artist):
                 title = artist +" - "+title
         media_class = MEDIA_CLASS_TRACK
-        thumbnail = item['thumbnails'][-1]['url']
+        if 'thumbnails' in item:
+            if isinstance(item['thumbnails'],list):
+                thumbnail = item['thumbnails'][-1]['url']
         media_content_type = MEDIA_TYPE_TRACK
         media_content_id = f"{item['videoId']}"
         can_play = True
         can_expand = False
-    elif "browseId" in item: #kolja
+    elif search_type == USER_ARTISTS: # user uploaded artists overview
+        title = f"{item['artist']}"
+        media_class = MEDIA_CLASS_ARTIST
+        thumbnail = item['thumbnails'][-1]['url']
+        media_content_type = USER_ARTIST # send to single artist
+        media_content_id = f"{item['browseId']}"
+        can_play = True #?
+        can_expand = True #?
+    elif search_type in [USER_ALBUMS, LIB_ALBUM]:
         title = f"{item['title']}"
         media_class = MEDIA_CLASS_ALBUM
         thumbnail = item['thumbnails'][-1]['url']
         media_content_type = MEDIA_TYPE_ALBUM
+        if search_type == USER_ALBUMS:
+            media_content_type = USER_ALBUM
         media_content_id = f"{item['browseId']}"
         can_play = True
         can_expand = True
-
     
     else:
         # this case is for the top folder of each type
@@ -213,13 +250,16 @@ def library_payload(media_library):
         LIB_ALBUM: "Albums",
         LIB_TRACKS: "Tracks",
         HISTORY: "History",
-        USER_TRACKS: "Uploaded Tracks",
+        USER_TRACKS: "Tracks uploaded",
+        USER_ALBUMS: "Albums uploaded",
+        USER_ARTISTS: "Artists uploaded",
     }
     for item in [{"label": name, "type": type_} for type_, name in library.items()]:
         library_info.children.append(
             item_payload(
                 {"label": item["label"], "type": item["type"], "uri": item["type"]},
                 media_library,
+                None
             )
         )
 

@@ -148,9 +148,13 @@ LIB_PLAYLIST = 'library_playlists'
 LIB_ALBUM = 'library_albums'
 LIB_TRACKS = 'library_tracks'
 USER_TRACKS = 'user_tracks'
+USER_ALBUMS = 'user_albums'
+USER_ALBUM = 'user_album'
+USER_ARTISTS = 'user_artists'
+USER_ARTIST = 'user_artist'
 CHANNEL = 'channel'
 HISTORY = 'history'
-BROWSER_LIMIT = 25
+BROWSER_LIMIT = 100
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
