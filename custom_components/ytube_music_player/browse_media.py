@@ -201,7 +201,7 @@ def item_payload(item, media_library,search_type):
     else:
         # this case is for the top folder of each type
         # possible content types: album, artist, movie, library_music, tvshow, channel
-        media_class = MEDIA_CLASS_DIRECTORY
+        media_class = item["class"]
         media_content_type = item["type"]
         media_content_id = ""
         can_play = False
@@ -246,18 +246,18 @@ def library_payload(media_library):
     )
 
     library = {
-        LIB_PLAYLIST: "Playlists",
-        LIB_ALBUM: "Albums",
-        LIB_TRACKS: "Tracks",
-        HISTORY: "History",
-        USER_TRACKS: "Tracks uploaded",
-        USER_ALBUMS: "Albums uploaded",
-        USER_ARTISTS: "Artists uploaded",
+        LIB_PLAYLIST: ["Playlists",MEDIA_CLASS_PLAYLIST],
+        LIB_ALBUM: ["Albums",MEDIA_CLASS_ALBUM],
+        LIB_TRACKS: ["Tracks", MEDIA_CLASS_TRACK],
+        HISTORY: ["History", MEDIA_CLASS_TRACK],
+        USER_TRACKS: ["Tracks uploaded", MEDIA_CLASS_TRACK],
+        USER_ALBUMS: ["Albums uploaded", MEDIA_CLASS_ALBUM],
+        USER_ARTISTS: ["Artists uploaded", MEDIA_CLASS_ARTIST],
     }
-    for item in [{"label": name, "type": type_} for type_, name in library.items()]:
+    for item in [{"label": name[0], "type": type_, "class": name[1]} for type_, name in library.items()]:
         library_info.children.append(
             item_payload(
-                {"label": item["label"], "type": item["type"], "uri": item["type"]},
+                {"label": item["label"], "type": item["type"], "uri": item["type"], "class": item["class"]},
                 media_library,
                 None
             )
