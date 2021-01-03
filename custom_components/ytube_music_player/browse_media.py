@@ -254,7 +254,7 @@ def library_payload(media_library):
         USER_ALBUMS: ["Albums uploaded", MEDIA_CLASS_ALBUM],
         USER_ARTISTS: ["Artists uploaded", MEDIA_CLASS_ARTIST],
     }
-    for item in [{"label": name[0], "type": type_, "class": name[1]} for type_, name in library.items()]:
+    for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
             item_payload(
                 {"label": item["label"], "type": item["type"], "uri": item["type"], "class": item["class"]},
