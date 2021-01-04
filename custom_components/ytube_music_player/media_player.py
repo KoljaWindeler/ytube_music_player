@@ -509,8 +509,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# redirect call, obviously we got called by status change, so we can call it without argument and let it pick
 		return self.select_source()
 
-	def select_source(self, source=None):
+	def select_source(self, source=None): 
 		_LOGGER.debug("select_source("+str(source)+")")
+		# source should just be the NAME without DOMAIN, to select it in the dropdown
+		if(isinstance(source,str)):
+			source = source.replace(DOMAIN_MP+".","")
 		# shutdown old player if we're currently playimg
 		was_playing = self._playing
 		if(self._playing):

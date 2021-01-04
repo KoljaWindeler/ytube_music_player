@@ -154,7 +154,7 @@ USER_ARTISTS = 'user_artists'
 USER_ARTIST = 'user_artist'
 CHANNEL = 'channel'
 HISTORY = 'history'
-BROWSER_LIMIT = 100
+BROWSER_LIMIT = 250
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
