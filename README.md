@@ -1,6 +1,6 @@
 # yTube Music Player
 
-Adds a mediaplayer to Home Assistant that can stream tracks from a playlist to a media player.
+Adds a mediaplayer to Home Assistant that can stream tracks from your YouTube music premium subscription to a media player.
 
 **This component will set up the following platforms.**
 
@@ -167,7 +167,7 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
         id: bm_8e5f874f_8dfcb60f
       - name: My Likes
         type: channel
-        id: Your Likes
+        id: PLZvjm51R8SGuxxxxxxx-A17Kp3jZfg6pg
       - name: Lala
         type: playlist
         id: PLZvjm51R8SGuxxxxxxx-A17Kp3jZfg6pg
