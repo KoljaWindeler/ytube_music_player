@@ -119,6 +119,9 @@ CONF_SHUFFLE_MODE = 'shuffle_mode'
 CONF_COOKIE = 'cookie'
 CONF_BRAND_ID = 'brand_id'
 
+CONF_PROXY_URL = 'proxy_url'
+CONF_PROXY_PATH = 'proxy_path'
+
 CONF_SELECT_SOURCE = 'select_source'
 CONF_SELECT_PLAYLIST = 'select_playlist'
 CONF_SELECT_SPEAKERS = 'select_speakers'
@@ -131,6 +134,7 @@ DEFAULT_SELECT_PLAYLIST = DOMAIN + '_playlist'
 DEFAULT_SELECT_PLAYMODE = DOMAIN + '_playmode'
 DEFAULT_SELECT_SPEAKERS = DOMAIN + '_speakers'
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
+PROXY_FILENAME = "ytube_proxy.mp4"
 
 DEFAULT_SHUFFLE_MODE = 1
 DEFAULT_SHUFFLE = True
