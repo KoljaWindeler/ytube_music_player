@@ -10,6 +10,7 @@ import pickle
 import os.path
 import random
 import datetime
+from urllib.request import urlopen
 from urllib.parse import unquote
 
 from .const import *
@@ -33,6 +34,7 @@ from pytube import request
 from pytube import extract
 from pytube.cipher import Cipher
 import ytmusicapi
+#from .ytmusicapi.ytmusic import *
 
 
 
@@ -66,6 +68,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 		self._header_file = config.get(CONF_HEADER_PATH, default_header_file)
 		self._speakersList = config.get(CONF_RECEIVERS)
+
+		# proxy settings
+		self._proxy_url = config.get(CONF_PROXY_URL,"")
+		self._proxy_path = config.get(CONF_PROXY_PATH,"")
 
 
 		_LOGGER.debug("YtubeMediaPlayer config: ")
@@ -359,7 +365,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# sets the current media_player from input_select
 		elif(self._select_mediaPlayer == ""): # drop down for player does not exist
 			if(self._remote_player == ""): # no preselected entity ID
-				self._track_name = "Pleas select player first"
+				self._track_name = "Please select player first"
 				self.schedule_update_ha_state()
 				msg= "Please select a player before start playing, e.g. via the 'media_player.select_source' method"
 				data = {"title": "yTubeMediaPlayer error", "message": msg}
@@ -851,6 +857,22 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_LOGGER.error("- Retry with: (%i)", retry)
 			return self._get_track(retry=retry-1)
 
+		# proxy playback, needed e.g. for sonos
+		try:
+			if(self._proxy_url!="" and self._proxy_path!=""):
+				p1 = datetime.datetime.now()
+				open(os.path.join(self._proxy_path,PROXY_FILENAME), 'wb').write(urlopen(_url).read())
+				if(self._proxy_url.endswith('/')):
+					self._proxy_url = self._proxy_url[:-1]
+				_url = self._proxy_url+"/"+PROXY_FILENAME
+				t = (datetime.datetime.now() - p1).total_seconds()
+				_LOGGER.debug("- proxy loading time: "+str(t)+" sec")
+		except:
+			_LOGGER.error("The proxy method hit an error, turning off")
+			self.exc()
+			self._turn_off_media_player()
+			return
+
 		### start playback ###
 		self._state = STATE_PLAYING
 		self.schedule_update_ha_state()
@@ -1009,7 +1031,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(media_type == USER_ALBUM):
 				self._tracks = self._api.get_library_upload_album(browseId=media_id)['tracks']
 			elif(media_type == USER_ARTIST):
-				self._tracks = self._api.get_library_upload_artist(browseId=media_id)
+				self._tracks = self._api.get_library_upload_artist(browseId=media_id) #BROWSER_LIMIT
 			else:
 				_LOGGER.debug("- error during fetching play_media, turning off")
 				self.turn_off()
