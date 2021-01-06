@@ -94,7 +94,7 @@ async def build_item_response(hass, media_library, payload):
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
         title = "Uploaded Artists"
     elif search_type == USER_ARTIST:
-        media = await hass.async_add_executor_job(media_library.get_library_upload_artist,search_id)
+        media = await hass.async_add_executor_job(media_library.get_library_upload_artist,search_id) #BROWSER_LIMIT
         title = "Uploaded Artist"
         if(isinstance(media,list)):
             if('artist' in media[0]):
@@ -140,7 +140,8 @@ def item_payload(item, media_library,search_type):
 
     Used by async_browse_media.
     """
-    _LOGGER.debug('item_payload')
+    # happens way to often
+    #_LOGGER.debug('item_payload')
     #_LOGGER.debug(item)
     #_LOGGER.debug(search_type)
 
