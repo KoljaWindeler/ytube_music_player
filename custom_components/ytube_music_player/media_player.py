@@ -878,7 +878,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.schedule_update_ha_state()
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
-			ATTR_MEDIA_CONTENT_TYPE: "audio/mp3",
+			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
 			ATTR_ENTITY_ID: self._remote_player
 			}
 		self.hass.services.call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
