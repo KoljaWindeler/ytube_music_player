@@ -173,6 +173,26 @@ This mediaplayer offers shotcuts, which can be used to select a remote_player an
         id: PLZvjm51R8SGuxxxxxxx-A17Kp3jZfg6pg
 ```
 
+## Services
+The following commands are available:
+mini-media-player shortcut type | service call | details
+-- | -- | --
+`source` | **media_player.select_source** *source=id and entity_id=[this]* | selects the media_player that plays the music. id can be an entity_id like `media_player.speaker123` or just the name `speaker123`
+`playlist` | media_player.play_media | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
+`channel` | media_player.play_media | selects one track from a **playlist** and starts a radio based on that track. So the id has to be a **playlist_id**
+`album` | media_player.play_media | plays an album. *You can  get the album Id from the Youtube Music website. Open an album from the library https://music.youtube.com/library/albums and copy the Id from the links*
+`track` | media_player.play_media | will play only one dedicated track
+`history` | media_player.play_media | will play a playlist from your recent listen music **on the website or the app** *the music that you play with this component will not show up in the list*
+`user_tracks` | media_player.play_media | this type will play the **uploaded** tracks of a user
+`user_album` | media_player.play_media | **uploaded** album of a user
+`user_artist` | media_player.play_media | play all **uploaded** tracks of an artists
+
+All calls to *media_player.play_media* need three arguments: media_content_id is the equivalent of the shortcut id, media_content_type represents the type (e.g. album) and the entity_id is always media_player.ytube_music_player
+
+You can also select the music you want to listen to via the media_browser and look up the media_content_type and media_content_id in the attributs of the player.
+
+
+
 ## Automations
 Play my **favorite** playlist in **random** mode on my **kitchen** speaker (kuche)
 ```yaml
@@ -193,7 +213,6 @@ sequence:
       media_content_type: playlist
 mode: single
 ```
-*You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
 
 ## Lyrics / Playlist
 The player attributes contain addition informations, like the playlist and if available the lyrics of the track
