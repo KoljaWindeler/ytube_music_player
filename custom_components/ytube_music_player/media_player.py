@@ -114,6 +114,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_album_cover = None
 		self._track_artist_cover = None
 
+		self._media_duration = None
+		self._media_position = None
+		self._media_position_updated = None
+
 		self._attributes['_player_state'] = STATE_OFF
 		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
 		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
@@ -236,6 +240,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return True
 
 	@property
+	def media_position(self):
+		"""Position of current playing media in seconds."""
+		return self._media_position
+
+
+	@property
+	def media_position_updated_at(self):
+		"""When was the position of the current playing media valid.
+		Returns value from homeassistant.util.dt.utcnow().
+		"""
+		return self._media_position_updated
+
+
+	@property
+	def media_duration(self):
+		"""Duration of current playing media in seconds."""
+		return self._media_duration
+
+
+	@property
 	def shuffle(self):
 		""" Boolean if shuffling is enabled. """
 		return self._shuffle
@@ -337,6 +361,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_artist = None
 		self._track_album_name = None
 		self._track_album_cover = None
+		self._media_duration = None
+		self._media_position = None
+		self._media_position_updated = None
 		self._turn_off_media_player()
 
 	def _turn_off_media_player(self, data=None):
@@ -421,6 +448,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._remote_player)
+
+		if('media_duration' in _player.attributes):
+			self._media_duration = _player.attributes['media_duration']
+		if('media_position' in _player.attributes):
+			self._media_position = _player.attributes['media_position']
+			self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
 
 		""" entity_id of selected speakers. """
 		self._attributes['_player_id'] = _player.entity_id
