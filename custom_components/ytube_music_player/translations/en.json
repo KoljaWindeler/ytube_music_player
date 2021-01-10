@@ -7,7 +7,7 @@
                 "data": {
                     "name": "Name for the entity (without 'media_player' prefix)",
                     "cookie": "Enter cookie text, copied from browser",
-                    "speakers": "Enter the entity_id of your default ouput player e.g. media_player.google_mini",
+                    "speakers": "Enter the entity_id of your default output player e.g. media_player.google_mini",
                     "brand_id": "Enter a brand id if you are using a brand account",
                     "header_path": "File path for the header file"
                 }
@@ -38,7 +38,7 @@
                 "data": {
                     "name": "Name for the entity (without 'media_player' prefix)",
                     "cookie": "Enter cookie text, copied from browser",
-                    "speakers": "Enter the entity_id of your default ouput player e.g. media_player.google_mini",
+                    "speakers": "Enter the entity_id of your default output player e.g. media_player.google_mini",
                     "brand_id": "Enter a brand id if you are using a brand account",
                     "header_path": "File path for the header file"
                 }
