@@ -4,6 +4,7 @@
 Adds a mediaplayer to Home Assistant that can stream tracks from your YouTube music premium subscription to a media player.
 
 ![mini-media-player](shortcuts.png)
+
 With mini-media-player (https://github.com/kalkih/mini-media-player) and shortcuts
 
 ![Example](screenshot.png)
