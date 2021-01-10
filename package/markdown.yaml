@@ -11,57 +11,114 @@ views:
               shuffle: false
               icon_state: false
             shortcuts:
-              columns: 4
+              columns: 6
               buttons:
+                - name: Keller
+                  type: source
+                  id: keller_2
+                - name: jkw_cast
+                  type: source
+                  id: jkw_cast2
+                - name: Laptop
+                  type: source
+                  id: bm_8e5f874f_8dfcb60f
                 - name: My Likes
                   type: channel
-                  id: Your Likes
-                - name: Caro
-                  type: channel
-                  id: Lala
+                  id: RDTMAK5uy_kset8D_____SD4TNjEVvrKRTmG7a56sY
+                - name: Lala
+                  type: playlist
+                  id: PLZvjm51R8SGu_______-A17Kp3jZfg6pg
           - type: entities
             entities:
               - entity: input_select.ytube_music_player_playlist
               - entity: input_select.ytube_music_player_source
               - entity: input_select.ytube_music_player_speakers
+              - entity: input_select.ytube_music_player_playmode
             title: Kolja
-          - type: media-control
+          - type: 'custom:mini-media-player'
             entity: media_player.keller_2
-          - type: media-control
+            artwork: cover
+          - type: 'custom:mini-media-player'
             entity: media_player.jkw_cast2
+          - type: 'custom:mini-media-player'
+            entity: media_player.kuche
       - type: vertical-stack
         cards:
           - type: markdown
             content: >-
-              {% if is_state('media_player.ytube_music_player','playing')
-              %}{{state_attr("media_player.ytube_music_player", "media_artist") }} -
-              {{ state_attr("media_player.ytube_music_player", "media_title") }}{%
-              else %}Player off{% endif %}
+              {% if is_state('media_player.ytube_music_player','playing')%}
+              **Playback started via:** (Arguments for play_media)
+
+              *_media_type*:
+              {{state_attr("media_player.ytube_music_player","_media_type")}} 
+
+              *_media_id*: {{state_attr("media_player.ytube_music_player",
+              "_media_id")}}
+
+
+              **Current Track Infos:** 
+
+              **Artist:**
+              {{state_attr("media_player.ytube_music_player","media_artist")}} 
+
+              **Track:**
+              {{state_attr("media_player.ytube_music_player","media_title")}}
+
+              **videoId:** {{state_attr("media_player.ytube_music_player",
+              "videoId")}}
+
+              **Rating:**
+              {{state_attr("media_player.ytube_music_player","likeStatus")}}
+
+              **Playing on:**
+              {{state_attr("media_player.ytube_music_player","_player_id")}}
+
+              {% else %}Player off{% endif %}
           - type: markdown
             content: >-
-              {% if is_state('media_player.ytube_music_player','playing')
-              %}Currently playing track {{
-              state_attr("media_player.ytube_music_player", "current_track")+1 }} of
-              {{ state_attr("media_player.ytube_music_player", "total_tracks") }}{%
-              else %}Player off{% endif %}     
-          - type: markdown
-            content: >-
-              {% if is_state('media_player.ytube_music_player','playing') %}{% for i
-              in range(0,state_attr("media_player.ytube_music_player",
+              {% if is_state('media_player.ytube_music_player','playing') %}{%
+              for i in range(0,state_attr("media_player.ytube_music_player",
               "total_tracks")) %}
                {% if i == state_attr("media_player.ytube_music_player",
               "current_track") %}**{% endif %}\[{{i+1}}] {{
-              state_attr("media_player.ytube_music_player", "tracks")[i] }}{% if i
-              == state_attr("media_player.ytube_music_player", "current_track")
-              %}**{% endif %}
+              state_attr("media_player.ytube_music_player", "tracks")[i] }}{% if
+              i == state_attr("media_player.ytube_music_player",
+              "current_track") %}**{% endif %}
 
               {%- endfor %}{% else %}Player off{% endif %}
                   
+          - type: horizontal-stack
+            cards:
+              - type: 'custom:button-card'
+                state:
+                  - operator: template
+                    value: >
+                      [[[ return
+                      states['media_player.ytube_music_player'].attributes.likeStatus
+                      == "LIKE"]]]
+                    icon: 'mdi:thumb-up'
+                  - operator: default
+                    icon: 'mdi:thumb-up-outline'
+                    value: false
+                tap_action:
+                  action: call-service
+                  service: ytube_music_player.call_method
+                  service_data:
+                    entity_id: media_player.ytube_music_player
+                    command: rate_track
+                    parameters: thumb_toggle_up_middle
+              - type: markdown
+                content: >-
+                  {% if is_state('media_player.ytube_music_player','playing')
+                  %}Currently playing track {{
+                  state_attr("media_player.ytube_music_player",
+                  "current_track")+1 }} of {{
+                  state_attr("media_player.ytube_music_player", "total_tracks")
+                  }}{% else %}Player off{% endif %}     
       - type: markdown
         content: >-
           {% if is_state('media_player.ytube_music_player','playing') %}{{
           state_attr("media_player.ytube_music_player", "lyrics") }}{% else
           %}Player off{% endif %}
-
     path: default_view
     title: Home
