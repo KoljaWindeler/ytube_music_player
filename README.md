@@ -21,6 +21,7 @@ Also supports media_browser
 - extracts url of the stream and forwards it to a generic mediaplayer
 - keeps auto_playing as long as it is turned on
 - on the fly change of media_player (playlist will stay the same, and position in track will be submitted to next player)
+- some proxy funcationality to support sonos player (currently testing_state)
 
 # Installation
 
@@ -70,74 +71,15 @@ It should look like the screenshot below
 
 ![Cookie](cookie.png)
 
-**2. It is recommended to use the config flow of Home Assistant for converting and saving this file**
+**2. Please use the config flow of Home Assistant**
 
-1. *After you've installed this component and restarted Home Assistant please REFRESH the page, otherwise it might not show up in the list of integrations*
-2. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
-3. Paste the cookie into the indicated field
-4. Save, it will claim that it worked (hopefully) but *you still have to add the configuration to you yaml!*
-(full storage based configuration isn't working yet)
+1. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
+1.1. If the integration didn't show up in the list please REFRESH the page
+2. Paste the cookie into the indicated field, all other fields are optional
+3. It is highly recommended to enter the entity_id of your default ouput player, otherwise you have to set that after every reboot
+4. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine
 
-
-## Configuration options
-
-Last step is simply the setup in yaml.
-
-Key | Type | Required | Default | Description
--- | -- | -- | -- | --
-`speakers` | `string list` | `false` | `None` | List of speakers (see below). All mediaplayer will be loaded into the list if this argument is left out. If one media_player is given still all available player will be added to the list, but the given media_player will be preselected. If two or more media_player are given only those will show up in the list
-`header_path` | `string` | `false` | `None` | Path to a manually created header file, if you did not use config_flow
-`brand_id` | `string` | `false` | `None` | YouTube Brand id, if needed
-
-**Option 1:** You can download the existing package file. Don't forget to configure your speakers.
-
-Download one of the yaml configrations from the package folder into your local `packages` folder (see https://www.home-assistant.io/docs/configuration/packages/)
-
-**Option 2:** Copy the following into your configuration.yaml. Don't forget to configure your speakers.
-
-```yaml
-media_player:
-  - platform: ytube_music_player
-# if your speaker is called media_player.speaker123, add speaker123 here to preselect it.
-#    speakers:
-#      - speaker123
-
-
-input_select:
-  ytube_music_player_source:
-    name: Source
-    icon: mdi:music-box-multiple
-    options: # don't change
-    - "Playlist Radio"
-    - "Playlist"
-
-  ytube_music_player_speakers:
-    name: Speakers
-    icon: mdi:speaker
-    options: # don't change
-    - "loading"
-
-  ytube_music_player_playlist:
-    name: Playlist
-    icon: mdi:playlist-music
-    options: # don't change
-    - "loading"
-
-  ytube_music_player_playmode:
-    name: Playmode
-    icon: mdi:playlist-music
-    options: ## don't change
-    - "Shuffle"
-    - "Random"
-    - "Shuffle Random"
-    - "Direct"
-
-# Optional, defaults to true
-input_boolean:
-  ytube_music_player_playcontinuous:
-    initial: true
-    name: "Countinuous playback"
-```
+**Although YAML configuration is still possible: Please remove it and configure the player via config_flow or several functions will be missing**
 
 ## Shortcuts
 The screenshot below shows the mini-media-player from kalkih (https://github.com/kalkih/mini-media-player)
@@ -191,7 +133,19 @@ All calls to *media_player.play_media* need three arguments: media_content_id is
 
 You can also select the music you want to listen to via the media_browser and look up the media_content_type and media_content_id in the attributs of the player.
 
+In addition the following special commands are also available:
+Service | parameter | details
+-- | -- | --
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: rate_track, `parameters`: thumb_up / thumb_down / thumb_middle / thumb_toggle_up_middle | Rates the currently playing song. The current rating is available as 'likeStatus' attribute of the player entity_id. middle means that the rating will be 'indifferent' so basically removes your previous rating
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: reload_dropdowns | Reloads the dropdown list of all media_players and also the playlists. Might be nice to reload those lists without reboot HA
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_start | Special animal 1/2: This will stop the current track, but note the position in the track. It will also store the track number in the playlist and the playlist. Finally it will UNTRACK the media_player. As result you can e.g. play another sound on that player, like a door bell or a warning
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
 
+## Dropdowns, Buttons and Marksdowns
+**TBD**
+The player attributes contain addition informations, like the playlist and if available the lyrics of the track
+![lyrics](lyrics.png)
+The yaml setup is available at package/markdown.yaml
 
 ## Automations
 Play my **favorite** playlist in **random** mode on my **kitchen** speaker (kuche)
@@ -213,11 +167,41 @@ sequence:
       media_content_type: playlist
 mode: single
 ```
+Interrupt current playback, play a "DingDong" and resume playback
+```yaml
+alias: dingdong
+sequence:
+  - service: ytube_music_player.call_method
+    entity_id: media_player.ytube_music_player
+    data:
+      command: interrupt_start
+  - variables:
+      vol: '{{ state_attr("media_player.keller_2", "volume_level") }}'
+  - service: media_player.volume_set
+    entity_id: media_player.keller_2
+    data:
+      volume_level: 1
+  - service: media_player.play_media
+    entity_id: media_player.keller_2
+    data:
+      media_content_id: 'http://192.168.2.84:8123/local/dingdong.mp3'
+      media_content_type: music
+  - delay: '00:00:02'
+  - service: media_player.volume_set
+    entity_id: media_player.keller_2
+    data:
+      volume_level: 0
+  - service: ytube_music_player.call_method
+    entity_id: media_player.ytube_music_player
+    data:
+      command: interrupt_resume
+  - service: media_player.volume_set
+    entity_id: media_player.keller_2
+    data:
+      volume_level: '{{vol}}'
+mode: single
 
-## Lyrics / Playlist
-The player attributes contain addition informations, like the playlist and if available the lyrics of the track
-![lyrics](lyrics.png)
-The yaml setup is available at package/markdown.yaml
+```
 
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
@@ -230,8 +214,8 @@ logger:
 
 
 ## Multiple accounts
-Not yet tested, but should work in general. Please have a look at https://github.com/KoljaWindeler/ytube_music_player/blob/main/Multiple_accounts.md
+Not yet tested, but should work in general. Please create two entities via the Config_flow and use **different** paths for the header file
 
 ## Credits
 
-This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/HomeAssistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and pytube (https://github.com/nficano/pytube)
+This is based on the gmusic mediaplayer of tprelog (https://github.com/tprelog/HomeAssistant-gmusic_player), ytmusicapi (https://github.com/sigma67/ytmusicapi) and pytube (https://github.com/nficano/pytube). This project is not supported nor endorsed by Google. Its aim is not the abuse of the service but the one to improve the access to it. The maintainers are not responsible for misuse.
