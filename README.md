@@ -203,6 +203,10 @@ mode: single
 
 ```
 
+## Sonos support / Proxy
+
+TODO
+
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
 ```yaml
