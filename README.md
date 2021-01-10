@@ -1,6 +1,32 @@
 # yTube Music Player
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
 Adds a mediaplayer to Home Assistant that can stream tracks from your YouTube music premium subscription to a media player.
+
+![mini-media-player](shortcuts.png)
+With mini-media-player (https://github.com/kalkih/mini-media-player) and shortcuts
+
+![Example](screenshot.png)
+Or nativ in Homeassistant with dropdowns
+
+Also supports media_browser
+![media-browser](media_browser.png)
+
+## Features
+- Browse through all you library tracks / artists / playlists
+- Either plays straight from the playlist or creates a radio based on the playlist
+- Forwards the streaming data to any generic mediaplayer
+- Keeps auto_playing as long as it is turned on
+- On the fly change of media_player (playlist will stay the same, and position in track will be submitted to next player)
+- Some proxy funcationality to support sonos player (currently testing_state)
+
+# Support
+If you like what I've done and you want to help: buy me a coffee/beer. Thanks! 
+
+[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/KoljaWindeler)
+
+
+# Installation
 
 **This component will set up the following platforms.**
 
@@ -8,52 +34,9 @@ Platform | Description
 -- | --
 `media_player` | will allow to play music from your YouTube Music account
 
-![Example](screenshot.png)
-
-With mini-media-player (https://github.com/kalkih/mini-media-player) ![mini-media-player](shortcuts.png)
-
-Also supports media_browser
-![media-browser](media_browser.png)
-
-## Features
-- loads all your playlists from your YouTube Music account
-- can either play straight from the playlist or create a radio based on the playlist
-- extracts url of the stream and forwards it to a generic mediaplayer
-- keeps auto_playing as long as it is turned on
-- on the fly change of media_player (playlist will stay the same, and position in track will be submitted to next player)
-- some proxy funcationality to support sonos player (currently testing_state)
-
-# Installation
-
 ## HACS
 
 The easiest way to add this to your Home Assistant installation is using [HACS](https://hacs.xyz/docs/basic/getting_started).
-
-To configure a new Custom Repository in HACS, click on the three dots at the top right and select `Custom repositories`. Once you have the custom repository menu open, paste the GitHub URL `https://github.com/KoljaWindeler/ytube_music_player/`, select `Integration`, hit `ADD`.
-
-It's recommended to restart Home Assistant directly after the installation without any change to the Configuration.
-Home Assistant will install the dependencies during the next reboot. After that you can add and check the configuration without error messages.
-This is nothing special to this Integration but the same for all custom components.
-
-## Manual
-
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `ytube_music_player`.
-4. Download _all_ the files from the `custom_components/ytube_music_player/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-
-Using your HA configuration directory (folder) as a starting point you should now also have this:
-
-```text
-custom_components/ytube_music_player/translations/en.json
-custom_components/ytube_music_player/__init__.py
-custom_components/ytube_music_player/browse_media.py
-custom_components/ytube_music_player/manifest.json
-custom_components/ytube_music_player/media_player.py
-custom_components/ytube_music_player/config_flow.py
-custom_components/ytube_music_player/const.py
-```
 
 # Setup
 
@@ -142,7 +125,9 @@ Service | parameter | details
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
 
 ## Dropdowns, Buttons and Marksdowns
-**TBD**
+The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
+However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at package/markdown.yaml. *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
+
 The player attributes contain addition informations, like the playlist and if available the lyrics of the track
 ![lyrics](lyrics.png)
 The yaml setup is available at package/markdown.yaml
