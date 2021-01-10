@@ -15,7 +15,7 @@ from urllib.parse import unquote
 
 from .const import *
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.condition import state
 from homeassistant.helpers.event import track_state_change
 from homeassistant.helpers.event import call_later
@@ -37,7 +37,6 @@ import ytmusicapi
 #from .ytmusicapi.ytmusic import *
 
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -45,19 +44,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 	"""Run setup via YAML."""
 	_LOGGER.debug("Config via YAML")
 	if(config is not None):
-		add_entities([yTubeMusicComponent(hass, config)], True)
+		add_entities([yTubeMusicComponent(hass, config,"_yaml")], True)
 
 async def async_setup_entry(hass, config, async_add_devices):
 	"""Run setup via Storage."""
 	_LOGGER.debug("Config via Storage/UI currently not supported due to me not understanding asyncio")
-#	if(len(config.data) > 0):
-#		async_add_devices([yTubeMusicComponent(hass, config.data)], True)
+	if(len(config.data) > 0):
+		async_add_devices([yTubeMusicComponent(hass, config.data,"")], True)
 
 
 class yTubeMusicComponent(MediaPlayerEntity):
-	def __init__(self, hass, config):
+	def __init__(self, hass, config, name_add):
 		self.hass = hass
-		self._name = DOMAIN
+		self._name = config.get(CONF_NAME,DOMAIN+name_add)
 		# confgurations can be either the full entity_id or just the name
 		self._select_playlist = input_select.DOMAIN+"."+config.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST).replace(input_select.DOMAIN+".","")
 		self._select_playMode = input_select.DOMAIN+"."+config.get(CONF_SELECT_PLAYMODE, DEFAULT_SELECT_PLAYMODE).replace(input_select.DOMAIN+".","")
@@ -85,24 +84,23 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		self._brand_id = str(config.get(CONF_BRAND_ID,""))
 		self._api = None
-		self.check_api()
-
 		self._js = ""
-		self._get_cipher('BB2mjBuAtiQ')
+		self._update_needed = False
 
 		self._remote_player = ""
 		self._untrack_remote_player = None
 		self._playlists = []
 		self._playlist_to_index = {}
 		self._tracks = []
-		self._track = []
 		self._attributes = {}
 		self._next_track_no = 0
 		self._allow_next = False
 		self._last_auto_advance = datetime.datetime.now()
 		self._started_by = None
+		self._interrupt_data = None
 		self._attributes['_media_type'] = None
 		self._attributes['_media_id'] = None
+		self._attributes['_player_state'] = STATE_OFF
 
 		self._playing = False
 		self._state = STATE_OFF
@@ -113,19 +111,46 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_album_name = None
 		self._track_album_cover = None
 		self._track_artist_cover = None
-
 		self._media_duration = None
 		self._media_position = None
 		self._media_position_updated = None
-
-		self._attributes['_player_state'] = STATE_OFF
 		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
 		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 		self._playContinuous = True
 
-		hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self._update_selects)
-		hass.bus.listen('ytubemusic_player.sync_media', self._update_playlists)
-		hass.bus.listen('ytubemusic_player.play_media', self._ytubemusic_play_media)
+
+		# register "call_method"
+		if(name_add==""):
+			platform = entity_platform.current_platform.get()
+			platform.async_register_entity_service(
+				SERVICE_CALL_METHOD,
+				{
+					vol.Required(ATTR_COMMAND): cv.string,
+					vol.Optional(ATTR_PARAMETERS): vol.All(
+						cv.ensure_list, vol.Length(min=1), [cv.string]
+					),
+				},
+				"async_call_method",
+			)
+		# run the api / get_cipher / update select as soon as possible
+		if hass.is_running:
+			self._update_needed = True
+		else:
+			hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, self.startup)
+
+	# update will be called eventually BEFORE homeassistant is started completly
+	# therefore we should not use this method for ths init
+	def update(self):
+		if(self._update_needed):
+			self.startup(self.hass)
+
+	# either called once homeassistant started (component was configured before startup)
+	# or call from update(), if the component was configured AFTER homeassistant was started
+	def startup(self,hass):
+		self._get_cipher('BB2mjBuAtiQ')
+		self.check_api()
+		self._update_selects()
+		
 
 	def check_api(self):
 		_LOGGER.debug("check_api")
@@ -570,7 +595,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			## try to set drop down
 			if(self._select_mediaPlayer != ""):
 				if(not self.check_entity_exists(self._select_mediaPlayer)):
-					_LOGGER.debug("- Drop down "+str(self._select_mediaPlayer)+" not found")
+					_LOGGER.debug("- Drop down for media player: "+str(self._select_mediaPlayer)+" not found")
 				else:
 					data = {input_select.ATTR_OPTION: source, ATTR_ENTITY_ID: self._select_mediaPlayer}
 					self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
@@ -581,8 +606,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				return
 		## if playing, switch player
 		if(was_playing):
-			#self.media_stop()
-			self._playing = True # was set to false in media_stop()
 			# don't call "_play" here, as that resets the playlist position
 			self._next_track_no = max(self._next_track_no-1,-1) # get track will increase the counter
 			self._get_track() 
@@ -602,23 +625,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_LOGGER.debug("_update_selects")
 		# -- all others -- #
 		if(not self.check_entity_exists(self._select_playlist)):
-			_LOGGER.debug("- "+str(self._select_playlist)+" not found")
+			_LOGGER.debug("- playlist: "+str(self._select_playlist)+" not found")
 			self._select_playlist = ""
 		if(not self.check_entity_exists(self._select_playMode)):
-			_LOGGER.debug("- "+str(self._select_playMode)+" not found")
+			_LOGGER.debug("- playmode: "+str(self._select_playMode)+" not found")
 			self._select_playMode = ""
 		if(not self.check_entity_exists(self._select_playContinuous)):
-			_LOGGER.debug("- "+str(self._select_playContinuous)+" not found")
+			_LOGGER.debug("- playContinuous: "+str(self._select_playContinuous)+" not found")
 			self._select_playContinuous = ""
 		if(not self.check_entity_exists(self._select_mediaPlayer)):
-			_LOGGER.debug("- "+str(self._select_mediaPlayer)+" not found")
+			_LOGGER.debug("- mediaPlayer: "+str(self._select_mediaPlayer)+" not found")
 			self._select_mediaPlayer = ""
 		if(not self.check_entity_exists(self._select_source)):
-			_LOGGER.debug("- "+str(self._select_source)+" not found")
+			_LOGGER.debug("- Source: "+str(self._select_source)+" not found")
 			self._select_source = ""
 		# ----------- speaker -----#
 		try:
-			speakersList = list(self._speakersList)
+			if(isinstance(self._speakersList,str)):
+				speakersList = [self._speakersList]
+			else:
+				speakersList = list(self._speakersList)
 			for i in  range(0,len(speakersList)):
 				speakersList[i] = speakersList[i].replace(DOMAIN_MP+".","")
 		except:
@@ -857,12 +883,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 
 		self._attributes['current_track'] = self._next_track_no
+		self._attributes['videoId'] = _track['videoId']
+		if('likeStatus' in _track):
+			self._attributes['likeStatus'] = _track['likeStatus']
+		else:
+			self._attributes['likeStatus'] = ""
+
 
 		""" Find the unique track id. """
-		uid = ''
-		if 'videoId' in _track:
-			uid = _track['videoId']
-		else:
+		if not('videoId' in _track):
 			_LOGGER.error("- Failed to get ID for track: (%s)", _track)
 			_LOGGER.error(_track)
 			if retry < 1:
@@ -908,6 +937,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		### start playback ###
 		self._state = STATE_PLAYING
+		self._playing = True
 		self.schedule_update_ha_state()
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
@@ -1216,6 +1246,84 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		data = {ATTR_ENTITY_ID: self._remote_player, "is_volume_muted": self._is_mute}
 		self.hass.services.call(DOMAIN_MP, 'volume_mute', data)
 
+
+	def async_call_method(self, command=None, parameters=None):
+		_LOGGER.debug('async_call_method')
+		all_params = []
+		if parameters:
+			for parameter in parameters:
+				all_params.append(parameter)
+		_LOGGER.debug(command)
+		_LOGGER.debug(parameters)
+		if(command == SERVICE_CALL_RATE_TRACK):
+			if(len(all_params)>=1):
+				try:
+					arg = 'LIKE'
+					if(all_params[0]==SERVICE_CALL_THUMB_UP):
+						_LOGGER.debug("rate thumb up")
+						arg = 'LIKE'
+					elif(all_params[0]==SERVICE_CALL_THUMB_DOWN):
+						_LOGGER.debug("rate thumb down")
+						arg = 'DISLIKE'
+					elif(all_params[0]==SERVICE_CALL_THUMB_MIDDLE):
+						_LOGGER.debug("rate thumb middle")
+						arg = 'INDIFFERENT'
+					elif(all_params[0]==SERVICE_CALL_TOGGLE_THUMB_UP_MIDDLE):
+						if('likeStatus' in self._attributes):
+							if(self._attributes['likeStatus']=='LIKE'):
+								_LOGGER.debug("rate thumb middle")
+								arg = 'INDIFFERENT'
+							else:
+								_LOGGER.debug("rate thumb up")
+								arg = 'LIKE'
+					self._api.rate_song(videoId=self._attributes['videoId'],rating=arg)
+					self._attributes['likeStatus'] = arg
+					self.schedule_update_ha_state()
+					self._tracks[self._next_track_no]['likeStatus'] = arg
+				except:
+					self.exc()
+		elif(command == SERVICE_CALL_INTERRUPT_START):
+			self._update_remote_player()
+			#_LOGGER.error(self._remote_player)
+			t = self.hass.states.get(self._remote_player)
+			#_LOGGER.error(t)
+			self._interrupt_data = dict()
+			if(all(a in t.attributes for a in ('media_position','media_position_updated_at','media_duration'))):
+				now = datetime.datetime.now(datetime.timezone.utc)
+				delay = now - t.attributes['media_position_updated_at']
+				pos = delay.total_seconds() + t.attributes['media_position']
+				if pos < t.attributes['media_duration']:
+					self._interrupt_data['pos'] = pos
+			#_LOGGER.error(self._interrupt_data)
+			#_LOGGER.error(self._remote_player)
+			self._interrupt_data['player'] = self._remote_player
+			#_LOGGER.error(self._interrupt_data)
+			self.media_stop(player=self._remote_player)
+			if(self._untrack_remote_player is not None):
+				try:
+					#_LOGGER.error("calling untrack")
+					self._untrack_remote_player()
+				except:
+					#_LOGGER.error("untrack failed!!")
+					pass
+		elif(command == SERVICE_CALL_INTERRUPT_RESUME):
+			if(self._interrupt_data['player']):
+				self._update_remote_player(remote_player=self._interrupt_data['player'])
+				self._untrack_remote_player = track_state_change(self.hass, self._remote_player, self._sync_player)
+				self._interrupt_data['player'] = None
+			self._next_track_no = max(self._next_track_no-1,-1)
+			self._get_track() 
+			if(self._interrupt_data['pos']):
+				player = self.hass.states.get(self._remote_player)
+				if(player.attributes['supported_features'] | SUPPORT_SEEK):
+					data = {'seek_position': self._interrupt_data['pos'], ATTR_ENTITY_ID: self._remote_player}
+					self.hass.services.call(DOMAIN_MP, media_player.SERVICE_MEDIA_SEEK, data)
+				self._interrupt_data['pos'] = None
+		elif(command == SERVICE_CALL_RELOAD_DROPDOWNS):
+			self._update_selects()
+
+	
+
 	def exc(self, resp="self"):
 		"""Print nicely formated exception."""
 		_LOGGER.error("\n\n============= ytube_music_player Integration Error ================")
@@ -1234,6 +1342,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_browse_media(self, media_content_type=None, media_content_id=None):
 		"""Implement the websocket media browsing helper."""
 		_LOGGER.debug("async_browse_media")
+		self.check_api()
 
 		if media_content_type in [None, "library"]:
 			return await self.hass.async_add_executor_job(library_payload, self._api)

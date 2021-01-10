@@ -1,15 +1,32 @@
 {
+    "title": "yTubeMediaPlayer",
     "config": {
         "step": {
             "user": {
                 "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "cookie": "Enter cookie text, copied from browser"
+                    "name": "Name for the entity (without 'media_player' prefix)",
+                    "cookie": "Enter cookie text, copied from browser",
+                    "speakers": "Enter the entity_id of your default ouput player e.g. media_player.google_mini",
+                    "brand_id": "Enter a brand id if you are using a brand account",
+                    "header_path": "File path for the header file"
+                }
+            },
+            "finish": {
+                "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
+                "data": {
+                    "select_speakers": "Entity id of input_select for speaker selection",
+                    "select_playmode":"Entity id of input_select for playmode selection",
+                    "select_source":"Entity id of input_select for playlist/radio selection",
+                    "select_playlist":"Entity id of input_select for playlist selection",
+                    "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
+                    "proxy_path": "Path for proxy mode, leave blank if you don't need it",
+                    "proxy_url": "Path for proxy mode, leave blank if you don't need it"
                 }
             }
         },
         "error": {
-            "error_generic": "Something with your cookie wasn't right but i don't know what, please check the log",
+            "error_generic": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
             "error_auth_user": "Can't find the 'X-Goog-AuthUser' field, please check your input",
             "error_cookie":  "Can't find the 'Cookie' field, please check your input"
         }
@@ -17,15 +34,30 @@
     "options": {
         "step": {
             "init": {
-                "title": "yTubeMediaPlayer",
                 "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "cookie": "Enter cookie text, copied from browser"
+                    "name": "Name for the entity (without 'media_player' prefix)",
+                    "cookie": "Enter cookie text, copied from browser",
+                    "speakers": "Enter the entity_id of your default ouput player e.g. media_player.google_mini",
+                    "brand_id": "Enter a brand id if you are using a brand account",
+                    "header_path": "File path for the header file"
+                }
+            },
+            "finish": {
+                "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
+                "data": {
+                    "select_speakers": "Entity id of input_select for speaker selection",
+                    "select_playmode":"Entity id of input_select for playmode selection",
+                    "select_source":"Entity id of input_select for playlist/radio selection",
+                    "select_playlist":"Entity id of input_select for playlist selection",
+                    "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
+                    "proxy_path": "Path for proxy mode, leave blank if you don't need it",
+                    "proxy_url": "Path for proxy mode, leave blank if you don't need it"
                 }
             }
         },
         "error": {
-            "error_generic": "Something with your cookie wasn't right but i don't know what, please check the log",
+            "error_generic": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
             "error_auth_user": "Can't find the 'X-Goog-AuthUser' field, please check your input",
             "error_cookie":  "Can't find the 'Cookie' field, please check your input"
         }

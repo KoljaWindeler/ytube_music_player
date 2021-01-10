@@ -12,12 +12,14 @@ from homeassistant.const import (
 	EVENT_HOMEASSISTANT_START,
 	ATTR_ENTITY_ID,
 	CONF_DEVICE_ID,
+	CONF_NAME,
 	CONF_USERNAME,
 	CONF_PASSWORD,
 	STATE_PLAYING,
 	STATE_PAUSED,
 	STATE_OFF,
 	STATE_IDLE,
+	ATTR_COMMAND,
 )
 
 from homeassistant.components.media_player.const import (
@@ -88,6 +90,9 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_OFF,
 )
 
+import homeassistant.components.input_select as input_select
+import homeassistant.components.input_boolean as input_boolean
+
 # Should be equal to the name of your component.
 PLATFORM = "media_player"
 DOMAIN = "ytube_music_player"
@@ -110,6 +115,16 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 	| SUPPORT_SELECT_SOURCE
 )
 
+SERVICE_CALL_METHOD = "call_method"
+ATTR_PARAMETERS = "parameters"
+SERVICE_CALL_RATE_TRACK = "rate_track"
+SERVICE_CALL_THUMB_UP = "thumb_up"
+SERVICE_CALL_THUMB_DOWN = "thumb_down"
+SERVICE_CALL_THUMB_MIDDLE = "thumb_middle"
+SERVICE_CALL_TOGGLE_THUMB_UP_MIDDLE = "thumb_toggle_up_middle"
+SERVICE_CALL_INTERRUPT_START = "interrupt_start"
+SERVICE_CALL_INTERRUPT_RESUME = "interrupt_resume"
+SERVICE_CALL_RELOAD_DROPDOWNS = "reload_dropdowns"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
@@ -128,11 +143,11 @@ CONF_SELECT_SPEAKERS = 'select_speakers'
 CONF_SELECT_PLAYMODE = 'select_playmode'
 CONF_SELECT_PLAYCONTINUOUS = 'select_playcontinuous'
 
-DEFAULT_SELECT_PLAYCONTINUOUS = DOMAIN + '_playcontinuous'
-DEFAULT_SELECT_SOURCE = DOMAIN + '_source'
-DEFAULT_SELECT_PLAYLIST = DOMAIN + '_playlist'
-DEFAULT_SELECT_PLAYMODE = DOMAIN + '_playmode'
-DEFAULT_SELECT_SPEAKERS = DOMAIN + '_speakers'
+DEFAULT_SELECT_PLAYCONTINUOUS = input_boolean.DOMAIN + "." + DOMAIN + '_playcontinuous'
+DEFAULT_SELECT_SOURCE = input_select.DOMAIN + "." + DOMAIN + '_source'
+DEFAULT_SELECT_PLAYLIST = input_select.DOMAIN + "." + DOMAIN + '_playlist'
+DEFAULT_SELECT_PLAYMODE = input_select.DOMAIN + "." + DOMAIN + '_playmode'
+DEFAULT_SELECT_SPEAKERS = input_select.DOMAIN + "." + DOMAIN + '_speakers'
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
 PROXY_FILENAME = "ytube_proxy.mp4"
 
@@ -176,10 +191,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def check_data(user_input,path):
+def check_data(user_input):
 	"""Check validity of the provided date."""
 	ret = {}
-	if(CONF_COOKIE in user_input):
+	if(CONF_COOKIE in user_input and CONF_HEADER_PATH in user_input):
 		try:
 			# sadly config flow will not allow to have a multiline text field
 			# we get a looong string that we've to rearrange into multiline for ytmusic
@@ -226,27 +241,29 @@ def check_data(user_input,path):
 				c = c.replace('X-Goog-AuthUser','\nX-Goog-AuthUser')
 			#_LOGGER.debug("feeding with: ")
 			#_LOGGER.debug(c)
-			YTMusic.setup(filepath = path, headers_raw = c)
+			YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
+			api = YTMusic(user_input[CONF_HEADER_PATH])
+			api.get_library_songs()
 			return {}
 		except Exception:
 			c = user_input[CONF_COOKIE].lower()
 			if(c.find('cookie') == -1 ):
 				_LOGGER.error("Field 'Cookie' not found!")
 				ret["base"] = ERROR_COOKIE
-			elif(c.find('X-Goog-AuthUser') == -1 ):
+			elif(c.find('x-goog-authuser') == -1 ):
 				_LOGGER.error("Field 'X-Goog-AuthUser' not found!")
 				ret["base"] = ERROR_AUTH_USER
 			else:
 				_LOGGER.error("Generic setup error, please see below")
 				_LOGGER.error(traceback.format_exc())
 				ret["base"] = ERROR_GENERIC
-			return ret
+	return ret
 
-def ensure_config(user_input,path):
+def ensure_config(user_input):
 	"""Make sure that needed Parameter exist and are filled with default if not."""
 	out = {}
-	out[CONF_HEADER_PATH] = path
-#	out[CONF_ICON] = DEFAULT_ICON
+	#out[CONF_ICON] = DEFAULT_ICON
+	out[CONF_NAME] = DOMAIN
 	out[CONF_RECEIVERS] = ''
 	out[CONF_SHUFFLE] = DEFAULT_SHUFFLE
 	out[CONF_SHUFFLE_MODE] = DEFAULT_SHUFFLE_MODE
@@ -254,10 +271,19 @@ def ensure_config(user_input,path):
 	out[CONF_SELECT_PLAYLIST] = DEFAULT_SELECT_PLAYLIST
 	out[CONF_SELECT_PLAYMODE] = DEFAULT_SELECT_PLAYMODE
 	out[CONF_SELECT_SPEAKERS] = DEFAULT_SELECT_SPEAKERS
+	out[CONF_SELECT_PLAYCONTINUOUS] = DEFAULT_SELECT_PLAYCONTINUOUS
+	out[CONF_PROXY_PATH] = ""
+	out[CONF_PROXY_URL] = ""
+	out[CONF_BRAND_ID] = ""
+	out[CONF_COOKIE] = ""
 
 	if user_input is not None:
+		if CONF_NAME in user_input:
+			out[CONF_NAME] = user_input[CONF_NAME]
 		if CONF_HEADER_PATH in user_input:
 			out[CONF_HEADER_PATH] = user_input[CONF_HEADER_PATH]
+		else:
+			_LOGGER.error("ohoh no header path in the input, not sure how we got here")
 		if CONF_RECEIVERS in user_input:
 			out[CONF_RECEIVERS] = user_input[CONF_RECEIVERS]
 		if CONF_SHUFFLE in user_input:
@@ -272,21 +298,39 @@ def ensure_config(user_input,path):
 			out[CONF_SELECT_PLAYMODE] = user_input[CONF_SELECT_PLAYMODE]
 		if CONF_SELECT_SPEAKERS in user_input:
 			out[CONF_SELECT_SPEAKERS] = user_input[CONF_SELECT_SPEAKERS]
+		if CONF_PROXY_PATH in user_input:
+			out[CONF_PROXY_PATH] = user_input[CONF_PROXY_PATH]
+		if CONF_PROXY_URL in user_input:
+			out[CONF_PROXY_URL] = user_input[CONF_PROXY_URL]
+		if CONF_BRAND_ID in user_input:
+			out[CONF_BRAND_ID] = user_input[CONF_BRAND_ID]
+		if CONF_COOKIE in user_input:
+			out[CONF_COOKIE] = user_input[CONF_COOKIE]
+		if CONF_SELECT_PLAYCONTINUOUS in user_input:
+			out[CONF_SELECT_PLAYCONTINUOUS] = user_input[CONF_SELECT_PLAYCONTINUOUS]
 	return out
 
 
-def create_form(user_input, path):
+def create_form(user_input, page=1):
 	"""Create form for UI setup."""
-	user_input = ensure_config(user_input,path)
-
+	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
-	data_schema[vol.Required(CONF_COOKIE, default="")] = str
-#	data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str
-#	data_schema[vol.Required(CONF_RECEIVERS, default=user_input[CONF_RECEIVERS])] = str
-#	data_schema[vol.Optional(CONF_SHUFFLE, default=user_input[CONF_SHUFFLE])] = vol.Coerce(bool)
-#	data_schema[vol.Optional(CONF_SHUFFLE_MODE, default=user_input[CONF_SHUFFLE_MODE])] = vol.Coerce(int)
-#	data_schema[vol.Optional(CONF_SELECT_SOURCE, default=user_input[CONF_SELECT_SOURCE])] = str
-#	data_schema[vol.Optional(CONF_SELECT_PLAYLIST, default=user_input[CONF_SELECT_PLAYLIST])] = str
-#	data_schema[vol.Optional(CONF_SELECT_SPEAKERS, default=user_input[CONF_SELECT_SPEAKERS])] = str
+
+	if(page == 1):
+		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
+		data_schema[vol.Required(CONF_COOKIE, default=user_input[CONF_COOKIE])] = str # configuration of the cookie
+		data_schema[vol.Optional(CONF_RECEIVERS, default=user_input[CONF_RECEIVERS])] = str # default remote_player
+		#data_schema[vol.Optional(CONF_SHUFFLE, default=user_input[CONF_SHUFFLE])] = vol.Coerce(bool) # default duffle, TRUE/FALSE
+		#data_schema[vol.Optional(CONF_SHUFFLE_MODE, default=user_input[CONF_SHUFFLE_MODE])] = vol.Coerce(int) # [1] = Shuffle .. 2....
+		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id
+		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
+	elif(page == 2):
+		data_schema[vol.Optional(CONF_SELECT_SPEAKERS, default=user_input[CONF_SELECT_SPEAKERS])] = str # drop down to select remote_player
+		data_schema[vol.Optional(CONF_SELECT_SOURCE, default=user_input[CONF_SELECT_SOURCE])] = str # drop down to select playlist / playlist-radio
+		data_schema[vol.Optional(CONF_SELECT_PLAYLIST, default=user_input[CONF_SELECT_PLAYLIST])] = str # drop down that holds the playlists
+		data_schema[vol.Optional(CONF_SELECT_PLAYCONTINUOUS, default=user_input[CONF_SELECT_PLAYCONTINUOUS])] = str # select of input_boolean -> continuous on/off
+
+		data_schema[vol.Optional(CONF_PROXY_PATH, default=user_input[CONF_PROXY_PATH])] = str # select of input_boolean -> continuous on/off
+		data_schema[vol.Optional(CONF_PROXY_URL, default=user_input[CONF_PROXY_URL])] = str # select of input_boolean -> continuous on/off
 
 	return data_schema
