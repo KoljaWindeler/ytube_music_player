@@ -3,7 +3,8 @@
 
 Adds a mediaplayer to Home Assistant that can stream tracks from your YouTube music premium subscription to a media player.
 
-![mini-media-player](shortcuts.png)
+![mini-media-player](./shortcuts.png)
+
 
 With mini-media-player (https://github.com/kalkih/mini-media-player) and shortcuts
 
@@ -41,27 +42,26 @@ The easiest way to add this to your Home Assistant installation is using [HACS](
 
 # Setup
 
-You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers
+You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below.
+
+![setup](setup.png)
 
 **1. Basic steps for grabbing**
 
-1. Open the development tools (I've used google chrome) [Crtl+Shift+I]
+1. Open the development tools (I've used google chrome) [Crtl+Shift+I / F12]
 2. Open the Network tab
 3. Open https://music.youtube.com, log out, log in, browse a bit around like clicking on the library in the top menu
-4. Search for "/browse" (for me only one item shows up) [If you can't find it: I had issues with ubuntu, worked instantly with windows]
-5. Go to "headers" -> "request headers" and copy everything starting after the "accept: */*" (mark with a mouse and copy to clipboard)
-
-It should look like the screenshot below
-
-![Cookie](cookie.png)
+4. Search for "browse" (for me only one item shows up)
+5. Go to "headers" -> "request headers" 
+6. copy everything starting after the "accept: */*" (mark with a mouse and copy to clipboard)
 
 **2. Please use the config flow of Home Assistant**
 
-1. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
-1.1. If the integration didn't show up in the list please REFRESH the page
-2. Paste the cookie into the indicated field, all other fields are optional
-3. It is highly recommended to enter the entity_id of your default ouput player, otherwise you have to set that after every reboot
-4. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine
+7. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
+   1. If the integration didn't show up in the list please REFRESH the page
+9. Paste the cookie into the indicated field, all other fields are optional or provide default values 
+   1. It is highly recommended to enter the entity_id of your default output player, otherwise you have to set that after every reboot
+   2. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
 
 **Although YAML configuration is still possible: Please remove it and configure the player via config_flow or several functions will be missing**
 
