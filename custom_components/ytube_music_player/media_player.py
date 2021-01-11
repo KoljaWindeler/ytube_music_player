@@ -516,8 +516,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._get_track()
 			# turn this player of when the remote_player was shut down
 			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE) and new_state.state == STATE_OFF):
-				_LOGGER.debug("we're here and off_is_idle")
-				_LOGGER.debug(self._off_is_idle)
 				if(self._off_is_idle):
 					self._allow_next = False
 					self._get_track()
