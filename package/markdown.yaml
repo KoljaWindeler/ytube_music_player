@@ -97,8 +97,14 @@ views:
                       states['media_player.ytube_music_player'].attributes.likeStatus
                       == "LIKE"]]]
                     icon: 'mdi:thumb-up'
-                  - operator: default
+                  - operator: template
+                    value: >
+                      [[[ return
+                      states['media_player.ytube_music_player'].attributes.likeStatus
+                      == "INDIFFERENT"]]]
                     icon: 'mdi:thumb-up-outline'
+                  - operator: default
+                    icon: 'mdi:power-off'
                     value: false
                 tap_action:
                   action: call-service

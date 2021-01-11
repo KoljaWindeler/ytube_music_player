@@ -1,9 +1,3 @@
-media_player:
-  - platform: ytube_music_player
-    # if your speaker is called media_player.speaker123, add speaker123 here to preselect it.
-    # speakers:
-    #   - speaker123
-
 
 input_select:
   ytube_music_player_source:
