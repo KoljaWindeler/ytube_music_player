@@ -51,7 +51,8 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 			if self._errors == {}:
 				self.data.update(user_input)
 				_LOGGER.error(self.data)
-				return self.async_create_entry(title="yTubeMusic", data=self.data)
+				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
+				return self.async_create_entry(title=_title, data=self.data)
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)
 
 	# TODO .. what is this good for?
@@ -107,5 +108,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 			self._errors = check_data(user_input)
 			if self._errors == {}:
 				self.data.update(user_input)
-				return self.async_create_entry(title="yTubeMusic", data=self.data)
+				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
+				return self.async_create_entry(title=_title, data=self.data)
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)
