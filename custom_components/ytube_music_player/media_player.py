@@ -486,11 +486,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" _player state - Example [playing -or- idle]. """
 		self._attributes['_player_state'] = _player.state
 
-		""" unlock allow next """
-		if 'media_position' in _player.attributes:
-			if _player.state == 'playing' and _player.attributes['media_position']>0:
-				self._allow_next = True
-		elif _player.state == 'playing': # fix for browser mod media_player not providing the 'media_position'
+		""" unlock allow next, some player fail because their media_position is 'strange' catch """
+		found_position = False
+		try:
+			if 'media_position' in _player.attributes:
+				found_position = True
+				if(isinstance(_player.attributes['media_position'],int)):
+					if _player.state == 'playing' and _player.attributes['media_position']>0:
+						self._allow_next = True
+		except:
+			found_position = False
+			pass
+		if not(found_position) and _player.state == 'playing': # fix for browser mod media_player not providing the 'media_position'
 			self._allow_next = True
 
 		""" auto next .. best cast: we have an old and a new state """
