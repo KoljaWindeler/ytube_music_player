@@ -205,6 +205,24 @@ This will spin up server on port 8080 that serves `/config/www` so your `proxy_u
 
 You can use this also with other speakers, but it will in general add some lack as the component has to download the track before it will start the playback. So if you don't need it: don't use it. If you have further question or if this is working for you please provide some feedback at https://github.com/KoljaWindeler/ytube_music_player/issues/38 as I can't test this on my own easily. Thanks!
 
+## MPD fix
+
+The mpd media_player will transition to `off` instead of `idle` at the end of each track. Ytube_music_player is able to handle this.
+Please add this automation from **@lightzhuk** to your configuration:
+```yaml
+- alias: mpd_fix
+  initial_state: true
+  trigger:
+    - platform: homeassistant
+      event: start
+  action:
+    - delay: 00:00:12
+    - service: ytube_music_player.call_method
+      entity_id: media_player.ytube_music_player
+      data:
+        command: off_is_idle
+```
+
 ## Debug Information
 I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
 ```yaml
