@@ -50,7 +50,6 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 			_LOGGER.error(self._errors)
 			if self._errors == {}:
 				self.data.update(user_input)
-				_LOGGER.error(self.data)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
 				return self.async_create_entry(title=_title, data=self.data)
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)

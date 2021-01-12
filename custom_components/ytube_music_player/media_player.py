@@ -117,7 +117,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
 		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 		self._playContinuous = True
-		self._off_is_idle = False
+		self._off_is_idle = False # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
 
 
 		# register "call_method"
@@ -151,45 +151,25 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._get_cipher('BB2mjBuAtiQ')
 		self.check_api()
 		self._update_selects()
-		
 
 	def check_api(self):
 		_LOGGER.debug("check_api")
 		if(self._api == None):
 			_LOGGER.debug("- no valid API, try to login")
-			try:
-				if(os.path.exists(self._header_file)):
-					if(self._brand_id!=""):
-						_LOGGER.debug("- using brand ID: "+self._brand_id)
-						try:
-							self._api = ytmusicapi.YTMusic(self._header_file,self._brand_id)
-							_LOGGER.debug("- YouTube Api version: "+str(ytmusicapi.__version__))
-						except:
-							self._api = None
-							self.exc(resp="ytmusicapi")
-							return False
-					else:
-						try:
-							self._api = ytmusicapi.YTMusic(self._header_file)
-							_LOGGER.debug("- YouTube Api version: "+str(ytmusicapi.__version__))
-						except:
-							self._api = None
-							self.exc(resp="ytmusicapi")
-							return False
-					if(self._api):
-						# test login
-						self._api.get_library_songs()
-						return True
-				else:
-					msg= "can't file header file at "+self._header_file
-					_LOGGER.error(msg)
-					data = {"title": "yTubeMediaPlayer error", "message": msg}
+			if(os.path.exists(self._header_file)):
+				[ret, msg, self._api] = try_login(self._header_file,self._brand_id)
+				if(msg!=""):
+					self._api = None
+					out = "Issue during login: "+msg
+					data = {"title": "yTubeMediaPlayer error", "message": out}
 					self.hass.services.call("persistent_notification","create", data)
 					return False
-			except:
-				msg= "Exception during login, e.g. login data are NOT correct"
-				_LOGGER.error(msg)
-				data = {"title": "yTubeMediaPlayer error", "message": msg}
+				else:
+					_LOGGER.debug("- YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
+			else:
+				out = "can't find header file at "+self._header_file
+				_LOGGER.error(out)
+				data = {"title": "yTubeMediaPlayer error", "message": out}
 				self.hass.services.call("persistent_notification","create", data)
 				return False
 		return True
@@ -353,7 +333,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if _player.state == STATE_OFF:
 				self._turn_on_media_player()
 		else:
-			_LOGGER.error("self._state is: (%s).", self._state)
+			_LOGGER.debug("self._state is: (%s).", self._state)
+			if(self._state == STATE_PLAYING):
+				self.media_stop() 
 			
 		# update cipher
 		self._get_cipher('BB2mjBuAtiQ')
@@ -482,8 +464,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._remote_player)
 
-		if('media_duration' in _player.attributes):
-			self._media_duration = _player.attributes['media_duration']
+		self._media_duration = _player.get('media_duration','')
 		if('media_position' in _player.attributes):
 			self._media_position = _player.attributes['media_position']
 			self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
@@ -564,6 +545,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		info['track_artist'] = ""
 		info['track_album_cover'] = ""
 
+		
 		if 'title' in _track:
 			info['track_name'] = _track['title']
 		if 'byline' in _track:
@@ -902,11 +884,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 
 		self._attributes['current_track'] = self._next_track_no
-		self._attributes['videoId'] = _track['videoId']
-		if('likeStatus' in _track):
-			self._attributes['likeStatus'] = _track['likeStatus']
-		else:
-			self._attributes['likeStatus'] = ""
+		self._attributes['videoId'] = _track.get('videoId','')
+		self._attributes['likeStatus'] = _track.get('likeStatus','')
 
 
 		""" Find the unique track id. """

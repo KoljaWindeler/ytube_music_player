@@ -155,9 +155,12 @@ PROXY_FILENAME = "ytube_proxy.mp4"
 DEFAULT_SHUFFLE_MODE = 1
 DEFAULT_SHUFFLE = True
 
-ERROR_COOKIE = 'error_cookie'
-ERROR_AUTH_USER = 'error_auth_user'
-ERROR_GENERIC = 'error_generic'
+ERROR_COOKIE = 'ERROR_COOKIE'
+ERROR_AUTH_USER = 'ERROR_AUTH_USER'
+ERROR_GENERIC = 'ERROR_GENERIC'
+ERROR_CONTENTS = 'ERROR_CONTENTS'
+ERROR_FORMAT = 'ERROR_FORMAT'
+ERROR_NONE = 'ERROR_NONE'
 
 PLAYMODE_SHUFFLE = "Shuffle"
 PLAYMODE_RANDOM = "Random"
@@ -196,69 +199,113 @@ def check_data(user_input):
 	"""Check validity of the provided date."""
 	ret = {}
 	if(CONF_COOKIE in user_input and CONF_HEADER_PATH in user_input):
-		try:
-			# sadly config flow will not allow to have a multiline text field
-			# we get a looong string that we've to rearrange into multiline for ytmusic
+		# sadly config flow will not allow to have a multiline text field
+		# we get a looong string that we've to rearrange into multiline for ytmusic
 
-			# the only thing we need is cookie + x-goog-authuser, lets try to cut this out
-			# so the fields are written like 'identifier':'value', but some values actually have ':' inside, bummer.
-			c = user_input[CONF_COOKIE]
-			clean_cookie = ""
-			clean_x_goog_authuser = ""
-			## lets try to find the cookie part
-			cookie_pos = c.lower().find('cookie')
-			if(cookie_pos>=0):
-				#_LOGGER.debug("found cookie in text")
-				cookie_end = c[cookie_pos:]
-				cookie_end_split = cookie_end.split(':')
-				if(len(cookie_end_split)>=3):
-					#_LOGGER.debug("found three or more sections")
-					cookie_length_last_field = cookie_end_split[2].rfind(' ')
-					if(cookie_length_last_field>=0):
-						#_LOGGER.debug("found a space")
-						cookie_length = len(cookie_end_split[0])+1+len(cookie_end_split[1])+1+cookie_length_last_field
-						clean_cookie = c[cookie_pos:cookie_pos+cookie_length]
-						#_LOGGER.debug(clean_cookie)
-			## lets try to find x-auth-part
-			xauth_pos = c.lower().find('x-goog-authuser: ')
-			if(xauth_pos>=0):
-				#_LOGGER.debug("found x-goog-authuser in text")
-				#_LOGGER.debug(c[xauth_pos+len('x-goog-authuser: '):])
-				xauth_len = c[xauth_pos+len('x-goog-authuser: '):].find(' ')
-				#_LOGGER.debug(xauth_len)
-				if(xauth_len>=0):
-					#_LOGGER.debug("found space in text")
-					clean_x_goog_authuser = c[xauth_pos:(xauth_pos+len('x-goog-authuser: ')+xauth_len)]
-					#_LOGGER.debug(clean_x_goog_authuser)
-			## lets see what we got
-			if(clean_cookie!="" and clean_x_goog_authuser!=""):
-				# woop woop, this COULD be it
-				c = clean_cookie+"\n"+clean_x_goog_authuser+"\n"
-			else:
-				# well we've failed to find the cookie, the only thing we can do is at least to help with some breaks
-				c = c.replace('cookie','\ncookie')
-				c = c.replace('Cookie','\nCookie')
-				c = c.replace('x-goog-authuser','\nx-goog-authuser')
-				c = c.replace('X-Goog-AuthUser','\nX-Goog-AuthUser')
-			#_LOGGER.debug("feeding with: ")
-			#_LOGGER.debug(c)
-			YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
-			api = YTMusic(user_input[CONF_HEADER_PATH])
-			api.get_library_songs()
-			return {}
-		except Exception:
-			c = user_input[CONF_COOKIE].lower()
-			if(c.find('cookie') == -1 ):
-				_LOGGER.error("Field 'Cookie' not found!")
-				ret["base"] = ERROR_COOKIE
-			elif(c.find('x-goog-authuser') == -1 ):
-				_LOGGER.error("Field 'X-Goog-AuthUser' not found!")
-				ret["base"] = ERROR_AUTH_USER
-			else:
-				_LOGGER.error("Generic setup error, please see below")
-				_LOGGER.error(traceback.format_exc())
-				ret["base"] = ERROR_GENERIC
+		# the only thing we need is cookie + x-goog-authuser, lets try to cut this out
+		# so the fields are written like 'identifier':'value', but some values actually have ':' inside, bummer.
+		c = user_input[CONF_COOKIE]
+		clean_cookie = ""
+		clean_x_goog_authuser = ""
+		## lets try to find the cookie part
+		cookie_pos = c.lower().find('cookie')
+		if(cookie_pos>=0):
+			#_LOGGER.debug("found cookie in text")
+			cookie_end = c[cookie_pos:]
+			cookie_end_split = cookie_end.split(':')
+			if(len(cookie_end_split)>=3):
+				#_LOGGER.debug("found three or more sections")
+				cookie_length_last_field = cookie_end_split[2].rfind(' ')
+				if(cookie_length_last_field>=0):
+					#_LOGGER.debug("found a space")
+					cookie_length = len(cookie_end_split[0])+1+len(cookie_end_split[1])+1+cookie_length_last_field
+					clean_cookie = c[cookie_pos:cookie_pos+cookie_length]
+					#_LOGGER.debug(clean_cookie)
+		## lets try to find x-auth-part
+		xauth_pos = c.lower().find('x-goog-authuser: ')
+		if(xauth_pos>=0):
+			#_LOGGER.debug("found x-goog-authuser in text")
+			#_LOGGER.debug(c[xauth_pos+len('x-goog-authuser: '):])
+			xauth_len = c[xauth_pos+len('x-goog-authuser: '):].find(' ')
+			#_LOGGER.debug(xauth_len)
+			if(xauth_len>=0):
+				#_LOGGER.debug("found space in text")
+				clean_x_goog_authuser = c[xauth_pos:(xauth_pos+len('x-goog-authuser: ')+xauth_len)]
+				#_LOGGER.debug(clean_x_goog_authuser)
+		## lets see what we got
+		if(clean_cookie!="" and clean_x_goog_authuser!=""):
+			# woop woop, this COULD be it
+			c = clean_cookie+"\n"+clean_x_goog_authuser+"\n"
+		else:
+			# well we've failed to find the cookie, the only thing we can do is at least to help with some breaks
+			c = c.replace('cookie','\ncookie')
+			c = c.replace('Cookie','\nCookie')
+			c = c.replace('x-goog-authuser','\nx-goog-authuser')
+			c = c.replace('X-Goog-AuthUser','\nX-Goog-AuthUser')
+		#_LOGGER.debug("feeding with: ")
+		#_LOGGER.debug(c)
+		YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
+		[ret, msg, api] = try_login(user_input[CONF_HEADER_PATH],"")
 	return ret
+
+def try_login(path, brand_id):
+	ret = {}
+	api = None
+	msg = ""
+	#### try to init object #####
+	try:
+		if(brand_id!=""):
+			_LOGGER.debug("- using brand ID: "+brand_id)
+			api = YTMusic(path,brand_id)
+		else:
+			_LOGGER.debug("- login without brand ID")
+			api = YTMusic(path)
+	except KeyError as err:
+		_LOGGER.debug("- Key exception")
+		if(str(err)=="'contents'"):
+			msg = "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?"
+			_LOGGER.error(msg)
+			ret["base"] = ERROR_CONTENTS
+		elif(str(err)=="'Cookie'"):
+			msg = "Format of cookie is NOT OK, Field 'Cookie' not found!"
+			_LOGGER.error(msg)
+			ret["base"] = ERROR_COOKIE
+		elif(str(err)=="'__Secure-3PAPISID'" or str(err)=="'__Secure-3PSID'"):
+			msg = "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'"
+			_LOGGER.error(msg)
+			ret["base"] = ERROR_FORMAT
+		else:
+			msg = "Some unknown error occured during the cookies usage, key is: "+str(err)
+			_LOGGER.error(msg)
+			_LOGGER.error("please see below")
+			_LOGGER.error(traceback.format_exc())
+			ret["base"] = ERROR_GENERIC
+	except:
+		_LOGGER.debug("- Generic exception")
+		msg = "Format of cookie is NOT OK, missing e.g. AuthUser or Cookie"
+		_LOGGER.error(msg)
+		ret["base"] = ERROR_FORMAT
+
+	#### try to grab library data #####
+	if(api == None and ret == {}):
+		msg = "Format of cookie seams OK, but the returned sub API object is None"
+		_LOGGER.error(msg)
+		ret["base"] = ERROR_NONE
+	elif(not(api == None) and ret == {}):
+		try:
+			api.get_library_songs()
+		except KeyError as err:
+			if(str(err)=="'contents'"):
+				msg = "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data? Or did you log-out?"
+				_LOGGER.error(msg)
+				ret["base"] = ERROR_CONTENTS
+		except:
+			msg = "Running get_library_songs resulted in an exception, no idea why.. honestly"
+			_LOGGER.error(msg)
+			_LOGGER.error("Please see below")
+			_LOGGER.error(traceback.format_exc())
+			ret["base"] = ERROR_GENERIC
+	return [ret, msg, api]
 
 def ensure_config(user_input):
 	"""Make sure that needed Parameter exist and are filled with default if not."""
