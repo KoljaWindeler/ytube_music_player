@@ -464,7 +464,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._remote_player)
 
-		self._media_duration = _player.get('media_duration','')
+		if('media_duration' in _player.attributes):			
+			self._media_duration = _player.attributes['media_duration']
 		if('media_position' in _player.attributes):
 			self._media_position = _player.attributes['media_position']
 			self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
@@ -884,8 +885,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 
 		self._attributes['current_track'] = self._next_track_no
-		self._attributes['videoId'] = _track.get('videoId','')
-		self._attributes['likeStatus'] = _track.get('likeStatus','')
+		self._attributes['videoId'] = _track['videoId']
+		if('likeStatus' in _track):
+			self._attributes['likeStatus'] = _track['likeStatus']	
+		else:	
+			self._attributes['likeStatus'] = ""
 
 
 		""" Find the unique track id. """
