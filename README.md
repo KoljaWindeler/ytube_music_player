@@ -25,7 +25,7 @@ Also supports media_browser
 # Support
 If you like what I've done and you want to help: buy me a coffee/beer. Thanks! 
 
-[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/KoljaWindeler)
+[![Beer](beers.png)](https://www.buymeacoffee.com/KoljaWindeler)
 
 
 # Installation
