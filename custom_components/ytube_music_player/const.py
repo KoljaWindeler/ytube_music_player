@@ -126,6 +126,7 @@ SERVICE_CALL_INTERRUPT_START = "interrupt_start"
 SERVICE_CALL_INTERRUPT_RESUME = "interrupt_resume"
 SERVICE_CALL_RELOAD_DROPDOWNS = "reload_dropdowns"
 SERVICE_CALL_OFF_IS_IDLE = "off_is_idle"
+SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)

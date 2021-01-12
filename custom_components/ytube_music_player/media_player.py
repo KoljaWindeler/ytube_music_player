@@ -117,7 +117,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
 		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 		self._playContinuous = True
-		self._off_is_idle = False # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
+		self._x_to_idle = None # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
 
 
 		# register "call_method"
@@ -498,13 +498,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._get_track()
 			# turn this player of when the remote_player was shut down
 			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE) and new_state.state == STATE_OFF):
-				if(self._off_is_idle):
+				if(self._x_to_idle == STATE_OFF): # workaround for MPD (changes to OFF at the end of a track)
 					self._allow_next = False
 					self._get_track()
 				else:
 					self._state = STATE_OFF
 					_LOGGER.debug("media player got turned off")
 					self.turn_off()
+			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED and # workaround for SONOS (changes to PAUSED at the end of a track)
+			       (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10 and self._x_to_idle == STATE_PAUSED):
+				self._allow_next = False
+				self._get_track()
 		# no states, lets rely on stuff like _allow_next
 		elif _player.state == 'idle':
 			if self._allow_next:
@@ -1324,8 +1328,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(command == SERVICE_CALL_RELOAD_DROPDOWNS):
 			self._update_selects()
 		elif(command == SERVICE_CALL_OFF_IS_IDLE): #needed for the MPD but for nobody else
-			self._off_is_idle = True 
-			_LOGGER.debug("Setting off_is_idle to True")
+			self._x_to_idle = STATE_OFF 
+			_LOGGER.debug("Setting x_is_idle to State Off")
+		elif(command == SERVICE_CALL_PAUSED_IS_IDLE): #needed for the Sonos but for nobody else
+			self._x_to_idle = STATE_PAUSED 
+			_LOGGER.debug("Setting x_is_idle to State Paused")
 
 	
 
