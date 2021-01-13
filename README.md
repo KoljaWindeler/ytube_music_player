@@ -70,7 +70,7 @@ The screenshot below shows the mini-media-player from kalkih (https://github.com
 
 ![mini-media-player](shortcuts.png)
 
-This mediaplayer offers shotcuts, which can be used to select a remote_player and playlist with a single click:
+This mediaplayer offers shortcuts, which can be used to select a remote_player and playlist with a single click:
 
 ```
 - type: 'custom:mini-media-player'
@@ -205,9 +205,21 @@ This will spin up server on port 8080 that serves `/config/www` so your `proxy_u
 
 You can use this also with other speakers, but it will in general add some lack as the component has to download the track before it will start the playback. So if you don't need it: don't use it. If you have further question or if this is working for you please provide some feedback at https://github.com/KoljaWindeler/ytube_music_player/issues/38 as I can't test this on my own easily. Thanks!
 
-## MPD fix
 
-The mpd media_player will transition to `off` instead of `idle` at the end of each track. Ytube_music_player is able to handle this.
+## Auto Advance
+When playing a playlist / album / radio the natural expectation is to play the next track once the last has finished. Ytube_music_player can't offload this task to the remote_player (the one that actually plays the music) as most players don't support playlists.
+
+Thus Ytube_music_player has to track the status the remote_player and detect the 'end of track' to start the next track from the list.
+
+Most player I've tested (Chromecast / Google Home / Browser Mod) will transistion from `playing` to `idle`.
+As a result the code of Ytube_music_player will play the next track whenever this state transition happens.
+Sadly not all player follow this logic. E.g. MPD based media_player will transition from `playing` to `off` at the end of a tack, some sonos speaker will switch to `paused`. I've added special commands to Ytube_music_player to overcome those issues. This will change the way ytube_music_player will react on state changes. E.g. if the `off_is_idle` command was sent, ytube_music_player will advance to the next track whenever the remote_player will transition from `playing` to `off`. This will enable auto-next-track. 
+
+*The drawback is obviously that you can't switch off the playback on the remote_player anymore (meaning the `off` button of `media_player.mpd`) because ytube_music_player has to understand this as end of track. You can of cause still shutdown to playback by turning of ytube_music_player.*
+
+### MPD fix
+
+The mpd media_player will transition to `off` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
 Please add this automation from **@lightzhuk** to your configuration:
 ```yaml
 - alias: mpd_fix
@@ -223,8 +235,26 @@ Please add this automation from **@lightzhuk** to your configuration:
         command: off_is_idle
 ```
 
+### Sonos fix
+
+The sonos media_player will transition to `pause` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
+Please add this automation to your configuration:
+```yaml
+- alias: sonos_fix
+  initial_state: true
+  trigger:
+    - platform: homeassistant
+      event: start
+  action:
+    - delay: 00:00:12
+    - service: ytube_music_player.call_method
+      entity_id: media_player.ytube_music_player
+      data:
+        command: paused_is_idle
+```
+
 ## Debug Information
-I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra informations in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
+I've added extensive debugging information to the component. So if you hit an error, please see if you can get as many details as possible for the issue by enabling the debug-log-level for the component. This will produce quite a lot extra information in the log (configuration -> logs). Please keep in mind that a restart of Homeassistant is needed to apply this change. 
 ```yaml
 logger:
   default: info
