@@ -209,7 +209,7 @@ You can use this also with other speakers, but it will in general add some lack 
 ## Auto Advance
 When playing a playlist / album / radio the natural expectation is to play the next track once the last has finished. Ytube_music_player can't offload this task to the remote_player (the one that actually plays the music) as most players don't support playlists.
 
-Thus Ytube_music_player has to track the status the remote_player and detect the 'end of track'.
+Thus Ytube_music_player has to track the status the remote_player and detect the 'end of track' to start the next track from the list.
 
 Most player I've tested (Chromecast / Google Home / Browser Mod) will transistion from `playing` to `idle`.
 As a result the code of Ytube_music_player will play the next track whenever this state transition happens.
