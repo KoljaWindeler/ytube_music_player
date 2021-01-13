@@ -109,4 +109,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 				self.data.update(user_input)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
 				return self.async_create_entry(title=_title, data=self.data)
+		elif self.data is not None:
+			# if we came straight from init
+			user_input = self.data
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)
