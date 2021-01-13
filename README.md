@@ -237,7 +237,7 @@ Please add this automation from **@lightzhuk** to your configuration:
 
 ### Sonos fix
 
-The mpd media_player will transition to `off` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
+The mpd media_player will transition to `pause` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
 Please add this automation to your configuration:
 ```yaml
 - alias: sonos_fix
