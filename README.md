@@ -207,12 +207,12 @@ You can use this also with other speakers, but it will in general add some lack 
 
 
 ## Auto Advance
-When playing a playlist / Album / Radio the natural expectation is to play the next track once the last has finished. Ytube_music_player can't offload this task to the remote_player (the one that actually plays the music) as most players don't support playlists.
+When playing a playlist / album / radio the natural expectation is to play the next track once the last has finished. Ytube_music_player can't offload this task to the remote_player (the one that actually plays the music) as most players don't support playlists.
 
 Thus Ytube_music_player has to track the status the remote_player and detect the 'end of track'.
 
 Most player I've tested (Chromecast / Google Home / Browser Mod) will transistion from `playing` to `idle`.
-As a result the code of Ytube_music_player will play the next track whenever this this state transition happens.
+As a result the code of Ytube_music_player will play the next track whenever this state transition happens.
 Sadly not all player follow this logic. E.g. MPD based media_player will transition from `playing` to `off` at the end of a tack, some sonos speaker will switch to `paused`. I've added special commands to Ytube_music_player to overcome those issues. This will change the way ytube_music_player will react on state changes. E.g. if the `off_is_idle` command was sent, ytube_music_player will advance to the next track whenever the remote_player will transition from `playing` to `off`. This will enable auto-next-track. 
 
 *The drawback is obviously that you can't switch off the playback on the remote_player anymore (meaning the `off` button of `media_player.mpd`) because ytube_music_player has to understand this as end of track. You can of cause still shutdown to playback by turning of ytube_music_player.*
