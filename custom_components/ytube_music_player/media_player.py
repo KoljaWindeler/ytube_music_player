@@ -947,23 +947,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		try:
 			l_id = self._api.get_watch_playlist(videoId=_track['videoId'])
 			if 'lyrics' in l_id:
-				lyrics = self._api.get_lyrics(browseId=l_id['lyrics'])
-				if lyrics['lyricsFound']:
+				if(l_id['lyrics'] != None):
+					lyrics = self._api.get_lyrics(browseId=l_id['lyrics'])
 					self._attributes['lyrics'] = lyrics['lyrics']
 		except:
 			pass
-
-		### get header ... for further deveopment ###
-		#try:
-		#	p1 = datetime.datetime.now()
-		#	status = request.head(_url)["content-type"]
-		#	t = (datetime.datetime.now() - p1).total_seconds()
-		#	_LOGGER.debug("- Link status: "+str(status)+" loading time: "+str(t)+" sec")
-		#except:
-		#	_LOGGER.error("- Status code failed")
-		
-		#_LOGGER.error("register call later")
-		# just to make sure that we check the status of the media player to free the "go to next"
 		call_later(self.hass, 15, self._sync_player)
 
 
