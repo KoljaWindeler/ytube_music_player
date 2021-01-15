@@ -1077,7 +1077,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(media_type == USER_ALBUM):
 				self._tracks = self._api.get_library_upload_album(browseId=media_id)['tracks']
 			elif(media_type == USER_ARTIST):
-				self._tracks = self._api.get_library_upload_artist(browseId=media_id) #BROWSER_LIMIT
+				self._tracks = self._api.get_library_upload_artist(browseId=media_id, limit=BROWSER_LIMIT)
 			else:
 				_LOGGER.debug("- error during fetching play_media, turning off")
 				self.turn_off()

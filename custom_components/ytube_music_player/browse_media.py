@@ -94,7 +94,7 @@ async def build_item_response(hass, media_library, payload):
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
         title = "Uploaded Artists"
     elif search_type == USER_ARTIST:
-        media = await hass.async_add_executor_job(media_library.get_library_upload_artist,search_id) #BROWSER_LIMIT
+        media = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
         title = "Uploaded Artist"
         if(isinstance(media,list)):
             if('artist' in media[0]):
@@ -111,6 +111,8 @@ async def build_item_response(hass, media_library, payload):
             children.append(item_payload(item, media_library,search_type))
         except UnknownMediaType:
             pass
+    children.sort(key=lambda x: x.title, reverse=False)
+
 
 
     response = BrowseMedia(
