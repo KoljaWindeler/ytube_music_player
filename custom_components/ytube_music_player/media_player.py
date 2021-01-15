@@ -1076,7 +1076,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 			elif(media_type == USER_ALBUM):
 				self._tracks = self._api.get_library_upload_album(browseId=media_id)['tracks']
-			elif(media_type == USER_ARTIST):
+			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
 				self._tracks = self._api.get_library_upload_artist(browseId=media_id, limit=BROWSER_LIMIT)
 			else:
 				_LOGGER.debug("- error during fetching play_media, turning off")

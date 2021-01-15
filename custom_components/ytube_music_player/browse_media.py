@@ -93,6 +93,9 @@ async def build_item_response(hass, media_library, payload):
     elif search_type == USER_ARTISTS:
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
         title = "Uploaded Artists"
+    elif search_type == USER_ARTISTS_2: # list all artists now, but follow up will be the albums of that artist
+        media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
+        title = "Uploaded Artists -> Album"
     elif search_type == USER_ARTIST:
         media = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
         title = "Uploaded Artist"
@@ -101,6 +104,25 @@ async def build_item_response(hass, media_library, payload):
                 if(isinstance(media[0]['artist'],list)):
                     if('name' in media[0]['artist'][0]):
                         title = media[0]['artist'][0]['name']
+    elif search_type == USER_ARTIST_2: # list each album of an uploaded artists only once .. next will be uploaded album view 'USER_ALBUM'
+        media_all = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
+        media = list()
+        for item in media_all:
+            if('album' in item):
+                if('name' in item['album']):
+                    if(all(item['album']['name'] != a['title'] for a in media)):
+                        media.append({
+                            'type': 'user_album',
+                            'browseId': item['album']['id'],
+                            'title': item['album']['name'],
+                            'thumbnails': item['thumbnails']
+                        })
+        title = "Uploaded Album"
+        if('artist' in media_all[0]):
+                if(isinstance(media_all[0]['artist'],list)):
+                    if('name' in media_all[0]['artist'][0]):
+                        title = "Uploaded albums of "+media_all[0]['artist'][0]['name']
+        search_type = USER_ALBUMS
 
     if media is None:
         return None
@@ -182,11 +204,13 @@ def item_payload(item, media_library,search_type):
         media_content_id = f"{item['videoId']}"
         can_play = True
         can_expand = False
-    elif search_type == USER_ARTISTS: # user uploaded artists overview
+    elif search_type == USER_ARTISTS or search_type == USER_ARTISTS_2: # user uploaded artists overview
         title = f"{item['artist']}"
         media_class = MEDIA_CLASS_ARTIST
         thumbnail = item['thumbnails'][-1]['url']
         media_content_type = USER_ARTIST # send to single artist
+        if(search_type == USER_ARTISTS_2):
+            media_content_type = USER_ARTIST_2 # send to single artist -> Album
         media_content_id = f"{item['browseId']}"
         can_play = True #?
         can_expand = True #?
@@ -256,6 +280,7 @@ def library_payload(media_library):
         USER_TRACKS: ["Tracks uploaded", MEDIA_CLASS_TRACK],
         USER_ALBUMS: ["Albums uploaded", MEDIA_CLASS_ALBUM],
         USER_ARTISTS: ["Artists uploaded", MEDIA_CLASS_ARTIST],
+        USER_ARTISTS_2: ["Artists uploaded -> Album", MEDIA_CLASS_ARTIST],
     }
     for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
