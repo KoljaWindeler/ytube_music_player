@@ -40,17 +40,17 @@ import ytmusicapi
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
 	"""Run setup via YAML."""
 	_LOGGER.debug("Config via YAML")
 	if(config is not None):
-		add_entities([yTubeMusicComponent(hass, config,"_yaml")], True)
+		async_add_entities([yTubeMusicComponent(hass, config,"_yaml")], update_before_add=False)
 
 async def async_setup_entry(hass, config, async_add_devices):
 	"""Run setup via Storage."""
 	_LOGGER.debug("Config via Storage/UI currently not supported due to me not understanding asyncio")
 	if(len(config.data) > 0):
-		async_add_devices([yTubeMusicComponent(hass, config.data,"")], True)
+		async_add_devices([yTubeMusicComponent(hass, config.data,"")], update_before_add=False)
 
 
 class yTubeMusicComponent(MediaPlayerEntity):
@@ -151,6 +151,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._get_cipher('BB2mjBuAtiQ')
 		self.check_api()
 		self._update_selects()
+		self._update_playmode()
 
 	def check_api(self):
 		_LOGGER.debug("check_api")
@@ -835,7 +836,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# if we've change the dropdown, reload the playlist and start playing
 		# else only change the mode
-		if(entity_id == self._select_playMode and old_state != None and new_state != None):
+		if(entity_id == self._select_playMode and old_state != None and new_state != None and self.state == STATE_PLAYING):
 			self._allow_next = False # player will change to idle, avoid auto_advance
 			return self.play_media(media_type=self._attributes['_media_type'], media_id=self._attributes['_media_id'])
 

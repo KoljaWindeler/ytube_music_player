@@ -55,6 +55,8 @@ async def build_item_response(hass, media_library, payload):
     thumbnail = None
     title = None
     media = None
+    p1 = datetime.datetime.now()
+    _LOGGER.debug("- build_item_response for: "+search_type)
     
     if search_type == LIB_PLAYLIST: # playlist OVERVIEW
         media = await hass.async_add_executor_job(media_library.get_library_playlists,BROWSER_LIMIT)
@@ -123,7 +125,6 @@ async def build_item_response(hass, media_library, payload):
                     if('name' in media_all[0]['artist'][0]):
                         title = "Uploaded albums of "+media_all[0]['artist'][0]['name']
         search_type = USER_ALBUMS
-
     if media is None:
         return None
 
@@ -154,7 +155,8 @@ async def build_item_response(hass, media_library, payload):
         response.children_media_class = MEDIA_CLASS_MUSIC
     else:
         response.calculate_children_class()
-
+    t = (datetime.datetime.now() - p1).total_seconds()
+    _LOGGER.debug("- Calc / grab time: "+str(t)+" sec")
     return response
 
 
