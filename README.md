@@ -30,15 +30,11 @@ If you like what I've done and you want to help: buy me a coffee/beer. Thanks!
 
 # Installation
 
-**This component will set up the following platforms.**
-
-Platform | Description
--- | --
-`media_player` | will allow to play music from your YouTube Music account
-
 ## HACS
 
-The easiest way to add this to your Home Assistant installation is using [HACS](https://hacs.xyz/docs/basic/getting_started).
+Please install this custom component via [HACS](https://hacs.xyz/docs/installation/prerequisites).
+
+Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/how-to-install-any-custom-component-from-github-in-less-than-5-minutes-ad84e6dc56ff) and install the yTube_music_player from the default HACS repository.
 
 # Setup
 
