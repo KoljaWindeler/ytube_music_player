@@ -28,9 +28,7 @@ If you like what I've done and you want to help: buy me a coffee/beer. Thanks!
 [![Beer](beers.png)](https://www.buymeacoffee.com/KoljaWindeler)
 
 
-# Installation
-
-## HACS
+# Installation via HACS
 
 Please install this custom component via [HACS](https://hacs.xyz/docs/installation/prerequisites).
 
