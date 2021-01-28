@@ -302,12 +302,20 @@ def try_login(path, brand_id):
 				msg = "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data? Or did you log-out?"
 				_LOGGER.error(msg)
 				ret["base"] = ERROR_CONTENTS
-		except:
-			msg = "Running get_library_songs resulted in an exception, no idea why.. honestly"
-			_LOGGER.error(msg)
-			_LOGGER.error("Please see below")
-			_LOGGER.error(traceback.format_exc())
-			ret["base"] = ERROR_GENERIC
+		except Exception as e:
+			if hasattr(e, 'args'):
+				if(len(e.args)>0):
+					if(isinstance(e.args[0],str)):
+						if(e.args[0].startswith("Server returned HTTP 403: Forbidden")):
+							msg = "The entered information has the correct format, but returned an error 403 (access forbidden). You don't have access with this data (anymore?). Please update the cookie"
+							_LOGGER.error(msg)
+							ret["base"] = ERROR_COOKIE
+			else:
+				msg = "Running get_library_songs resulted in an exception, no idea why.. honestly"
+				_LOGGER.error(msg)
+				_LOGGER.error("Please see below")
+				_LOGGER.error(traceback.format_exc())
+				ret["base"] = ERROR_GENERIC
 	return [ret, msg, api]
 
 def ensure_config(user_input):
