@@ -47,7 +47,6 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		if user_input is not None:
 			self.data.update(user_input)
 			self._errors = check_data(user_input)
-			_LOGGER.error(self._errors)
 			if self._errors == {}:
 				self.data.update(user_input)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
