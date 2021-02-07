@@ -1172,6 +1172,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.hass.services.call(DOMAIN_MP, 'media_stop', data)
 		_LOGGER.debug("- media_stop -> "+self._remote_player)
 
+	def media_seek(self, position):
+		"""Seek the media to a specific location."""
+		_LOGGER.debug("seek: "+str(position))
+		data = {ATTR_ENTITY_ID: self._remote_player, 'seek_position': position}
+		self.hass.services.call(DOMAIN_MP, 'media_seek', data)
+
 	def set_shuffle(self, shuffle):
 		_LOGGER.debug("set_shuffle: "+str(shuffle))
 		self._shuffle = shuffle # True / False
