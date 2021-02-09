@@ -593,31 +593,41 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		info['track_artist'] = ""
 		info['track_album_cover'] = ""
 
-		
-		if 'title' in _track:
-			info['track_name'] = _track['title']
-		if 'byline' in _track:
-			info['track_artist'] = _track['byline']
-		elif 'artists' in _track:
-			info['track_artist'] = ""
-			if(isinstance(_track["artists"],str)):
-				info['track_artist'] = _track["artists"]
-			elif(isinstance(_track["artists"],list)):
-				if 'name' in _track['artists'][0]:
-					info['track_artist'] = _track['artists'][0]['name']
-				else:
-					info['track_artist'] = _track['artists'][0]
-		if 'thumbnail' in _track:
-			_album_art_ref = _track['thumbnail']   ## returns a list,
-			if 'thumbnails' in _album_art_ref:
-				_album_art_ref = _album_art_ref['thumbnails']
-			# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
-			if isinstance(_album_art_ref,list):
-				info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
-		elif 'thumbnails' in _track:
-			_album_art_ref = _track['thumbnails']   ## returns a list
-			if isinstance(_album_art_ref,list):
-				info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+		try:
+			if 'title' in _track:
+				info['track_name'] = _track['title']
+		except:
+			pass
+
+		try:
+			if 'byline' in _track:
+				info['track_artist'] = _track['byline']
+			elif 'artists' in _track:
+				info['track_artist'] = ""
+				if(isinstance(_track["artists"],str)):
+					info['track_artist'] = _track["artists"]
+				elif(isinstance(_track["artists"],list)):
+					if 'name' in _track['artists'][0]:
+						info['track_artist'] = _track['artists'][0]['name']
+					else:
+						info['track_artist'] = _track['artists'][0]
+		except:
+			pass
+
+		try:
+			if 'thumbnail' in _track:
+				_album_art_ref = _track['thumbnail']   ## returns a list,
+				if 'thumbnails' in _album_art_ref:
+					_album_art_ref = _album_art_ref['thumbnails']
+				# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
+				if isinstance(_album_art_ref,list):
+					info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+			elif 'thumbnails' in _track:
+				_album_art_ref = _track['thumbnails']   ## returns a list
+				if isinstance(_album_art_ref,list):
+					info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+		except: 
+			pass
 		return info
 
 
