@@ -365,15 +365,22 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		
 		
 		# make sure that the player, is on and idle
-		if self._playing == True:
-			self.media_stop() 
-		elif self._playing == False and self._state == STATE_OFF:
-			if _player.state == STATE_OFF:
-				self._turn_on_media_player()
-		else:
-			_LOGGER.debug("self._state is: (%s).", self._state)
-			if(self._state == STATE_PLAYING):
+		try:
+			if self._playing == True:
 				self.media_stop() 
+			elif self._playing == False and self._state == STATE_OFF:
+				if _player.state == STATE_OFF:
+					self._turn_on_media_player()
+			else:
+				_LOGGER.debug("self._state is: (%s).", self._state)
+				if(self._state == STATE_PLAYING):
+					self.media_stop() 
+		except:
+			_LOGGER.error("We hit an error during prepare play, likely related to issue 52")
+			_LOGGER.error("Player: "+str(_player)+".")
+			_LOGGER.error("remote_player: "+str(self._remote_player)+".")
+			self.exc()
+
 			
 		# update cipher
 		self._get_cipher('BB2mjBuAtiQ')
@@ -453,7 +460,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.hass.services.call("persistent_notification","create", data)
 				return False
 			else:
-				return True
+				if self.hass.states.get(_remote_player) is None:
+					_LOGGER.error("(%s) is not a valid media player.", media_player.state)
+					return False
+				else:
+					return True
 		else:
 			media_player = self.hass.states.get(self._select_mediaPlayer) # Example: self.hass.states.get(input_select.gmusic_player_speakers)
 			if media_player is None:
@@ -726,6 +737,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
 						speakersList.append(e.entity_id.replace(DOMAIN_MP+".",""))
 			speakersList = list(dict.fromkeys(speakersList))
+			_LOGGER.debug("- Adding "+str(len(speakersList))+" player to the dropdown")
 			data = {input_select.ATTR_OPTIONS: list(speakersList), ATTR_ENTITY_ID: self._select_mediaPlayer}
 			self.hass.services.call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
 			if(defaultPlayer!=''):
