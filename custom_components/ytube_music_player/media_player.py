@@ -460,8 +460,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.hass.services.call("persistent_notification","create", data)
 				return False
 			else:
-				if self.hass.states.get(_remote_player) is None:
-					_LOGGER.error("(%s) is not a valid media player.", media_player.state)
+				if self.hass.states.get(self._remote_player) is None:
+					_LOGGER.error("(%s) is not a valid media player.", self._remote_player)
 					return False
 				else:
 					return True
