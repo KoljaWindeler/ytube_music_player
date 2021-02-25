@@ -71,6 +71,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# proxy settings
 		self._proxy_url = config.get(CONF_PROXY_URL,"")
 		self._proxy_path = config.get(CONF_PROXY_PATH,"")
+		self._proxy_alternating_id = 0
 
 
 		_LOGGER.debug("YtubeMediaPlayer config: ")
@@ -941,10 +942,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		try:
 			if(self._proxy_url!="" and self._proxy_path!=""):
 				p1 = datetime.datetime.now()
-				open(os.path.join(self._proxy_path,PROXY_FILENAME), 'wb').write(urlopen(_url).read())
+				open(os.path.join(self._proxy_path,str(self._proxy_alternating_id)+"_"+PROXY_FILENAME), 'wb').write(urlopen(_url).read())
+				self._proxy_alternating_id = (self._proxy_alternating_id+1)%2
 				if(self._proxy_url.endswith('/')):
 					self._proxy_url = self._proxy_url[:-1]
-				_url = self._proxy_url+"/"+PROXY_FILENAME
+				_url = self._proxy_url+"/"+str(self._proxy_alternating_id)+"_"+PROXY_FILENAME
 				t = (datetime.datetime.now() - p1).total_seconds()
 				_LOGGER.debug("- proxy loading time: "+str(t)+" sec")
 		except:
