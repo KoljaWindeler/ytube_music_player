@@ -20,8 +20,8 @@
                     "select_source":"Entity id of input_select for playlist/radio selection",
                     "select_playlist":"Entity id of input_select for playlist selection",
                     "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
-                    "proxy_path": "Path for proxy mode, leave blank if you don't need it",
-                    "proxy_url": "Path for proxy mode, leave blank if you don't need it"
+                    "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
+                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it"
                 }
             }
         },
@@ -54,8 +54,8 @@
                     "select_source":"Entity id of input_select for playlist/radio selection",
                     "select_playlist":"Entity id of input_select for playlist selection",
                     "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
-                    "proxy_path": "Path for proxy mode, leave blank if you don't need it",
-                    "proxy_url": "Path for proxy mode, leave blank if you don't need it"
+                    "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
+                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it"
                 }
             }
         },
