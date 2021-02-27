@@ -13,5 +13,6 @@
     "persistent_notification"],
   "codeowners": [
     "@KoljaWindeler"
-  ]
+  ],
+  "version": "0.20210227.01"
 }
