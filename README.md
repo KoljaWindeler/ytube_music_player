@@ -36,12 +36,12 @@ you can now use it via the media browser and the default mediaplayer card, but p
 
 3. (highly recommended) install the mini-media-player and use [see shortcut buttons](#shortcuts) 
 4. (optional) add dropdowns to your configuration.yaml if you prefere them over the shortcuts [see how to](#dropdowns-buttons-and-marksdowns) 
-5. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#MPD_fix)
+5. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#mpd-fix)
 6. (optional) install [automations](#Automations)
 
 when you find a bug, or want some extra informations
 
-7. (debug) enable [debug info](#Debug_Information)
+7. (debug) enable [debug info](#debug-information)
 
 # Installation via HACS
 
