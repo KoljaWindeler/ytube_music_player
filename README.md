@@ -136,11 +136,11 @@ Service | parameter | details
 
 ## Dropdowns, Buttons and Marksdowns
 The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
-However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at [package/markdown.yaml](https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/markdown.yaml). *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
+However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at [package/default.yaml](https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml). *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
 
 The player attributes contain addition informations, like the playlist and if available the lyrics of the track
 ![lyrics](lyrics.png)
-The yaml setup is available at package/markdown.yaml
+The yaml setup is available at [package/markdown.yaml](https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/markdown.yaml)
 
 ## Automations
 Play my **favorite** playlist in **random** mode on my **kitchen** speaker (kuche)
