@@ -29,19 +29,23 @@ If you like what I've done and you want to help: buy me a coffee/beer. Thanks!
 
 
 # Step - by - step guide
-1. (required) install the component via HACS [see Installation](#installation-via-hacs)
-2. (required) configure the component via config flow, see details for the [see Setup](#setup)
+
+1. Initial setup: [Videotutorial](https://www.youtube.com/watch?v=_UQv7fc3h5s)
+- (required) install the component via HACS [see Installation](#installation-via-hacs)
+- (required) configure the component via config flow, see details for the [see Setup](#setup)
 
 you can now use it via the media browser and the default mediaplayer card, but please read on ... 
 
-3. (highly recommended) install the mini-media-player and use [see shortcut buttons](#shortcuts) 
-4. (optional) add dropdowns to your configuration.yaml if you prefere them over the shortcuts [see how to](#dropdowns-buttons-and-marksdowns) 
-5. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#mpd-fix)
-6. (optional) install [automations](#Automations)
+2. Mini-media-player [Videotutorial](https://www.youtube.com/watch?v=YccSsBr3Tag)
+- (highly recommended) install the mini-media-player and use [see shortcut buttons](#shortcuts) 
+3. Dropdowns [Videotutorial](https://www.youtube.com/watch?v=J1unTpW5wcI)
+- (optional) add dropdowns to your configuration.yaml if you prefere them over the shortcuts [see how to](#dropdowns-buttons-and-marksdowns) 
+4. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#mpd-fix)
+5. (optional) install [automations](#Automations)
 
 when you find a bug, or want some extra informations
 
-7. (debug) enable [debug info](#debug-information)
+6. (debug) enable [debug info](#debug-information)
 
 # Installation via HACS
 
