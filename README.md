@@ -28,6 +28,21 @@ If you like what I've done and you want to help: buy me a coffee/beer. Thanks!
 [![Beer](beers.png)](https://www.buymeacoffee.com/KoljaWindeler)
 
 
+# Step - by - step guide
+1. (required) install the component via HACS [see Installation](#installation-via-hacs)
+2. (required) configure the component via config flow, see details for the [see Setup](#setup)
+
+you can now use it via the media browser and the default mediaplayer card, but please read on ... 
+
+3. (highly recommended) install the mini-media-player and use [see shortcut buttons](#shortcuts) 
+4. (optional) add dropdowns to your configuration.yaml if you prefere them over the shortcuts [see how to](#dropdowns-buttons-and-marksdowns) 
+5. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#MPD_fix)
+6. (optional) install [automations](#Automations)
+
+when you find a bug, or want some extra informations
+
+7. (debug) enable [debug info](#Debug_Information)
+
 # Installation via HACS
 
 Please install this custom component via [HACS](https://hacs.xyz/docs/installation/prerequisites).
@@ -64,7 +79,7 @@ The screenshot below shows the mini-media-player from kalkih (https://github.com
 
 ![mini-media-player](shortcuts.png)
 
-This mediaplayer offers shortcuts, which can be used to select a remote_player and playlist with a single click:
+This mediaplayer offers shortcuts, which can be used to select the remote_player, album to play or playlist with a single click:
 
 ```
 - type: 'custom:mini-media-player'
@@ -121,7 +136,7 @@ Service | parameter | details
 
 ## Dropdowns, Buttons and Marksdowns
 The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
-However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at package/markdown.yaml. *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
+However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at [package/markdown.yaml](https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/markdown.yaml). *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
 
 The player attributes contain addition informations, like the playlist and if available the lyrics of the track
 ![lyrics](lyrics.png)
