@@ -271,7 +271,7 @@ I've added extensive debugging information to the component. So if you hit an er
 
 There are two ways to enable the debug output (as of 20210303):
 
-1. Reroute debug output to error via service
+### 1. Reroute debug output to error via service
 - Open Developer tools
 - open service tab
 - call service below
@@ -285,7 +285,7 @@ command: debug_as_error
 This will instantly post all messages as errors until you reboot homeassistant:
 ![Debug as error](debug_as_error.png)
 
-2. Let Homeassistant show debug information
+### 2. Let Homeassistant show debug information
 - edit the `configuration.yaml` and add the logger section
 - Please keep in mind that a restart of Homeassistant is needed to apply this change. 
 
