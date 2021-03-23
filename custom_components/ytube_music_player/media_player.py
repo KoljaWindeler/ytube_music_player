@@ -101,6 +101,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._interrupt_data = None
 		self._attributes['_media_type'] = None
 		self._attributes['_media_id'] = None
+		self._attributes['_radio_based'] = ""
 		self._attributes['_player_state'] = STATE_OFF
 
 		self._playing = False
@@ -560,9 +561,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._get_track()
 			# turn this player of when the remote_player was shut down
 			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE) and new_state.state == STATE_OFF):
-				if(self._x_to_idle == STATE_OFF): # workaround for MPD (changes to OFF at the end of a track)
+				if(self._x_to_idle == STATE_OFF or self._x_to_idle == STATE_OFF_1X): # workaround for MPD (changes to OFF at the end of a track)
 					self._allow_next = False
 					self._get_track()
+					if(self._x_to_idle == STATE_OFF_1X):
+						self._x_to_idle = None
 				else:
 					self._state = STATE_OFF
 					self.log_me('debug',"media player got turned off")
@@ -1075,6 +1078,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._started_by = "Browser"
 		self._attributes['_media_type'] = media_type
 		self._attributes['_media_id'] = media_id
+		self._attributes['_radio_based'] =  ""
 
 		self.prepare_play()
 
@@ -1086,41 +1090,55 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# load Tracks depending on input
 		try:
+			crash_extra = ''
 			if(media_type == MEDIA_TYPE_PLAYLIST):
+				crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
 				self._tracks = self._api.get_playlist(playlistId=media_id)['tracks']
 			elif(media_type == MEDIA_TYPE_ALBUM):
+				crash_extra = 'get_album(browseId='+str(media_id)+')'
 				self._tracks = self._api.get_album(browseId=media_id)['tracks']
 			elif(media_type == MEDIA_TYPE_TRACK):
+				crash_extra = 'get_song(videoId='+str(media_id)+')'
 				self._tracks = [self._api.get_song(videoId=media_id)]
 			elif(media_id == HISTORY):
+				crash_extra = 'get_history()'
 				self._tracks = self._api.get_history()
 			elif(media_id == USER_TRACKS):
+				crash_extra = 'get_library_upload_songs(limit=999)'
 				self._tracks = self._api.get_library_upload_songs(limit=999)
 			elif(media_type == CHANNEL):
 				# get original playlist from the media_id
+				crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
 				self._tracks = self._api.get_playlist(playlistId=media_id,limit=999)['tracks']
 				# select on track randomly
 				if(isinstance(self._tracks, list)):
 					if(len(self._tracks)>0):
 						if(len(self._tracks)>1):
 							r_track = self._tracks[random.randrange(0,len(self._tracks)-1)]
+							info = self.extract_info(r_track) 
+							self._attributes['_radio_based'] =  info['track_artist'] + " - " + info['track_name']
 						else:
 							r_track = self._tracks[0]
 						# get a 'channel' based on that random track
+						crash_extra += ' ... get_watch_playlist(videoId='+str(r_track['videoId'])+')'
 						self._tracks = self._api.get_watch_playlist(videoId=r_track['videoId'])['tracks']
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 			elif(media_type == USER_ALBUM):
+				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
 				self._tracks = self._api.get_library_upload_album(browseId=media_id)['tracks']
 			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
+				crash_extra = 'get_library_upload_artist(browseId='+str(media_id)+')'
 				self._tracks = self._api.get_library_upload_artist(browseId=media_id, limit=BROWSER_LIMIT)
 			else:
 				self.log_me('debug',"- error during fetching play_media, turning off")
 				self.turn_off()
 		except:
 			self._api = None
+			self.log_me('debug',crash_extra)
 			self.exc(resp="ytmusicapi")
 			self.turn_off()
 			return
+		self.log_me('debug',crash_extra)
 
 		# mode 1 and 3 shuffle the playlist after generation
 		if(isinstance(self._tracks,list)):
@@ -1348,6 +1366,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(command == SERVICE_CALL_OFF_IS_IDLE): #needed for the MPD but for nobody else
 			self._x_to_idle = STATE_OFF 
 			self.log_me('debug',"Setting x_is_idle to State Off")
+		elif(command == SERVICE_CALL_OFF_IS_IDLE_1X): #needed for my own setup. the amp will (when powering on) switch off the chromcast .. ignore ONE off event
+			self._x_to_idle = STATE_OFF_1X 
+			self.log_me('debug',"Setting x_is_idle to State Off 1x")
 		elif(command == SERVICE_CALL_PAUSED_IS_IDLE): #needed for the Sonos but for nobody else
 			self._x_to_idle = STATE_PAUSED 
 			self.log_me('debug',"Setting x_is_idle to State Paused")
