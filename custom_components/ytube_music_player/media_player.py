@@ -103,6 +103,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_media_id'] = None
 		self._attributes['_radio_based'] = ""
 		self._attributes['_player_state'] = STATE_OFF
+		self._attributes['_player_id'] = None
 
 		self._playing = False
 		self._state = STATE_OFF
@@ -456,39 +457,37 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	def _update_remote_player(self, remote_player=""):
-		self.log_me('debug',"_update_remote_player")
+		self.log_me('debug',"_update_remote_player("+str(remote_player)+")")
 		old_remote_player = self._remote_player
+		# sanitize player, remove domain
+		remote_player = remote_player.replace(DOMAIN_MP+".","")
+
 		if(remote_player != ""):
 			# make sure that the entity ID is complete
-			if(not(remote_player.startswith(DOMAIN_MP+"."))):
-				remote_player = DOMAIN_MP+"."+remote_player
-			self._remote_player = remote_player
+			remote_player = DOMAIN_MP+"."+remote_player		
 		# sets the current media_player from input_select
-		elif(self._select_mediaPlayer == ""): # drop down for player does not exist
-			if(self._remote_player == ""): # no preselected entity ID
-				self._track_name = "Please select player first"
-				self.schedule_update_ha_state()
-				msg= "Please select a player before start playing, e.g. via the 'media_player.select_source' method"
-				data = {"title": "yTubeMediaPlayer error", "message": msg}
-				self.hass.services.call("persistent_notification","create", data)
-				return False
-			else:
-				if self.hass.states.get(self._remote_player) is None:
-					_LOGGER.error("(%s) is not a valid media player.", self._remote_player)
-					return False
-				else:
-					return True
-		else:
+		elif(self._select_mediaPlayer != ""): # drop down for player does exist
 			media_player = self.hass.states.get(self._select_mediaPlayer) # Example: self.hass.states.get(input_select.gmusic_player_speakers)
 			if media_player is None:
-				_LOGGER.error("(%s) is not a valid input_select entity.", self._select_mediaPlayer)
-				return False
-			_remote_player = "media_player." + media_player.state
-			if self.hass.states.get(_remote_player) is None:
-				_LOGGER.error("(%s) is not a valid media player.", media_player.state)
-				return False
-			# Example: self._remote_player = media_player.bedroom_stereo
-			self._remote_player = _remote_player
+				_LOGGER.error("(%s) is not a valid input_select entity to get the player.", self._select_mediaPlayer)
+			else:
+				# since we can't be sure if the MediaPlayer Domain is in the field value, add it and remove it :D 
+				remote_player = DOMAIN_MP+"."+media_player.state.replace(DOMAIN_MP+".","")
+		
+		# ok lets check if we have a player or post an error
+		if(self.check_entity_exists(remote_player)):
+			self._remote_player = remote_player
+			self._attributes['_player_id'] = self._remote_player
+		elif(self.check_entity_exists(self._remote_player)):
+			self._attributes['_player_id'] = self._remote_player
+		else:
+			self._track_name = "Please select player first"
+			self.schedule_update_ha_state()
+			msg= "Please select a player before start playing, e.g. via the 'media_player.select_source' method or in the settings/config_flow"
+			data = {"title": "yTubeMediaPlayer error", "message": msg}
+			self.hass.services.call("persistent_notification","create", data)
+			self.log_me('error',"No player selected or the selected player isn't available ("+str(remote_player)+"/"+str(self._remote_player)+"), you will not be able to play music, please set the default player in the settings/config_flow or call media_player.select_source")
+			return False
 
 		# unsubscribe / resubscribe
 		if self._remote_player != old_remote_player:
@@ -740,8 +739,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._select_mediaPlayer = ""
 			# if exactly one unit is provided, stick with it, if it existst
 			if(len(speakersList) == 1):
-				self._update_remote_player(remote_player=speakersList[0])
-				self.log_me('debug',"- Choosing "+self._remote_player+" as player")
+				if(self._update_remote_player(remote_player=speakersList[0])):
+					self.log_me('debug',"- Choosing "+self._remote_player+" as player")
 		else: #dropdown exists
 			defaultPlayer = ''
 			if(len(speakersList)<=1):
@@ -1006,6 +1005,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				streamingData=self._api.get_streaming_data(videoId)
 			except:
 				self._api = None
+				self.log_me('error',"self._api.get_streaming_data("+str(videoId)+")")
 				self.exc(resp="ytmusicapi")
 				return
 			if('adaptiveFormats' in streamingData):
@@ -1049,6 +1049,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_LOGGER.error(self._api.get_song(videoId))
 			except:
 				self._api = None
+				self.log_me('error',"self._api.get_song("+str(videoId)+")")
 				self.exc(resp="ytmusicapi")
 				return
 
