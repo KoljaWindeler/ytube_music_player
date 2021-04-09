@@ -28,7 +28,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		self._errors = {}
 		if user_input is not None:
 			# there is user input, check and save if valid (see const.py)
-			self._errors = check_data(user_input)
+			self._errors = await async_check_data(self.hass,user_input)
 			if self._errors == {}:
 				self.data = user_input
 				return await self.async_step_finish()
@@ -46,7 +46,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		self._errors = {}
 		if user_input is not None:
 			self.data.update(user_input)
-			self._errors = check_data(user_input)
+			self._errors = await async_check_data(self.hass,user_input)
 			if self._errors == {}:
 				self.data.update(user_input)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
@@ -87,7 +87,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 		self._errors = {}
 		if user_input is not None:
 			# there is user input, check and save if valid (see const.py)
-			self._errors = check_data(user_input)
+			self._errors = await async_check_data(self.hass,user_input)
 			if self._errors == {}:
 				self.data.update(user_input)
 				return await self.async_step_finish()
@@ -103,7 +103,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 		self._errors = {}
 		if user_input is not None:
 			self.data.update(user_input)
-			self._errors = check_data(user_input)
+			self._errors = await async_check_data(self.hass,user_input)
 			if self._errors == {}:
 				self.data.update(user_input)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')

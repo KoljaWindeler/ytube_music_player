@@ -202,7 +202,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-def check_data(user_input):
+async def async_check_data(hass, user_input):
 	"""Check validity of the provided date."""
 	ret = {}
 	if(CONF_COOKIE in user_input and CONF_HEADER_PATH in user_input):
@@ -252,10 +252,10 @@ def check_data(user_input):
 		#_LOGGER.debug("feeding with: ")
 		#_LOGGER.debug(c)
 		YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
-		[ret, msg, api] = try_login(user_input[CONF_HEADER_PATH],"")
+		[ret, msg, api] = await async_try_login(hass,user_input[CONF_HEADER_PATH],"")
 	return ret
 
-def try_login(path, brand_id):
+async def async_try_login(hass, path, brand_id):
 	ret = {}
 	api = None
 	msg = ""
@@ -263,10 +263,10 @@ def try_login(path, brand_id):
 	try:
 		if(brand_id!=""):
 			_LOGGER.debug("- using brand ID: "+brand_id)
-			api = YTMusic(path,brand_id)
+			api = await hass.async_add_executor_job(YTMusic,path,brand_id)
 		else:
 			_LOGGER.debug("- login without brand ID")
-			api = YTMusic(path)
+			api = await hass.async_add_executor_job(YTMusic,path)
 	except KeyError as err:
 		_LOGGER.debug("- Key exception")
 		if(str(err)=="'contents'"):
@@ -300,7 +300,7 @@ def try_login(path, brand_id):
 		ret["base"] = ERROR_NONE
 	elif(not(api == None) and ret == {}):
 		try:
-			api.get_library_songs()
+			await hass.async_add_executor_job(api.get_library_songs)
 		except KeyError as err:
 			if(str(err)=="'contents'"):
 				msg = "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data? Or did you log-out?"
