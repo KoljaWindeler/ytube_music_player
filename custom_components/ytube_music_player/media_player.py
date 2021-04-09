@@ -962,7 +962,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				p1 = datetime.datetime.now()
 				_proxy_url = await self.hass.async_add_executor_job(urlopen,_url)
 				_proxy_file = open(os.path.join(self._proxy_path,PROXY_FILENAME), 'wb')
-				_proxy_url_content = await self.hass.async_add_executor_job(u.read)
+				_proxy_url_content = await self.hass.async_add_executor_job(_proxy_url.read)
 				await self.hass.async_add_executor_job(_proxy_file.write,_proxy_url_content)
 				if(self._proxy_url.endswith('/')):
 					self._proxy_url = self._proxy_url[:-1]
