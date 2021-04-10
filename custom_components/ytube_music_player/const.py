@@ -130,6 +130,7 @@ SERVICE_CALL_OFF_IS_IDLE = "off_is_idle"
 SERVICE_CALL_OFF_IS_IDLE_1X = "off_is_idle_1x"
 SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
+SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)

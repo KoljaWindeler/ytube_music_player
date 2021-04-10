@@ -57,7 +57,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
 		self._debug_as_error = False 
-		self._name = config.get(CONF_NAME,DOMAIN+name_add)
+		self._org_name = config.get(CONF_NAME,DOMAIN+name_add)
+		self._name = self._org_name
 		# confgurations can be either the full entity_id or just the name
 		self._select_playlist = input_select.DOMAIN+"."+config.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST).replace(input_select.DOMAIN+".","")
 		self._select_playMode = input_select.DOMAIN+"."+config.get(CONF_SELECT_PLAYMODE, DEFAULT_SELECT_PLAYMODE).replace(input_select.DOMAIN+".","")
@@ -87,6 +88,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._api = None
 		self._js = ""
 		self._update_needed = False
+		self._like_in_name = False
 
 		self._remote_player = ""
 		self._untrack_remote_player = None
@@ -445,6 +447,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_media_type'] = ""
 		self._attributes['_media_id'] = ""
 		self._attributes['current_track'] = 0
+		if(self._like_in_name):
+			self._name = self._org_name
 
 		self.async_schedule_update_ha_state()
 		if(self._remote_player == ""):
@@ -570,7 +574,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				else:
 					self._state = STATE_OFF
 					self.log_me('debug',"media player got turned off")
-					self.turn_off()
+					self.async_turn_off()
 			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED and # workaround for SONOS (changes to PAUSED at the end of a track)
 			       (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10 and self._x_to_idle == STATE_PAUSED):
 				self._allow_next = False
@@ -922,9 +926,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['current_track'] = self._next_track_no
 		self._attributes['videoId'] = _track['videoId']
 		if('likeStatus' in _track):
-			self._attributes['likeStatus'] = _track['likeStatus']	
+			self._attributes['likeStatus'] = _track['likeStatus']
+			if(self._like_in_name):
+				self._name = self._org_name + " - " + _track['likeStatus']
 		else:	
 			self._attributes['likeStatus'] = ""
+			if(self._like_in_name):
+				self._name = self._org_name
 
 
 		""" Find the unique track id. """
@@ -1334,6 +1342,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 								arg = 'LIKE'
 					await self.hass.async_add_executor_job(self._api.rate_song,self._attributes['videoId'],arg)
 					self._attributes['likeStatus'] = arg
+					if(self._like_in_name):
+						self._name = self._org_name + " - " + arg
 					self.async_schedule_update_ha_state()
 					self._tracks[self._next_track_no]['likeStatus'] = arg
 				except:
@@ -1389,6 +1399,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(command == SERIVCE_CALL_DEBUG_AS_ERROR):
 			self._debug_as_error = True
 			self.log_me('debug',"Posting debug messages as error until restart")
+		elif(command == SERVICE_CALL_LIKE_IN_NAME):
+			self._like_in_name = True
+			self._name = self._org_name + " - " + self._attributes['likeStatus']
+			self.log_me('debug',"Showing like status in name until restart")
 
 	
 
