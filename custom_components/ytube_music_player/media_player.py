@@ -1299,7 +1299,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_volume_down(self, **kwargs):
 		"""Volume down media player."""
 		newvolume = max(self._volume - 0.05, 0.01)
-		self.async_set_volume_level(newvolume)
+		await self.async_set_volume_level(newvolume)
 
 	async def async_mute_volume(self, mute):
 		"""Send mute command."""
