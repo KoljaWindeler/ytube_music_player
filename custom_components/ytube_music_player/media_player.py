@@ -106,6 +106,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_radio_based'] = ""
 		self._attributes['_player_state'] = STATE_OFF
 		self._attributes['_player_id'] = None
+		self._attributes['likeStatus'] = ""
 
 		self._playing = False
 		self._state = STATE_OFF
@@ -426,13 +427,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" Turn off the selected media_player """
 		self.log_me('debug',"turn_off")
 		self._playing = False
-		self._track_name = None
-		self._track_artist = None
-		self._track_album_name = None
-		self._track_album_cover = None
-		self._media_duration = None
-		self._media_position = None
-		self._media_position_updated = None
 		await self.async_turn_off_media_player()
 
 	async def async_turn_off_media_player(self, data=None):
@@ -440,6 +434,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		"""Fire the off action."""
 		self._playing = False
 		self._state = STATE_OFF
+		self._track_name = None
+		self._track_artist = None
+		self._track_album_name = None
+		self._track_album_cover = None
+		self._media_duration = None
+		self._media_position = None
+		self._media_position_updated = None
 		self._attributes['_player_state'] = STATE_OFF
 		self._attributes['likeStatus'] = ""
 		self._attributes['videoId'] = ""
@@ -574,7 +575,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				else:
 					self._state = STATE_OFF
 					self.log_me('debug',"media player got turned off")
-					self.async_turn_off()
+					await self.async_turn_off()
 			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED and # workaround for SONOS (changes to PAUSED at the end of a track)
 			       (datetime.datetime.now()-self._last_auto_advance).total_seconds() > 10 and self._x_to_idle == STATE_PAUSED):
 				self._allow_next = False
