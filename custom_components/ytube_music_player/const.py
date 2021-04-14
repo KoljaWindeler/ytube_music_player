@@ -4,6 +4,7 @@ import voluptuous as vol
 import logging
 import datetime
 import traceback
+import asyncio
 from collections import OrderedDict
 from ytmusicapi import YTMusic
 
@@ -131,6 +132,7 @@ SERVICE_CALL_OFF_IS_IDLE_1X = "off_is_idle_1x"
 SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
 SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
+SERVICE_CALL_GOTO_TRACK = "goto_track"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
@@ -166,6 +168,7 @@ ERROR_GENERIC = 'ERROR_GENERIC'
 ERROR_CONTENTS = 'ERROR_CONTENTS'
 ERROR_FORMAT = 'ERROR_FORMAT'
 ERROR_NONE = 'ERROR_NONE'
+ERROR_FORBIDDEN = 'ERROR_FORBIDDEN'
 
 PLAYMODE_SHUFFLE = "Shuffle"
 PLAYMODE_RANDOM = "Random"
@@ -252,7 +255,19 @@ async def async_check_data(hass, user_input):
 			c = c.replace('X-Goog-AuthUser','\nX-Goog-AuthUser')
 		#_LOGGER.debug("feeding with: ")
 		#_LOGGER.debug(c)
-		YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
+		try:
+			YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
+		except:
+			ret["base"] = ERROR_GENERIC
+			formatted_lines = traceback.format_exc().splitlines()
+			for i in formatted_lines:
+				if(i.startswith('Exception: ')):
+					if(i.find('The following entries are missing in your headers: Cookie')>=0):
+						ret["base"] = ERROR_COOKIE
+					elif(i.find('The following entries are missing in your headers: X-Goog-AuthUser')>=0):
+						ret["base"] = ERROR_AUTH_USER
+			_LOGGER.error(traceback.format_exc())
+			return ret
 		[ret, msg, api] = await async_try_login(hass,user_input[CONF_HEADER_PATH],"")
 	return ret
 
@@ -314,7 +329,7 @@ async def async_try_login(hass, path, brand_id):
 						if(e.args[0].startswith("Server returned HTTP 403: Forbidden")):
 							msg = "The entered information has the correct format, but returned an error 403 (access forbidden). You don't have access with this data (anymore?). Please update the cookie"
 							_LOGGER.error(msg)
-							ret["base"] = ERROR_COOKIE
+							ret["base"] = ERROR_FORBIDDEN
 			else:
 				msg = "Running get_library_songs resulted in an exception, no idea why.. honestly"
 				_LOGGER.error(msg)
@@ -375,20 +390,28 @@ def ensure_config(user_input):
 	return out
 
 
-def create_form(user_input, page=1):
+async def async_create_form(hass, user_input, page=1):
 	"""Create form for UI setup."""
 	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
 
+	all_media_player = dict()
+	all_entities = await hass.async_add_executor_job(hass.states.all) 
+	for e in all_entities:
+		if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
+			all_media_player.update({e.entity_id: e.entity_id.replace(DOMAIN_MP+".","")})
+	
+
 	if(page == 1):
 		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
 		data_schema[vol.Required(CONF_COOKIE, default=user_input[CONF_COOKIE])] = str # configuration of the cookie
-		data_schema[vol.Optional(CONF_RECEIVERS, default=user_input[CONF_RECEIVERS])] = str # default remote_player
+		#data_schema[vol.Optional(CONF_RECEIVERS, default=user_input[CONF_RECEIVERS])] = str # default remote_player
+		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = cv.multi_select(all_media_player)
 		#data_schema[vol.Optional(CONF_SHUFFLE, default=user_input[CONF_SHUFFLE])] = vol.Coerce(bool) # default duffle, TRUE/FALSE
 		#data_schema[vol.Optional(CONF_SHUFFLE_MODE, default=user_input[CONF_SHUFFLE_MODE])] = vol.Coerce(int) # [1] = Shuffle .. 2....
-		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id
 		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
 	elif(page == 2):
+		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id
 		data_schema[vol.Optional(CONF_SELECT_SPEAKERS, default=user_input[CONF_SELECT_SPEAKERS])] = str # drop down to select remote_player
 		data_schema[vol.Optional(CONF_SELECT_SOURCE, default=user_input[CONF_SELECT_SOURCE])] = str # drop down to select playlist / playlist-radio
 		data_schema[vol.Optional(CONF_SELECT_PLAYLIST, default=user_input[CONF_SELECT_PLAYLIST])] = str # drop down that holds the playlists
