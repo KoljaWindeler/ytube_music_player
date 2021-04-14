@@ -165,10 +165,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	# either called once homeassistant started (component was configured before startup)
 	# or call from update(), if the component was configured AFTER homeassistant was started
 	async def async_startup(self,hass):
-		await self.async_get_cipher('BB2mjBuAtiQ')
-		await self.async_check_api()
-		await self.async_update_selects()
-		await self.async_update_playmode()
+		self.log_me('debug',"async_startup")	
+		try:
+			await self.async_get_cipher('BB2mjBuAtiQ')
+		except:
+			self.log_me('error',"async_get_cipher failed")	
+		try:
+			await self.async_check_api()
+		except:
+			self.log_me('error',"async_check_api failed")	
+		try:
+			await self.async_update_selects()
+		except:
+			self.log_me('error',"async_update_selects failed")	
+		try:
+			await self.async_update_playmode()
+		except:
+			self.log_me('error',"async_update_playmode failed")	
+		self.log_me('debug',"END async_startup")	
 
 	async def async_check_api(self):
 		self.log_me('debug',"async_check_api")
@@ -462,7 +476,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_update_remote_player(self, remote_player=""):
-		self.log_me('debug',"async_update_remote_player("+str(remote_player)+")")
+		self.log_me('debug',"async_update_remote_player("+str(remote_player)+"/"+str(self._remote_player)+")")
 		old_remote_player = self._remote_player
 		# sanitize player, remove domain
 		remote_player = remote_player.replace(DOMAIN_MP+".","")
@@ -471,7 +485,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# make sure that the entity ID is complete
 			remote_player = DOMAIN_MP+"."+remote_player		
 		# sets the current media_player from input_select
-		elif(self._select_mediaPlayer != ""): # drop down for player does exist
+		elif(self._select_mediaPlayer != "" and await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)): # drop down for player does exist .. double check!!
 			media_player = self.hass.states.get(self._select_mediaPlayer) # Example: self.hass.states.get(input_select.gmusic_player_speakers)
 			if media_player is None:
 				_LOGGER.error("(%s) is not a valid input_select entity to get the player.", self._select_mediaPlayer)
@@ -685,7 +699,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self.log_me('debug',"- Choosing "+self._remote_player+" as player")
 			## try to set drop down
 			if(self._select_mediaPlayer != ""):
-				if(not await self.async_check_entity_exists(self._select_mediaPlayer)):
+				if(not await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)):
 					self.log_me('debug',"- Drop down for media player: "+str(self._select_mediaPlayer)+" not found")
 				else:
 					data = {input_select.ATTR_OPTION: source, ATTR_ENTITY_ID: self._select_mediaPlayer}
@@ -716,19 +730,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_update_selects(self, now=None):
 		self.log_me('debug',"async_update_selects")
 		# -- all others -- #
-		if(not await self.async_check_entity_exists(self._select_playlist)):
+		if(not await self.async_check_entity_exists(self._select_playlist, unavailable_is_ok=False)):
 			self.log_me('debug',"- playlist: "+str(self._select_playlist)+" not found")
 			self._select_playlist = ""
-		if(not  await self.async_check_entity_exists(self._select_playMode)):
+		if(not  await self.async_check_entity_exists(self._select_playMode, unavailable_is_ok=False)):
 			self.log_me('debug',"- playmode: "+str(self._select_playMode)+" not found")
 			self._select_playMode = ""
-		if(not await self.async_check_entity_exists(self._select_playContinuous)):
+		if(not await self.async_check_entity_exists(self._select_playContinuous, unavailable_is_ok=False)):
 			self.log_me('debug',"- playContinuous: "+str(self._select_playContinuous)+" not found")
 			self._select_playContinuous = ""
-		if(not await self.async_check_entity_exists(self._select_mediaPlayer)):
+		if(not await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)):
 			self.log_me('debug',"- mediaPlayer: "+str(self._select_mediaPlayer)+" not found")
 			self._select_mediaPlayer = ""
-		if(not await self.async_check_entity_exists(self._select_source)):
+		if(not await self.async_check_entity_exists(self._select_source, unavailable_is_ok=False)):
 			self.log_me('debug',"- Source: "+str(self._select_source)+" not found")
 			self._select_source = ""
 		# ----------- speaker -----#
@@ -771,13 +785,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# finally call update playlist to fill the list .. if it exists
 		await self.async_update_playlists()
 	
-	async def async_check_entity_exists(self, e):
+	async def async_check_entity_exists(self, e,unavailable_is_ok = True):
 		try:
 			r = self.hass.states.get(e)
 			if(r is None):
 				return False
-			#if(r.state == "unavailable"):
-			#	return False
+			if(r.state == "unavailable"): #needed, some dropdown field will report as "unavailable" although they don't exist
+				if(not(unavailable_is_ok)):
+					return False
 			return True
 		except:
 			return False
@@ -1155,12 +1170,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_artist,media_id,BROWSER_LIMIT)
 			else:
 				self.log_me('debug',"- error during fetching play_media, turning off")
-				self.turn_off()
+				await self.async_turn_off()
 		except:
 			self._api = None
 			self.log_me('debug',crash_extra)
 			self.exc(resp="ytmusicapi")
-			self.turn_off()
+			await self.async_turn_off_media_player()
 			return
 		self.log_me('debug',crash_extra)
 
@@ -1171,10 +1186,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.log_me('debug',"- shuffle new tracklist")
 			if(len(self._tracks)==0):
 				_LOGGER.error("tracklist with 0 tracks loaded, existing")
-				self.turn_off()
+				await self.async_turn_off()
 				return
 		else:
-			self.turn_off()
+			await self.async_turn_off()
 			return
 
 
@@ -1404,6 +1419,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._like_in_name = True
 			self._name = self._org_name + " - " + self._attributes['likeStatus']
 			self.log_me('debug',"Showing like status in name until restart")
+		elif(command == SERVICE_CALL_GOTO_TRACK):
+			self.log_me('debug',"Going to Track "+str(all_params[0])+".")
+			self._next_track_no = min(max(int(all_params[0])-1-1,-1),len(self._tracks)-1)
+			await self.async_get_track() 
+		else:
+			self.log_me('error',"Command "+str(command)+" not implimented")
+
 
 	
 
