@@ -39,7 +39,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 			user_input[CONF_HEADER_PATH] = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 			user_input[CONF_NAME] = DOMAIN
 
-		return self.async_show_form(step_id="user", data_schema=vol.Schema(create_form(user_input,1)), errors=self._errors)
+		return self.async_show_form(step_id="user", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
 
 	# will be called by sending the form, until configuration is done
 	async def async_step_finish(self,user_input=None):
@@ -51,7 +51,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 				self.data.update(user_input)
 				_title = "yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,'')
 				return self.async_create_entry(title=_title, data=self.data)
-		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)
+		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
 
 	# TODO .. what is this good for?
 	async def async_step_import(self, user_input):  # pylint: disable=unused-argument
@@ -96,7 +96,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 			# if we came straight from init
 			user_input = self.data
 		# no user input, or error. Show form
-		return self.async_show_form(step_id="init", data_schema=vol.Schema(create_form(user_input,1)), errors=self._errors)
+		return self.async_show_form(step_id="init", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
 
 	# will be called by sending the form, until configuration is done
 	async def async_step_finish(self,user_input=None):
@@ -111,4 +111,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 		elif self.data is not None:
 			# if we came straight from init
 			user_input = self.data
-		return self.async_show_form(step_id="finish", data_schema=vol.Schema(create_form(user_input,2)), errors=self._errors)
+		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
