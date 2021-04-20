@@ -103,7 +103,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._interrupt_data = None
 		self._attributes['_media_type'] = None
 		self._attributes['_media_id'] = None
-		self._attributes['_radio_based'] = ""
 		self._attributes['_player_state'] = STATE_OFF
 		self._attributes['_player_id'] = None
 		self._attributes['likeStatus'] = ""
@@ -1111,7 +1110,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._started_by = "Browser"
 		self._attributes['_media_type'] = media_type
 		self._attributes['_media_id'] = media_id
-		self._attributes['_radio_based'] =  ""
 
 		if(False == (await self.async_prepare_play())):
 			return
@@ -1143,23 +1141,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				crash_extra = 'get_library_upload_songs(limit=999)'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_songs,999)
 			elif(media_type == CHANNEL):
-				# get original playlist from the media_id
-				crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+				if(media_id=="LM"):
+					media_id = "PLLM"
+				crash_extra = 'get_watch_playlist(playlistId=RDAM'+str(media_id)+')'
+				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAM"+str(media_id)))
 				self._tracks = self._tracks['tracks']
-				# select on track randomly
-				if(isinstance(self._tracks, list)):
-					if(len(self._tracks)>0):
-						if(len(self._tracks)>1):
-							r_track = self._tracks[random.randrange(0,len(self._tracks)-1)]
-							info = self.extract_info(r_track) 
-							self._attributes['_radio_based'] =  info['track_artist'] + " - " + info['track_name']
-						else:
-							r_track = self._tracks[0]
-						# get a 'channel' based on that random track
-						crash_extra += ' ... get_watch_playlist(videoId='+str(r_track['videoId'])+')'
-						self._tracks = await self.hass.async_add_executor_job(self._api.get_watch_playlist,r_track['videoId'])
-						self._tracks = self._tracks['tracks']
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
