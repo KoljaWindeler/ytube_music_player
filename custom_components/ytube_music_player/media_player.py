@@ -112,6 +112,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_player_state'] = STATE_OFF
 		self._attributes['_player_id'] = None
 		self._attributes['likeStatus'] = ""
+		self._attributes['current_playlist_title'] = ""
 
 		self._playing = False
 		self._state = STATE_OFF
