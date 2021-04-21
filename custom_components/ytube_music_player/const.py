@@ -128,7 +128,6 @@ SERVICE_CALL_INTERRUPT_START = "interrupt_start"
 SERVICE_CALL_INTERRUPT_RESUME = "interrupt_resume"
 SERVICE_CALL_RELOAD_DROPDOWNS = "reload_dropdowns"
 SERVICE_CALL_OFF_IS_IDLE = "off_is_idle"
-SERVICE_CALL_OFF_IS_IDLE_1X = "off_is_idle_1x"
 SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
 SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
@@ -141,6 +140,9 @@ CONF_SHUFFLE = 'shuffle'
 CONF_SHUFFLE_MODE = 'shuffle_mode'
 CONF_COOKIE = 'cookie'
 CONF_BRAND_ID = 'brand_id'
+CONF_ADVANCE_CONFIG = 'advance_config'
+CONF_LIKE_IN_NAME = 'like_in_name'
+CONF_DEBUG_AS_ERROR = 'debug_as_error'
 
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PATH = 'proxy_path'
@@ -157,6 +159,8 @@ DEFAULT_SELECT_PLAYLIST = input_select.DOMAIN + "." + DOMAIN + '_playlist'
 DEFAULT_SELECT_PLAYMODE = input_select.DOMAIN + "." + DOMAIN + '_playmode'
 DEFAULT_SELECT_SPEAKERS = input_select.DOMAIN + "." + DOMAIN + '_speakers'
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
+DEFAULT_LIKE_IN_NAME = False
+DEFAULT_DEBUG_AS_ERROR = False
 PROXY_FILENAME = "ytube_proxy.mp4"
 
 DEFAULT_SHUFFLE_MODE = 1
@@ -206,70 +210,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_check_data(hass, user_input):
-	"""Check validity of the provided date."""
-	ret = {}
-	if(CONF_COOKIE in user_input and CONF_HEADER_PATH in user_input):
-		# sadly config flow will not allow to have a multiline text field
-		# we get a looong string that we've to rearrange into multiline for ytmusic
-
-		# the only thing we need is cookie + x-goog-authuser, lets try to cut this out
-		# so the fields are written like 'identifier':'value', but some values actually have ':' inside, bummer.
-		c = user_input[CONF_COOKIE]
-		clean_cookie = ""
-		clean_x_goog_authuser = ""
-		## lets try to find the cookie part
-		cookie_pos = c.lower().find('cookie')
-		if(cookie_pos>=0):
-			#_LOGGER.debug("found cookie in text")
-			cookie_end = c[cookie_pos:]
-			cookie_end_split = cookie_end.split(':')
-			if(len(cookie_end_split)>=3):
-				#_LOGGER.debug("found three or more sections")
-				cookie_length_last_field = cookie_end_split[2].rfind(' ')
-				if(cookie_length_last_field>=0):
-					#_LOGGER.debug("found a space")
-					cookie_length = len(cookie_end_split[0])+1+len(cookie_end_split[1])+1+cookie_length_last_field
-					clean_cookie = c[cookie_pos:cookie_pos+cookie_length]
-					#_LOGGER.debug(clean_cookie)
-		## lets try to find x-auth-part
-		xauth_pos = c.lower().find('x-goog-authuser: ')
-		if(xauth_pos>=0):
-			#_LOGGER.debug("found x-goog-authuser in text")
-			#_LOGGER.debug(c[xauth_pos+len('x-goog-authuser: '):])
-			xauth_len = c[xauth_pos+len('x-goog-authuser: '):].find(' ')
-			#_LOGGER.debug(xauth_len)
-			if(xauth_len>=0):
-				#_LOGGER.debug("found space in text")
-				clean_x_goog_authuser = c[xauth_pos:(xauth_pos+len('x-goog-authuser: ')+xauth_len)]
-				#_LOGGER.debug(clean_x_goog_authuser)
-		## lets see what we got
-		if(clean_cookie!="" and clean_x_goog_authuser!=""):
-			# woop woop, this COULD be it
-			c = clean_cookie+"\n"+clean_x_goog_authuser+"\n"
-		else:
-			# well we've failed to find the cookie, the only thing we can do is at least to help with some breaks
-			c = c.replace('cookie','\ncookie')
-			c = c.replace('Cookie','\nCookie')
-			c = c.replace('x-goog-authuser','\nx-goog-authuser')
-			c = c.replace('X-Goog-AuthUser','\nX-Goog-AuthUser')
-		#_LOGGER.debug("feeding with: ")
-		#_LOGGER.debug(c)
-		try:
-			YTMusic.setup(filepath = user_input[CONF_HEADER_PATH], headers_raw = c)
-		except:
-			ret["base"] = ERROR_GENERIC
-			formatted_lines = traceback.format_exc().splitlines()
-			for i in formatted_lines:
-				if(i.startswith('Exception: ')):
-					if(i.find('The following entries are missing in your headers: Cookie')>=0):
-						ret["base"] = ERROR_COOKIE
-					elif(i.find('The following entries are missing in your headers: X-Goog-AuthUser')>=0):
-						ret["base"] = ERROR_AUTH_USER
-			_LOGGER.error(traceback.format_exc())
-			return ret
-		[ret, msg, api] = await async_try_login(hass,user_input[CONF_HEADER_PATH],"")
-	return ret
 
 async def async_try_login(hass, path, brand_id):
 	ret = {}
@@ -341,7 +281,6 @@ async def async_try_login(hass, path, brand_id):
 def ensure_config(user_input):
 	"""Make sure that needed Parameter exist and are filled with default if not."""
 	out = {}
-	#out[CONF_ICON] = DEFAULT_ICON
 	out[CONF_NAME] = DOMAIN
 	out[CONF_RECEIVERS] = ''
 	out[CONF_SHUFFLE] = DEFAULT_SHUFFLE
@@ -355,69 +294,14 @@ def ensure_config(user_input):
 	out[CONF_PROXY_URL] = ""
 	out[CONF_BRAND_ID] = ""
 	out[CONF_COOKIE] = ""
+	out[CONF_ADVANCE_CONFIG] = False
+	out[CONF_LIKE_IN_NAME] = DEFAULT_LIKE_IN_NAME
+	out[CONF_DEBUG_AS_ERROR] = DEFAULT_DEBUG_AS_ERROR
 
 	if user_input is not None:
-		if CONF_NAME in user_input:
-			out[CONF_NAME] = user_input[CONF_NAME]
-		if CONF_HEADER_PATH in user_input:
-			out[CONF_HEADER_PATH] = user_input[CONF_HEADER_PATH]
-		else:
-			_LOGGER.error("ohoh no header path in the input, not sure how we got here")
-		if CONF_RECEIVERS in user_input:
-			out[CONF_RECEIVERS] = user_input[CONF_RECEIVERS]
-		if CONF_SHUFFLE in user_input:
-			out[CONF_SHUFFLE] = user_input[CONF_SHUFFLE]
-		if CONF_SHUFFLE_MODE in user_input:
-			out[CONF_SHUFFLE_MODE] = user_input[CONF_SHUFFLE_MODE]
-		if CONF_SELECT_SOURCE in user_input:
-			out[CONF_SELECT_SOURCE] = user_input[CONF_SELECT_SOURCE]
-		if CONF_SELECT_PLAYLIST in user_input:
-			out[CONF_SELECT_PLAYLIST] = user_input[CONF_SELECT_PLAYLIST]
-		if CONF_SELECT_PLAYMODE in user_input:
-			out[CONF_SELECT_PLAYMODE] = user_input[CONF_SELECT_PLAYMODE]
-		if CONF_SELECT_SPEAKERS in user_input:
-			out[CONF_SELECT_SPEAKERS] = user_input[CONF_SELECT_SPEAKERS]
-		if CONF_PROXY_PATH in user_input:
-			out[CONF_PROXY_PATH] = user_input[CONF_PROXY_PATH]
-		if CONF_PROXY_URL in user_input:
-			out[CONF_PROXY_URL] = user_input[CONF_PROXY_URL]
-		if CONF_BRAND_ID in user_input:
-			out[CONF_BRAND_ID] = user_input[CONF_BRAND_ID]
-		if CONF_COOKIE in user_input:
-			out[CONF_COOKIE] = user_input[CONF_COOKIE]
-		if CONF_SELECT_PLAYCONTINUOUS in user_input:
-			out[CONF_SELECT_PLAYCONTINUOUS] = user_input[CONF_SELECT_PLAYCONTINUOUS]
+		out.update(user_input)
+			
 	return out
 
 
-async def async_create_form(hass, user_input, page=1):
-	"""Create form for UI setup."""
-	user_input = ensure_config(user_input)
-	data_schema = OrderedDict()
 
-	all_media_player = dict()
-	all_entities = await hass.async_add_executor_job(hass.states.all) 
-	for e in all_entities:
-		if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
-			all_media_player.update({e.entity_id: e.entity_id.replace(DOMAIN_MP+".","")})
-	
-
-	if(page == 1):
-		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
-		data_schema[vol.Required(CONF_COOKIE, default=user_input[CONF_COOKIE])] = str # configuration of the cookie
-		#data_schema[vol.Optional(CONF_RECEIVERS, default=user_input[CONF_RECEIVERS])] = str # default remote_player
-		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = cv.multi_select(all_media_player)
-		#data_schema[vol.Optional(CONF_SHUFFLE, default=user_input[CONF_SHUFFLE])] = vol.Coerce(bool) # default duffle, TRUE/FALSE
-		#data_schema[vol.Optional(CONF_SHUFFLE_MODE, default=user_input[CONF_SHUFFLE_MODE])] = vol.Coerce(int) # [1] = Shuffle .. 2....
-		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
-	elif(page == 2):
-		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id
-		data_schema[vol.Optional(CONF_SELECT_SPEAKERS, default=user_input[CONF_SELECT_SPEAKERS])] = str # drop down to select remote_player
-		data_schema[vol.Optional(CONF_SELECT_SOURCE, default=user_input[CONF_SELECT_SOURCE])] = str # drop down to select playlist / playlist-radio
-		data_schema[vol.Optional(CONF_SELECT_PLAYLIST, default=user_input[CONF_SELECT_PLAYLIST])] = str # drop down that holds the playlists
-		data_schema[vol.Optional(CONF_SELECT_PLAYCONTINUOUS, default=user_input[CONF_SELECT_PLAYCONTINUOUS])] = str # select of input_boolean -> continuous on/off
-
-		data_schema[vol.Optional(CONF_PROXY_PATH, default=user_input[CONF_PROXY_PATH])] = str # select of input_boolean -> continuous on/off
-		data_schema[vol.Optional(CONF_PROXY_URL, default=user_input[CONF_PROXY_URL])] = str # select of input_boolean -> continuous on/off
-
-	return data_schema

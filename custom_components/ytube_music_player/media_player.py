@@ -56,7 +56,7 @@ async def async_setup_entry(hass, config, async_add_devices):
 class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
-		self._debug_as_error = False 
+		self._debug_as_error = config.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.get(CONF_NAME,DOMAIN+name_add)
 		self._name = self._org_name
 		# confgurations can be either the full entity_id or just the name
@@ -65,6 +65,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._select_playContinuous = input_boolean.DOMAIN+"."+config.get(CONF_SELECT_PLAYCONTINUOUS, DEFAULT_SELECT_PLAYCONTINUOUS).replace(input_boolean.DOMAIN+".","")
 		self._select_mediaPlayer = input_select.DOMAIN+"."+config.get(CONF_SELECT_SPEAKERS, DEFAULT_SELECT_SPEAKERS).replace(input_select.DOMAIN+".","")
 		self._select_source = input_select.DOMAIN+"."+config.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE).replace(input_select.DOMAIN+".","")
+		self._like_in_name = config.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
+		
+		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
+		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 		self._header_file = config.get(CONF_HEADER_PATH, default_header_file)
@@ -83,13 +87,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"- speakerlist: " + str(self._speakersList))
 		self.log_me('debug',"- playModes: " + str(self._select_playMode))
 		self.log_me('debug',"- playContinuous: " + str(self._select_playContinuous))
+		self.log_me('debug',"- shuffle: " + str(self._shuffle))
+		self.log_me('debug',"- shuffle_mode: " + str(self._shuffle_mode))
+		self.log_me('debug',"- like_in_name: " + str(self._like_in_name))
 
 		self._brand_id = str(config.get(CONF_BRAND_ID,""))
 		self._api = None
 		self._js = ""
 		self._update_needed = False
-		self._like_in_name = False
-
+		
 		self._remote_player = ""
 		self._untrack_remote_player = None
 		self._playlists = []
@@ -119,8 +125,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._media_duration = None
 		self._media_position = None
 		self._media_position_updated = None
-		self._shuffle = config.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
-		self._shuffle_mode = config.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 		self._playContinuous = True
 		self._x_to_idle = None # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
 		
@@ -1390,9 +1394,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(command == SERVICE_CALL_OFF_IS_IDLE): #needed for the MPD but for nobody else
 			self._x_to_idle = STATE_OFF 
 			self.log_me('debug',"Setting x_is_idle to State Off")
-		elif(command == SERVICE_CALL_OFF_IS_IDLE_1X): #needed for my own setup. the amp will (when powering on) switch off the chromcast .. ignore ONE off event
-			self._x_to_idle = STATE_OFF_1X 
-			self.log_me('debug',"Setting x_is_idle to State Off 1x")
 		elif(command == SERVICE_CALL_PAUSED_IS_IDLE): #needed for the Sonos but for nobody else
 			self._x_to_idle = STATE_PAUSED 
 			self.log_me('debug',"Setting x_is_idle to State Paused")
