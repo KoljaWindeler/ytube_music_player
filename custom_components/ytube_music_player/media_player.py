@@ -1129,33 +1129,42 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			crash_extra = ''
 			if(media_type == MEDIA_TYPE_PLAYLIST):
 				crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
-				self._tracks = self._tracks['tracks']
+				playlist_info = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+				self._tracks = playlist_info['tracks']
+				self._attributes['current_playlist_title'] = str(playlist_info['title'])
 			elif(media_type == MEDIA_TYPE_ALBUM):
 				crash_extra = 'get_album(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_album,media_id)
 				self._tracks = self._tracks['tracks']
+				self._attributes['current_playlist_title'] = ""
 			elif(media_type == MEDIA_TYPE_TRACK):
 				crash_extra = 'get_song(videoId='+str(media_id)+')'
 				self._tracks = [await self.hass.async_add_executor_job(self._api.get_song,media_id)]
+				self._attributes['current_playlist_title'] = ""
 			elif(media_id == HISTORY):
 				crash_extra = 'get_history()'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_history)
+				self._attributes['current_playlist_title'] = ""
 			elif(media_id == USER_TRACKS):
 				crash_extra = 'get_library_upload_songs(limit=999)'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_songs,999)
+				self._attributes['current_playlist_title'] = ""
 			elif(media_type == CHANNEL):
 				crash_extra = 'get_watch_playlist(playlistId=RDAMPL'+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAMPL"+str(media_id)))
 				self._tracks = self._tracks['tracks']
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
+				playlist_info = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+				self._attributes['current_playlist_title'] = str(playlist_info['title'])
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_album,media_id)
 				self._tracks = self._tracks['tracks']
+				self._attributes['current_playlist_title'] = ""
 			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
 				crash_extra = 'get_library_upload_artist(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_artist,media_id,BROWSER_LIMIT)
+				self._attributes['current_playlist_title'] = ""
 			else:
 				self.log_me('debug',"- error during fetching play_media, turning off")
 				await self.async_turn_off()
