@@ -846,6 +846,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._playlist_to_index["No playlists found"] = 0
 
 			playlists = list(self._playlist_to_index.keys())
+			playlists.sort()
 			self._attributes['playlists'] = playlists
 
 			data = {"options": list(playlists), "entity_id": self._select_playlist}
