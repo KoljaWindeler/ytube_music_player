@@ -8,7 +8,8 @@
                     "name": "Name for the entity (without 'media_player' prefix)",
                     "cookie": "Enter cookie text, copied from browser",
                     "speakers": "Select the default output device",
-                    "header_path": "File path for the header file"
+                    "header_path": "File path for the header file",
+                    "advance_config": "Show advance configuration"
                 }
             },
             "finish": {
@@ -21,7 +22,10 @@
                     "select_playlist":"Entity id of input_select for playlist selection",
                     "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
                     "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
-                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it"
+                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
+                    "like_in_name": "Show like status in the name",
+                    "debug_as_error": "Show all debug output as ERROR in the log",
+                    "shuffle": "Turn on shuffle on startup"
                 }
             }
         },
@@ -43,7 +47,8 @@
                     "name": "Name for the entity (without 'media_player' prefix)",
                     "cookie": "Enter cookie text, copied from browser",
                     "speakers": "Select the default output device",
-                    "header_path": "File path for the header file"
+                    "header_path": "File path for the header file",
+                    "advance_config": "Show advance configuration"
                 }
             },
             "finish": {
@@ -56,7 +61,10 @@
                     "select_playlist":"Entity id of input_select for playlist selection",
                     "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
                     "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
-                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it"
+                    "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
+                    "like_in_name": "Show like status in the name",
+                    "debug_as_error": "Show all debug output as ERROR in the log",
+                    "shuffle": "Turn on shuffle on startup"
                 }
             }
         },
