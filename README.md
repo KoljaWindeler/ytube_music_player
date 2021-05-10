@@ -118,7 +118,8 @@ mini-media-player shortcut type | service call | details
 -- | -- | --
 `source` | **media_player.select_source** *source=id and entity_id=[this]* | selects the media_player that plays the music. id can be an entity_id like `media_player.speaker123` or just the name `speaker123`
 `playlist` | media_player.play_media | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
-`channel` | media_player.play_media | selects one track from a **playlist** and starts a radio based on that track. So the id has to be a **playlist_id**
+`channel` | media_player.play_media | Starts a radio based on a playlist. So the id has to be a **playlist_id**
+`vid_channel` | media_player.play_media | Starts a radio based on a videoId. So the id has to be a **video_id**
 `album` | media_player.play_media | plays an album. *You can  get the album Id from the Youtube Music website. Open an album from the library https://music.youtube.com/library/albums and copy the Id from the links*
 `track` | media_player.play_media | will play only one dedicated track
 `history` | media_player.play_media | will play a playlist from your recent listen music **on the website or the app** *the music that you play with this component will not show up in the list*
@@ -137,6 +138,8 @@ Service | parameter | details
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: reload_dropdowns | Reloads the dropdown list of all media_players and also the playlists. Might be nice to reload those lists without reboot HA
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_start | Special animal 1/2: This will stop the current track, but note the position in the track. It will also store the track number in the playlist and the playlist. Finally it will UNTRACK the media_player. As result you can e.g. play another sound on that player, like a door bell or a warning
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
+
+
 
 ## Dropdowns, Buttons and Marksdowns
 The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
@@ -200,6 +203,18 @@ sequence:
       volume_level: '{{vol}}'
 mode: single
 
+```
+
+Play a radio on the current track:
+```yaml
+alias: RadioOnSong
+sequence:
+  - service: media_player.play_media
+    data:
+      media_content_id: >
+        {{state_attr("media_player.ytube_music_player","_media_id") }}
+      media_content_type: vid_channel
+    entity_id: media_player.ytube_music_player
 ```
 
 ## Sonos support / Proxy

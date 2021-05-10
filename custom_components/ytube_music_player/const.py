@@ -144,6 +144,7 @@ CONF_ADVANCE_CONFIG = 'advance_config'
 CONF_LIKE_IN_NAME = 'like_in_name'
 CONF_DEBUG_AS_ERROR = 'debug_as_error'
 
+CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PATH = 'proxy_path'
 
@@ -163,6 +164,7 @@ DEFAULT_LIKE_IN_NAME = False
 DEFAULT_DEBUG_AS_ERROR = False
 PROXY_FILENAME = "ytube_proxy.mp4"
 
+DEFAULT_TRACK_LIMIT = 99
 DEFAULT_SHUFFLE_MODE = 1
 DEFAULT_SHUFFLE = True
 
@@ -190,6 +192,7 @@ USER_ARTISTS_2 = 'user_artists2'
 USER_ARTIST = 'user_artist'
 USER_ARTIST_2 = 'user_artist2'
 CHANNEL = 'channel'
+CHANNEL_VID = 'vid_channel'
 HISTORY = 'history'
 STATE_OFF_1X = 'OFF_1X'
 BROWSER_LIMIT = 500
@@ -297,6 +300,7 @@ def ensure_config(user_input):
 	out[CONF_ADVANCE_CONFIG] = False
 	out[CONF_LIKE_IN_NAME] = DEFAULT_LIKE_IN_NAME
 	out[CONF_DEBUG_AS_ERROR] = DEFAULT_DEBUG_AS_ERROR
+	out[CONF_TRACK_LIMIT] = DEFAULT_TRACK_LIMIT
 
 	if user_input is not None:
 		out.update(user_input)

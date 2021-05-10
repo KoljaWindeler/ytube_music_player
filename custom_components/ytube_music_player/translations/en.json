@@ -25,7 +25,8 @@
                     "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
                     "like_in_name": "Show like status in the name",
                     "debug_as_error": "Show all debug output as ERROR in the log",
-                    "shuffle": "Turn on shuffle on startup"
+                    "shuffle": "Turn on shuffle on startup",
+                    "track_limit": "Limit of simultaneously loaded tracks"
                 }
             }
         },
@@ -64,7 +65,8 @@
                     "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
                     "like_in_name": "Show like status in the name",
                     "debug_as_error": "Show all debug output as ERROR in the log",
-                    "shuffle": "Turn on shuffle on startup"
+                    "shuffle": "Turn on shuffle on startup",
+                    "track_limit": "Limit of simultaneously loaded tracks"
                 }
             }
         },
