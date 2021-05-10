@@ -15,6 +15,6 @@
   "codeowners": [
     "@KoljaWindeler"
   ],
-  "version": "0.20210428.01",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "version": "0.20210510.01"
 }
