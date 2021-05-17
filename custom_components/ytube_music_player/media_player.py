@@ -1082,13 +1082,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._state = STATE_PLAYING
 		self._playing = True
 		self.async_schedule_update_ha_state()
+		self._last_auto_advance = datetime.datetime.now() # avoid auto_advance
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
 			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
 			ATTR_ENTITY_ID: self._remote_player
 			}
 		await self.hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
-		self._last_auto_advance = datetime.datetime.now() # avoid auto_advance
 
 		### get lyrics after playback started ###
 		self._attributes['lyrics'] = 'No lyrics available'
@@ -1112,6 +1112,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		_url = ""
 		await self.async_check_api()
 		try:
+			stop = False
 			self.log_me('debug',"- try to find URL on our own")
 			try:
 				streamingData = await self.hass.async_add_executor_job(self._api.get_streaming_data,videoId)
@@ -1124,51 +1125,52 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				streamingData = streamingData['adaptiveFormats']
 			elif('formats' in streamingData): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
 				streamingData = streamingData['formats']
-			streamId = 0
-			# try to find audio only stream
-			for i in range(0,len(streamingData)):
-				if(streamingData[i]['mimeType'].startswith('audio/mp4')):
-					streamId = i
-					break
-				elif(streamingData[i]['mimeType'].startswith('audio')):
-					streamId = i
-			if(streamingData[streamId].get('url') is None):
-				sigCipher_ch = streamingData[streamId]['signatureCipher']
-				sigCipher_ex = sigCipher_ch.split('&')
-				res = dict({'s': '', 'url': ''})
-				for sig in sigCipher_ex:
-					for key in res:
-						if(sig.find(key+"=")>=0):
-							res[key]=unquote(sig[len(key+"="):])
-				# I'm just not sure if the original video from the init will stay online forever
-				# in case it's down the player might not load and thus we won't have a javascript loaded
-				# so if that happens: we try with this url, might work better (at least the file should be online)
-				# the only trouble i could see is that this video is private and thus also won't load the player .. 
-				if(self._js == ""):
-					await self.async_get_cipher(videoId)
-				signature = self._cipher.get_signature(ciphered_signature=res['s'])
-				_url = res['url'] + "&sig=" + signature
-				self.log_me('debug',"- self decoded URL via cipher")
 			else:
-				_url = streamingData[streamId]['url']
-				self.log_me('debug',"- found URL in api data")
+				self.log_me('error','No adaptiveFormat and no formats found')
+				self.log_me('error','get_streaming_data('+str(videoId)+')')
+				self.log_me('error', streamingData)
+				stop = True
+			
+			if(not(stop)):
+				streamId = 0
+				# try to find audio only stream
+				for i in range(0,len(streamingData)):
+					if(streamingData[i]['mimeType'].startswith('audio/mp4')):
+						streamId = i
+						break
+					elif(streamingData[i]['mimeType'].startswith('audio')):
+						streamId = i
+				if(streamingData[streamId].get('url') is None):
+					sigCipher_ch = streamingData[streamId]['signatureCipher']
+					sigCipher_ex = sigCipher_ch.split('&')
+					res = dict({'s': '', 'url': ''})
+					for sig in sigCipher_ex:
+						for key in res:
+							if(sig.find(key+"=")>=0):
+								res[key]=unquote(sig[len(key+"="):])
+					# I'm just not sure if the original video from the init will stay online forever
+					# in case it's down the player might not load and thus we won't have a javascript loaded
+					# so if that happens: we try with this url, might work better (at least the file should be online)
+					# the only trouble i could see is that this video is private and thus also won't load the player .. 
+					if(self._js == ""):
+						await self.async_get_cipher(videoId)
+					signature = self._cipher.get_signature(ciphered_signature=res['s'])
+					_url = res['url'] + "&sig=" + signature
+					self.log_me('debug',"- self decoded URL via cipher")
+				else:
+					_url = streamingData[streamId]['url']
+					self.log_me('debug',"- found URL in api data")
 
 		except Exception as err:
 			_LOGGER.error("- Failed to get own(!) URL for track, further details below. Will not try YouTube method")
 			_LOGGER.error(traceback.format_exc())
 			_LOGGER.error(videoId)
-			try:
-				_LOGGER.error(self._api.get_song(videoId))
-			except:
-				self._api = None
-				self.log_me('error',"self._api.get_song("+str(videoId)+")")
-				self.exc(resp="ytmusicapi")
-				return
 
 		# backup: run youtube stack, only if we failed
 		if(_url == ""):
 			try:
-				streams = YouTube('https://www.youtube.com/watch?v='+videoId).streams
+				streamingData = await self.hass.async_add_executor_job(YouTube,"https://www.youtube.com/watch?v="+videoId)
+				streams = streamingData.streams
 				streams_audio = streams.filter(only_audio=True)
 				if(len(streams_audio)):
 					_url = streams_audio.order_by('abr').last().url
