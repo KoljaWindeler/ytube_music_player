@@ -74,6 +74,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._header_file = config.get(CONF_HEADER_PATH, default_header_file)
 		self._speakersList = config.get(CONF_RECEIVERS)
 		self._trackLimit = config.get(CONF_TRACK_LIMIT)
+		self._legacyRadio = config.get(CONF_LEGACY_RADIO)
 		self._friendly_speakersList = dict()
 
 		# proxy settings
@@ -93,6 +94,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"- shuffle_mode: " + str(self._shuffle_mode))
 		self.log_me('debug',"- like_in_name: " + str(self._like_in_name))
 		self.log_me('debug',"- track_limit: " + str(self._trackLimit))
+		self.log_me('debug',"- legacy_radio: " + str(self._legacyRadio))
 
 		self._brand_id = str(config.get(CONF_BRAND_ID,""))
 		self._api = None
@@ -548,7 +550,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self._untrack_remote_player()
 				except:
 					pass
-		self._untrack_remote_player = async_track_state_change(self.hass, self._remote_player, self.async_sync_player)
+			self._untrack_remote_player = async_track_state_change(self.hass, self._remote_player, self.async_sync_player)
 		self.log_me('debug',"[E] async_update_remote_player")
 		return True
 
@@ -853,6 +855,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
 
 			# track changes
+			if(self._untrack_remote_player_selector is not None):
+				try:
+					self._untrack_remote_player_selector()
+				except:
+					self.log_me('error','untrack failed')
 			self._untrack_remote_player_selector = async_track_state_change(self.hass, self._select_mediaPlayer, self.async_select_source_helper)
 		
 		
@@ -1227,9 +1234,28 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				crash_extra = 'get_library_upload_songs(limit=999)'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_songs,self._trackLimit*10)
 			elif(media_type == CHANNEL):
-				crash_extra = 'get_watch_playlist(playlistId=RDAMPL'+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAMPL"+str(media_id)))
-				self._tracks = self._tracks['tracks']
+				if(self._legacyRadio):
+					# get original playlist from the media_id
+					crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
+					self._tracks = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+					self._tracks = self._tracks['tracks']
+					# select on track randomly
+					if(isinstance(self._tracks, list)):
+						if(len(self._tracks)>0):
+							if(len(self._tracks)>1):
+								r_track = self._tracks[random.randrange(0,len(self._tracks)-1)]
+								info = self.extract_info(r_track) 
+								self._attributes['_radio_based'] =  info['track_artist'] + " - " + info['track_name']
+							else:
+								r_track = self._tracks[0]
+							# get a 'channel' based on that random track
+							crash_extra += ' ... get_watch_playlist(videoId='+str(r_track['videoId'])+')'
+							self._tracks = await self.hass.async_add_executor_job(self._api.get_watch_playlist,r_track['videoId'])
+							self._tracks = self._tracks['tracks']
+				else:
+					crash_extra = 'get_watch_playlist(playlistId=RDAMPL'+str(media_id)+')'
+					self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAMPL"+str(media_id)))
+					self._tracks = self._tracks['tracks']
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 				playlist_info = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
 				self._attributes['current_playlist_title'] = "Radio of "+str(playlist_info['title'])

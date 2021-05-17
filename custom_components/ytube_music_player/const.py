@@ -143,6 +143,7 @@ CONF_BRAND_ID = 'brand_id'
 CONF_ADVANCE_CONFIG = 'advance_config'
 CONF_LIKE_IN_NAME = 'like_in_name'
 CONF_DEBUG_AS_ERROR = 'debug_as_error'
+CONF_LEGACY_RADIO = 'legacy_radio'
 
 CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
@@ -165,6 +166,7 @@ DEFAULT_DEBUG_AS_ERROR = False
 PROXY_FILENAME = "ytube_proxy.mp4"
 
 DEFAULT_TRACK_LIMIT = 99
+DEFAULT_LEGACY_RADIO = True
 DEFAULT_SHUFFLE_MODE = 1
 DEFAULT_SHUFFLE = True
 
@@ -301,6 +303,7 @@ def ensure_config(user_input):
 	out[CONF_LIKE_IN_NAME] = DEFAULT_LIKE_IN_NAME
 	out[CONF_DEBUG_AS_ERROR] = DEFAULT_DEBUG_AS_ERROR
 	out[CONF_TRACK_LIMIT] = DEFAULT_TRACK_LIMIT
+	out[CONF_LEGACY_RADIO] = DEFAULT_LEGACY_RADIO
 
 	if user_input is not None:
 		out.update(user_input)
