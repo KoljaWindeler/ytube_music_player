@@ -317,9 +317,7 @@ Not yet tested, but should work in general. Please create two entities via the C
 ## FAQ
 - **[Q] Where are the input_select fields?**
 
-  [A] you have to add them to your configuration, simply copy the content of 
-  https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml 
-  to your configuration.yaml (and restart home-assistant) 
+  [A] you have to add them to your configuration, simply copy the content of https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml to your configuration.yaml (and restart home-assistant) 
 
 ## Credits
 
