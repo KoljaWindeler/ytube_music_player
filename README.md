@@ -315,9 +315,12 @@ logger:
 Not yet tested, but should work in general. Please create two entities via the Config_flow and use **different** paths for the header file
 
 ## FAQ
-- **[Q] Where are the input_select fields?**
-
+- **[Q] Where are the input_select fields?**  
   [A] you have to add them to your configuration, simply copy the content of https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml to your configuration.yaml (and restart home-assistant) 
+  
+- **[Q] Where can I find the ID for e.g. a playlist?**  
+  [A] simply start the playlist / album / track via the media_browser. Once the music is playing open the `developer tools` -> `states` and search for your `media_player.ytube_music_player`. Note the `_media_type` and the `_media_id` and use them for your service calls / shortcuts
+
 
 ## Credits
 
