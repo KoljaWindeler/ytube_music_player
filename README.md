@@ -326,6 +326,13 @@ Not yet tested, but should work in general. Please create two entities via the C
   
  - **[Q] What is legacy radio?**  
   [A] YouTube Music offers differnt ways to play a radio. The 'legacy' version would choose a random track from that playlist and create a radio based on that single track. The 'non legacy' version will be based on the complete playlist. At least for me the 'legacy' way offers more variaty, the 'non legacy' is mostly the same list. 
+  
+ - **[Q] What is Shuffle vs Random vs Shuffle Random**  
+  [A] Once shuffle is enabled you can choose the method:  
+  1. **Shuffle** will shuffle the playlist on generation and the play straight 1,2,3,..., this is the default
+  2. **Random** will NOT shuffle the playlist on generation but pick the tracks randomly, repeats can happen
+  3. **Shuffle Random** will shuffle the playlist on generation and pick the next random, repeats can happen  
+  You can change the mode when you add the input_select.ytube_music_player_playmode
 
 
 ## Credits
