@@ -34,7 +34,7 @@ from pytube import request
 from pytube import extract
 from pytube.cipher import Cipher
 import ytmusicapi
-#from .ytmusicapi.ytmusic import *
+#from ytmusicapi import YTMusic # use this to work with local version
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,7 +211,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self.log_me('debug',"[E] (fail) async_check_api")
 					return False
 				else:
-					self.log_me('debug',"- YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
+					try:
+						self.log_me('debug',"- YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
+					except:
+						self.log_me('debug',"- YouTube Api initialized ok")
 			else:
 				out = "can't find header file at "+self._header_file
 				_LOGGER.error(out)
@@ -758,6 +761,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if(self._untrack_remote_player_selector is not None):
 						try:
 							self._untrack_remote_player_selector()
+							self._untrack_remote_player_selector = None
 							self.log_me('debug',"- untrack passed")
 						except:
 							self.log_me('debug',"- untrack failed")
@@ -896,7 +900,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.log_me('debug'," - "+str(len(self._playlists))+" Playlists loaded")
 			except:
 				self._api = None
-				self.exc(resp="ytmusicapi")
+				self.exc()
 				return
 			idx = -1
 			for playlist in self._playlists:
@@ -918,7 +922,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							self.log_me('debug',"- Failed to get_playlist count for playlist ID '"+str(playlist['playlistId'])+"' setting it to 25")
 						else:
 							self.log_me('debug',"- Failed to get_playlist, no playlist ID")
-						self.exc(resp="ytmusicapi")
+						self.exc()
 						self._playlists[idx]['count'] = 25
 
 			if(len(self._playlists)==0):
@@ -939,7 +943,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		
 	def _tracks_to_attribute(self):
-		self.log_me('debug',"_tracks_to_attribute")
+		self.log_me('debug',"[S] _tracks_to_attribute")
 		self._attributes['total_tracks'] = len(self._tracks)
 		self._attributes['tracks'] = []
 		for track in self._tracks:
@@ -1122,31 +1126,41 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			stop = False
 			self.log_me('debug',"- try to find URL on our own")
 			try:
-				streamingData = await self.hass.async_add_executor_job(self._api.get_streaming_data,videoId)
+				streamingData = await self.hass.async_add_executor_job(self._api.get_song,videoId)
 			except:
 				self._api = None
-				self.log_me('error',"self._api.get_streaming_data("+str(videoId)+")")
-				self.exc(resp="ytmusicapi")
+				self.log_me('error',"self._api.get_song("+str(videoId)+")")
+				self.exc()
 				return
-			if('adaptiveFormats' in streamingData):
-				streamingData = streamingData['adaptiveFormats']
-			elif('formats' in streamingData): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
-				streamingData = streamingData['formats']
+			if 'streamingData' in streamingData:
+				if('adaptiveFormats' in streamingData['streamingData']):
+					streamingData = streamingData['streamingData']['adaptiveFormats']
+				elif('formats' in streamingData['streamingData']): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
+					streamingData = streamingData['streamingData']['formats']
+				else:
+					self.log_me('error','No adaptiveFormat and no formats found')
+					self.log_me('error','get_song('+str(videoId)+')')
+					self.log_me('error', streamingData)
+					stop = True
 			else:
-				self.log_me('error','No adaptiveFormat and no formats found')
-				self.log_me('error','get_streaming_data('+str(videoId)+')')
-				self.log_me('error', streamingData)
 				stop = True
 			
 			if(not(stop)):
 				streamId = 0
 				# try to find audio only stream
 				for i in range(0,len(streamingData)):
-					if(streamingData[i]['mimeType'].startswith('audio/mp4')):
-						streamId = i
-						break
-					elif(streamingData[i]['mimeType'].startswith('audio')):
-						streamId = i
+					if('audioQuality' in streamingData[i]):
+						if(streamingData[i]['audioQuality']=='AUDIO_QUALITY_HIGH'):
+							streamId = i
+							self.log_me('debug','- found high quality audiostream ('+str(i)+')')
+							break
+					elif('mimeType' in streamingData[i]):
+						if(streamingData[i]['mimeType'].startswith('audio/mp4')):
+							self.log_me('debug','- found audio/mp4 audiostream ('+str(i)+')')
+							streamId = i
+						elif(streamingData[i]['mimeType'].startswith('audio')):
+							self.log_me('debug','- found audio audiostream ('+str(i)+')')
+							streamId = i
 				if(streamingData[streamId].get('url') is None):
 					sigCipher_ch = streamingData[streamId]['signatureCipher']
 					sigCipher_ex = sigCipher_ch.split('&')
@@ -1187,7 +1201,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_LOGGER.error(_url)
 
 			except Exception as err:
-				_LOGGER.error(traceback.format_exc())
+				#_LOGGER.error(traceback.format_exc())
 				_LOGGER.error("- Failed to get URL with YouTube methode")
 				_LOGGER.error(err)
 				return ""
@@ -1227,6 +1241,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(media_type == MEDIA_TYPE_TRACK):
 				crash_extra = 'get_song(videoId='+str(media_id)+')'
 				self._tracks = [await self.hass.async_add_executor_job(self._api.get_song,media_id)]
+				self._tracks[0] = self._tracks[0]['videoDetails']
 			elif(media_id == HISTORY):
 				crash_extra = 'get_history()'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_history)
@@ -1279,7 +1294,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		except:
 			self._api = None
 			self.log_me('debug',crash_extra)
-			self.exc(resp="ytmusicapi")
+			self.exc()
 			await self.async_turn_off_media_player()
 			return
 		self.log_me('debug',crash_extra)
@@ -1294,6 +1309,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				await self.async_turn_off()
 				return
 		else:
+			self.log_me('error',"Tracklist not a list .. turning off")
 			await self.async_turn_off()
 			return
 
@@ -1571,6 +1587,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	# helper to resume tracking of the select field for media player
 	# we have to untrack it before we change it ourself and give HA some time to make the change and call this resubscription delayed
 	async def async_track_select_mediaplayer_helper(self, args=None):
+		# this should now be needed .. but one never know
+		if(self._untrack_remote_player_selector is not None):
+			try:
+				self._untrack_remote_player_selector()
+				self.log_me('debug',"- untrack passed")
+			except:
+				self.log_me('debug',"- untrack failed")
+				pass
 		self._untrack_remote_player_selector = async_track_state_change(self.hass, self._select_mediaPlayer, self.async_select_source_helper)
 		self.log_me('debug',"- untrack resub")	
 
