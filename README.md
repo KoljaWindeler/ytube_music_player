@@ -329,9 +329,9 @@ Not yet tested, but should work in general. Please create two entities via the C
   
  - **[Q] What is Shuffle vs Random vs Shuffle Random**  
   [A] Once shuffle is enabled you can choose the method:  
-  1. **Shuffle** will shuffle the playlist on generation and the play straight 1,2,3,..., this is the default
-  2. **Random** will NOT shuffle the playlist on generation but pick the tracks randomly, repeats can happen
-  3. **Shuffle Random** will shuffle the playlist on generation and pick the next random, repeats can happen  
+  1.) **Shuffle** will shuffle the playlist on generation and the play straight 1,2,3,..., this is the default  
+  2.) **Random** will NOT shuffle the playlist on generation but pick the tracks randomly, repeats can happen  
+  3.) **Shuffle Random** will shuffle the playlist on generation and pick the next random, repeats can happen  
   You can change the mode when you add the input_select.ytube_music_player_playmode
 
 
