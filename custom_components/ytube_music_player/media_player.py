@@ -56,6 +56,7 @@ async def async_setup_entry(hass, config, async_add_devices):
 class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
+		self._debug_log_concat = ""
 		self._debug_as_error = config.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.get(CONF_NAME,DOMAIN+name_add)
 		self._name = self._org_name
@@ -100,7 +101,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._api = None
 		self._js = ""
 		self._update_needed = False
-		
+				
 		self._remote_player = ""
 		self._untrack_remote_player = None
 		self._untrack_remote_player_selector = None
@@ -158,18 +159,48 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	# user had difficulties during the debug message on, so we'll provide a workaroud to post debug as errors
 	def log_me(self,type,msg):
-		if(self._debug_as_error):
-			_LOGGER.error(msg)
-		else:
-			if(type=='debug'):
-				_LOGGER.debug(msg)
-			else:
+		# clear buffer of _later
+		## see if this is just the ending message:
+		try:
+			if(isinstance(msg,str)):
+				if(msg.find('[E]')==0 and self._debug_log_concat != ""):
+					name = msg.split('[E]')[1]
+					if(self._debug_log_concat.find(name)>=0):
+						self._debug_log_concat += " [E]"
+						msg = ""
+			if(self._debug_log_concat!=""):
+				if(self._debug_as_error):
+					_LOGGER.error(self._debug_log_concat)
+				else:
+					_LOGGER.debug(self._debug_log_concat)
+				self._debug_log_concat = ""
+		except: 
+			self.exc()
+			pass
+		# send new message
+		if(msg!=""):
+			if(self._debug_as_error or type=='error'):
 				_LOGGER.error(msg)
+			else:
+				_LOGGER.debug(msg)
+
+	# sum up a log
+	def log_debug_later(self,msg):
+		if(msg.find('[S]')==0): # a new start message
+			if(self._debug_log_concat != ""): # if there is something in the buffer print it now
+				self.log_me("","")	
+			self._debug_log_concat = msg # start with a new buffer
+		else: # not a new messsage, append it
+			self._debug_log_concat += " ... "+msg
+		if self._debug_log_concat.find('[E]')>=0: # if the end part is in the messeage print it now
+			self.log_me("","")
+
+
 
 	# update will be called eventually BEFORE homeassistant is started completly
 	# therefore we should not use this method for ths init
 	async def async_update(self):
-		self.log_me('debug',"[S] async_update")	
+		self.log_debug_later("[S] async_update")
 		if(self._update_needed):
 			self._update_needed = False
 			await self.async_startup(self.hass)
@@ -198,9 +229,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"[E] async_startup")
 
 	async def async_check_api(self):
-		self.log_me('debug',"[S] async_check_api")
+		self.log_debug_later("[S] async_check_api")
 		if(self._api == None):
-			self.log_me('debug',"- no valid API, try to login")
+			self.log_debug_later("- no valid API, try to login")
 			if(os.path.exists(self._header_file)):
 				[ret, msg, self._api] = await async_try_login(self.hass,self._header_file,self._brand_id)
 				if(msg!=""):
@@ -212,9 +243,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					return False
 				else:
 					try:
-						self.log_me('debug',"- YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
+						self.log_debug_later("YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
 					except:
-						self.log_me('debug',"- YouTube Api initialized ok")
+						self.log_debug_later("YouTube Api initialized ok")
 			else:
 				out = "can't find header file at "+self._header_file
 				_LOGGER.error(out)
@@ -456,7 +487,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return True
 
 	async def async_turn_on_media_player(self, data=None):
-		self.log_me('debug',"[S] async_turn_on_media_player")
+		self.log_debug_later("[S] async_turn_on_media_player")
 		"""Fire the on action."""
 		if data is None:
 			data = {ATTR_ENTITY_ID: self._remote_player}
@@ -508,9 +539,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_update_remote_player(self, remote_player=""):
-		self.log_me('debug',"[S] async_update_remote_player(Input "+str(remote_player)+"/ current "+str(self._remote_player)+")")
+		self.log_debug_later("[S] async_update_remote_player(Input "+str(remote_player)+"/ current "+str(self._remote_player)+") ")
 		if(remote_player == self._remote_player):
-			self.log_me('debug',"[E] async_update_remote_player no change")
+			self.log_me('debug'," no change [E]")
 			return
 
 
@@ -525,7 +556,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(self._select_mediaPlayer != "" and await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)): # drop down for player does exist .. double check!!
 			media_player = self.hass.states.get(self._select_mediaPlayer) # Example: self.hass.states.get(input_select.gmusic_player_speakers)
 			if media_player is None:
-				_LOGGER.error("(%s) is not a valid input_select entity to get the player.", self._select_mediaPlayer)
+				self.log_me('error',"("+self._select_mediaPlayer+") is not a valid input_select entity to get the player.")
 			else:
 				# since we can't be sure if the MediaPlayer Domain is in the field value, add it and remove it :D 
 				remote_player = DOMAIN_MP+"."+media_player.state.replace(DOMAIN_MP+".","")
@@ -559,7 +590,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_get_cipher(self, videoId):
-		self.log_me('debug',"[S] async_get_cipher")
+		self.log_debug_later("[S] async_get_cipher")
 		embed_url = "https://www.youtube.com/embed/"+videoId
 		embed_html = await self.hass.async_add_executor_job(request.get,embed_url)
 		js_url = extract.js_url(embed_html)
@@ -570,17 +601,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_sync_player(self, entity_id=None, old_state=None, new_state=None):
-		self.log_me('debug',"[S] async_sync_player")
+		self.log_debug_later("[S] async_sync_player")
 		if(entity_id!=None and old_state!=None) and new_state!=None:
-			self.log_me('debug',entity_id+": "+old_state.state+" -> "+new_state.state)
+			self.log_debug_later(entity_id+": "+old_state.state+" -> "+new_state.state)
 			if(entity_id!=self._remote_player):
-				self.log_me('debug',"- ignoring old player")
+				self.log_me('debug',"- ignoring player "+str(entity_id)+" the player of interest is "+str(self._remote_player))
 				return
 		else:
-			self.log_me('debug',self._remote_player)
+			self.log_debug_later(self._remote_player)
 		
 		""" Perform actions based on the state of the selected (Speakers) media_player """
 		if not self._playing:
+			self.log_debug_later("not playing [E]")
 			return
 		""" _player = The selected speakers """
 		_player = self.hass.states.get(self._remote_player)
@@ -943,7 +975,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		
 	def _tracks_to_attribute(self):
-		self.log_me('debug',"[S] _tracks_to_attribute")
+		self.log_debug_later("[S] _tracks_to_attribute")
 		self._attributes['total_tracks'] = len(self._tracks)
 		self._attributes['tracks'] = []
 		for track in self._tracks:
@@ -1126,41 +1158,49 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			stop = False
 			self.log_me('debug',"- try to find URL on our own")
 			try:
-				streamingData = await self.hass.async_add_executor_job(self._api.get_song,videoId)
+				response = await self.hass.async_add_executor_job(self._api.get_song,videoId)
 			except:
 				self._api = None
 				self.log_me('error',"self._api.get_song("+str(videoId)+")")
 				self.exc()
 				return
-			if 'streamingData' in streamingData:
-				if('adaptiveFormats' in streamingData['streamingData']):
-					streamingData = streamingData['streamingData']['adaptiveFormats']
-				elif('formats' in streamingData['streamingData']): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
-					streamingData = streamingData['streamingData']['formats']
-				else:
+			streamingData = []
+			if 'streamingData' in response:
+				if('adaptiveFormats' in response['streamingData']):
+					streamingData += response['streamingData']['adaptiveFormats']
+				if('formats' in response['streamingData']): #backup, not sure if that is ever needed, or if adaptiveFormats are always present
+					streamingData += response['streamingData']['formats']
+				if(len(streamingData)==0):
 					self.log_me('error','No adaptiveFormat and no formats found')
 					self.log_me('error','get_song('+str(videoId)+')')
-					self.log_me('error', streamingData)
+					self.log_me('error', s)
 					stop = True
 			else:
 				stop = True
 			
 			if(not(stop)):
 				streamId = 0
-				# try to find audio only stream
+				found_quality = -1
+				quality_mapper = {'AUDIO_QUALITY_LOW': 1, 'AUDIO_QUALITY_MEDIUM': 2, 'AUDIO_QUALITY_HIGH': 3 }
+				# try to find best audio only stream
 				for i in range(0,len(streamingData)):
+					#self.log_me('debug','found stream')
+					#self.log_me('debug',streamingData[i])
 					if('audioQuality' in streamingData[i]):
-						if(streamingData[i]['audioQuality']=='AUDIO_QUALITY_HIGH'):
+						self.log_me('debug','- found stream with audioQuality '+streamingData[i]['audioQuality']+' ('+str(i)+')')
+						# store only stream with better quality, accept 0 once
+						if(quality_mapper.get(streamingData[i]['audioQuality'],0) > found_quality):
+							found_quality = quality_mapper.get(streamingData[i]['audioQuality'],0)
 							streamId = i
-							self.log_me('debug','- found high quality audiostream ('+str(i)+')')
-							break
-					elif('mimeType' in streamingData[i]):
-						if(streamingData[i]['mimeType'].startswith('audio/mp4')):
-							self.log_me('debug','- found audio/mp4 audiostream ('+str(i)+')')
-							streamId = i
-						elif(streamingData[i]['mimeType'].startswith('audio')):
-							self.log_me('debug','- found audio audiostream ('+str(i)+')')
-							streamId = i
+					elif(found_quality == -1): # only search for mimetype if we didn't find a quality stream before
+						if('mimeType' in streamingData[i]):
+							if(streamingData[i]['mimeType'].startswith('audio/mp4')):
+								self.log_me('debug','- found audio/mp4 audiostream ('+str(i)+')')
+								streamId = i
+							elif(streamingData[i]['mimeType'].startswith('audio')):
+								self.log_me('debug','- found audio audiostream ('+str(i)+')')
+								streamId = i
+				self.log_me('debug','- using stream '+str(streamId))
 				if(streamingData[streamId].get('url') is None):
 					sigCipher_ch = streamingData[streamId]['signatureCipher']
 					sigCipher_ex = sigCipher_ch.split('&')
