@@ -10,6 +10,8 @@ import pickle
 import os.path
 import random
 import datetime
+import requests
+import re
 from urllib.request import urlopen
 from urllib.parse import unquote
 
@@ -134,6 +136,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._media_position = None
 		self._media_position_updated = None
 		self._playContinuous = True
+		self._signatureTimestamp = 0
 		self._x_to_idle = None # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
 		
 
@@ -214,6 +217,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			await self.async_get_cipher('BB2mjBuAtiQ')
 		except:
 			self.log_me('error',"async_get_cipher failed")	
+		try:
+			await self.async_get_signatureTimestamp()
+		except:
+			self.log_me('error',"async_get_signatureTimestamp failed")	
 		try:
 			await self.async_check_api()
 		except:
@@ -599,6 +606,38 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		#2do some sort of check if tis worked
 		self.log_me('debug',"[E] async_get_cipher")
 
+
+	async def async_get_signatureTimestamp(self):
+		self.log_debug_later("[S] async_get_signatureTimestamp")
+		embed_url = "https://music.youtube.com"
+		headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+		signatureTimestamp=0
+		embed_html = await self.hass.async_add_executor_job(lambda: requests.get(embed_url, headers=headers))
+		if(embed_html.status_code==200):
+			s = str(embed_html.content)
+			reg = re.search(r'"jsUrl":"(.*?)"', s)
+			if(reg is not None):
+				base_url = s[reg.span()[0]+9:reg.span()[1]-1]
+				base_js = await self.hass.async_add_executor_job(lambda: requests.get(embed_url+base_url, headers=headers))
+				if(base_js.status_code==200):
+					s=str(base_js.content)
+					reg = re.search(r'signatureTimestamp:[0-9]+', s)
+					if(reg is not None):
+						signatureTimestamp = s[reg.span()[0]+19:reg.span()[1]]
+						self.log_debug_later("via lookup "+str(signatureTimestamp))
+					else:
+						self.log_debug_later("didn't find signatureTimestamp")
+			else:
+				self.log_debug_later("didn't find jsUrl")
+		else:
+			self.log_debug_later("didn't get primary html")
+
+		if(signatureTimestamp==0):
+			signatureTimestamp = (datetime.date.today() - datetime.date.fromtimestamp(0)).days - 1
+			self.log_debug_later("via date "+str(signatureTimestamp))
+		self._signatureTimestamp = signatureTimestamp
+		self.log_me('debug',"[E] async_get_signatureTimestamp")
+		return
 
 	async def async_sync_player(self, entity_id=None, old_state=None, new_state=None):
 		self.log_debug_later("[S] async_sync_player")
@@ -1131,6 +1170,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
 			ATTR_ENTITY_ID: self._remote_player
 			}
+		self.log_me('debug',"- forwarding url to player "+str(self._remote_player))
 		await self.hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
 
 		### get lyrics after playback started ###
@@ -1147,7 +1187,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"[E] async_get_track")
 
 
-	async def async_get_url(self, videoId=None, retry=False):
+	async def async_get_url(self, videoId=None, retry=True):
 		self.log_me('debug',"[S] async_get_url")
 		if(videoId==None):
 			self.log_me('debug',"videoId was None")
@@ -1158,10 +1198,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			stop = False
 			self.log_me('debug',"- try to find URL on our own")
 			try:
-				response = await self.hass.async_add_executor_job(self._api.get_song,videoId)
+				response = await self.hass.async_add_executor_job(lambda:self._api.get_song(videoId,self._signatureTimestamp))
 			except:
 				self._api = None
-				self.log_me('error',"self._api.get_song("+str(videoId)+")")
+				self.log_me('error','self.get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
 				self.exc()
 				return
 			streamingData = []
@@ -1172,7 +1212,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					streamingData += response['streamingData']['formats']
 				if(len(streamingData)==0):
 					self.log_me('error','No adaptiveFormat and no formats found')
-					self.log_me('error','get_song('+str(videoId)+')')
+					self.log_me('error','self.get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
 					self.log_me('error', s)
 					stop = True
 			else:
@@ -1218,6 +1258,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					signature = self._cipher.get_signature(ciphered_signature=res['s'])
 					_url = res['url'] + "&sig=" + signature
 					self.log_me('debug',"- self decoded URL via cipher")
+
+					r = await self.hass.async_add_executor_job(requests.head,_url)
+					if(r.status_code==403):
+						self.log_me('debug',"- decoded url return 403 status code")
+						if(retry):
+							self.log_me('debug',"- updating signature Timestamp and try again")
+							await self.async_get_signatureTimestamp()
+							return await self.async_get_url(videoId,False)
+						else:
+							self.log_me('debug',"- giving up, maybe pyTube can help")
+							_url = ""
 				else:
 					_url = streamingData[streamId]['url']
 					self.log_me('debug',"- found URL in api data")
@@ -1279,8 +1330,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_album,media_id)
 				self._tracks = self._tracks['tracks']
 			elif(media_type == MEDIA_TYPE_TRACK):
-				crash_extra = 'get_song(videoId='+str(media_id)+')'
-				self._tracks = [await self.hass.async_add_executor_job(self._api.get_song,media_id)]
+				crash_extra = 'get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')'
+				self._tracks = [await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))]
 				self._tracks[0] = self._tracks[0]['videoDetails']
 			elif(media_id == HISTORY):
 				crash_extra = 'get_history()'
@@ -1319,7 +1370,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(videoId=str(media_id)))
 				self._tracks = self._tracks['tracks']
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
-				video_info = await self.hass.async_add_executor_job(self._api.get_song,media_id)
+				video_info = await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))
 				self._attributes['current_playlist_title'] = "Radio of "+str(video_info['title'])
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
