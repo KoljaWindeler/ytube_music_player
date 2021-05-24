@@ -1132,7 +1132,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
 			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
-			ATTR_ENTITY_ID: self._remote_player
+			ATTR_ENTITY_ID: self._remote_player,
+			"extra": {
+				"metadata": {
+					"metadataType": 3,
+					"title": self._track_name,
+					"artist": self._track_artist,
+					"images": [
+						{
+							"url":self._track_album_cover,
+						}
+						]
+				}
+			}
 			}
 		self.log_me('debug',"- forwarding url to player "+str(self._remote_player))
 		await self.hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
