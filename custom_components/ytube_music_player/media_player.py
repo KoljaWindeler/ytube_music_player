@@ -218,10 +218,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		except:
 			self.log_me('error',"async_get_cipher failed")	
 		try:
-			await self.async_get_signatureTimestamp()
-		except:
-			self.log_me('error',"async_get_signatureTimestamp failed")	
-		try:
 			await self.async_check_api()
 		except:
 			self.log_me('error',"async_check_api failed")	
@@ -249,6 +245,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self.log_me('debug',"[E] (fail) async_check_api")
 					return False
 				else:
+					self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
 					try:
 						self.log_debug_later("YouTube Api initialized ok, version: "+str(ytmusicapi.__version__))
 					except:
@@ -606,44 +603,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		#2do some sort of check if tis worked
 		self.log_me('debug',"[E] async_get_cipher")
 
-
-	async def async_get_signatureTimestamp(self):
-		self.log_debug_later("[S] async_get_signatureTimestamp")
-		embed_url = "https://music.youtube.com"
-		headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
-		signatureTimestamp=0
-		embed_html = await self.hass.async_add_executor_job(lambda: requests.get(embed_url, headers=headers))
-		if(embed_html.status_code==200):
-			s = str(embed_html.content)
-			reg = re.search(r'"jsUrl":"(.*?)"', s)
-			if(reg is not None):
-				base_url = s[reg.span()[0]+9:reg.span()[1]-1]
-				base_js = await self.hass.async_add_executor_job(lambda: requests.get(embed_url+base_url, headers=headers))
-				if(base_js.status_code==200):
-					s=str(base_js.content)
-					reg = re.search(r'signatureTimestamp:[0-9]+', s)
-					if(reg is not None):
-						signatureTimestamp = s[reg.span()[0]+19:reg.span()[1]]
-						self.log_debug_later("via lookup "+str(signatureTimestamp))
-					else:
-						self.log_debug_later("didn't find signatureTimestamp")
-			else:
-				self.log_debug_later("didn't find jsUrl")
-		else:
-			self.log_debug_later("didn't get primary html")
-
-		if(signatureTimestamp==0):
-			signatureTimestamp = (datetime.date.today() - datetime.date.fromtimestamp(0)).days - 1
-			self.log_debug_later("via date "+str(signatureTimestamp))
-		self._signatureTimestamp = signatureTimestamp
-		self.log_me('debug',"[E] async_get_signatureTimestamp")
-		return
-
 	async def async_sync_player(self, entity_id=None, old_state=None, new_state=None):
 		self.log_debug_later("[S] async_sync_player")
 		if(entity_id!=None and old_state!=None) and new_state!=None:
 			self.log_debug_later(entity_id+": "+old_state.state+" -> "+new_state.state)
-			if(entity_id!=self._remote_player):
+			if(entity_id.lower()!=self._remote_player.lower()):
 				self.log_me('debug',"- ignoring player "+str(entity_id)+" the player of interest is "+str(self._remote_player))
 				return
 		else:
@@ -1264,7 +1228,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						self.log_me('debug',"- decoded url return 403 status code")
 						if(retry):
 							self.log_me('debug',"- updating signature Timestamp and try again")
-							await self.async_get_signatureTimestamp()
+							self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
 							return await self.async_get_url(videoId,False)
 						else:
 							self.log_me('debug',"- giving up, maybe pyTube can help")
