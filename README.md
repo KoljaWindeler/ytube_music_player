@@ -333,6 +333,10 @@ Not yet tested, but should work in general. Please create two entities via the C
   2.) **Random** will NOT shuffle the playlist on generation but pick the tracks randomly, repeats can happen  
   3.) **Shuffle Random** will shuffle the playlist on generation and pick the next random, repeats can happen  
   You can change the mode when you add the input_select.ytube_music_player_playmode
+  
+  - **[Q] Can I search for items**  
+  [A] yes, please have a look at this little clip https://youtu.be/6pQJa0tvVMQ  
+  basically call the service `ytube_music_player.search` and open the media_browser after that. There should be a new item that contains the results
 
 
 ## Credits
