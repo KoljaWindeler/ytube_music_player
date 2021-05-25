@@ -47,7 +47,7 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def build_item_response(hass, media_library, payload):
+async def build_item_response(hass, media_library, payload, search=None):
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -92,13 +92,13 @@ async def build_item_response(hass, media_library, payload):
         res = await hass.async_add_executor_job(media_library.get_library_upload_album,search_id)
         media = res['tracks']
         title = res['title']
-    elif search_type == USER_ARTISTS:
+    elif search_type == USER_ARTISTS: # with S
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
         title = "Uploaded Artists"
     elif search_type == USER_ARTISTS_2: # list all artists now, but follow up will be the albums of that artist
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
         title = "Uploaded Artists -> Album"
-    elif search_type == USER_ARTIST:
+    elif search_type == USER_ARTIST: # without S
         media = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
         title = "Uploaded Artist"
         if(isinstance(media,list)):
@@ -125,6 +125,30 @@ async def build_item_response(hass, media_library, payload):
                     if('name' in media_all[0]['artist'][0]):
                         title = "Uploaded albums of "+media_all[0]['artist'][0]['name']
         search_type = USER_ALBUMS
+    elif search_type == SEARCH:
+        #_LOGGER.debug("search entry")
+        #_LOGGER.debug(search.get('filter',None))
+        #_LOGGER.debug(search.get('limit',None))
+        if search is not None:
+            media_all = await hass.async_add_executor_job(lambda: media_library.search(query=search.get('query',""), filter=search.get('filter',None), limit=int(search.get('limit',20))))
+            media = list()
+            
+            if(search.get('filter',None) is not None):
+                helper = {}
+            else:
+                helper = {'song':"Track: ", 'playlist': "Playlist: ",'album':"Album: "}
+
+            for a in media_all:
+                if(a['resultType'] == 'song'):
+                    media.append({'type': LIB_TRACKS, 'videoId': a['videoId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                elif(a['resultType'] == 'playlist'):
+                    media.append({'type': LIB_PLAYLIST, 'playlistId': a['browseId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                elif(a['resultType'] == 'album'):
+                    media.append({'type': LIB_ALBUM, 'browseId': a['browseId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                else: # video / artists / uploads are currently ignored
+                    continue
+        #_LOGGER.debug("search entry end")
+        
     if media is None:
         return None
 
@@ -216,7 +240,7 @@ def item_payload(item, media_library,search_type):
         media_content_id = f"{item['browseId']}"
         can_play = True #?
         can_expand = True #?
-    elif search_type in [USER_ALBUMS, LIB_ALBUM]:
+    elif (search_type in [USER_ALBUMS, LIB_ALBUM]) or ((item.get('type',None)==LIB_ALBUM) and (item.get('title',None) is not None)):
         title = f"{item['title']}"
         media_class = MEDIA_CLASS_ALBUM
         thumbnail = item['thumbnails'][-1]['url']
@@ -257,7 +281,7 @@ def item_payload(item, media_library,search_type):
     )
 
 
-def library_payload(media_library):
+def library_payload(media_library,search=None):
     """
     Create response payload to describe contents of a specific library.
 
@@ -282,8 +306,11 @@ def library_payload(media_library):
         USER_TRACKS: ["Tracks uploaded", MEDIA_CLASS_TRACK],
         USER_ALBUMS: ["Albums uploaded", MEDIA_CLASS_ALBUM],
         USER_ARTISTS: ["Artists uploaded", MEDIA_CLASS_ARTIST],
-        USER_ARTISTS_2: ["Artists uploaded -> Album", MEDIA_CLASS_ARTIST],
+        USER_ARTISTS_2: ["Artists uploaded -> Album", MEDIA_CLASS_ARTIST]
     }
+    if(search!=None):
+        library.update({SEARCH: ["Results for \""+str(search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
+    
     for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
             item_payload(

@@ -117,8 +117,12 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 	| SUPPORT_SEEK
 )
 
-SERVICE_CALL_METHOD = "call_method"
+SERVICE_SEARCH = "search"
 ATTR_PARAMETERS = "parameters"
+ATTR_QUERY = "query"
+ATTR_FILTER = "filter"
+ATTR_LIMIT = "limit"
+SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_RATE_TRACK = "rate_track"
 SERVICE_CALL_THUMB_UP = "thumb_up"
 SERVICE_CALL_THUMB_DOWN = "thumb_down"
@@ -193,6 +197,7 @@ USER_ARTISTS = 'user_artists'
 USER_ARTISTS_2 = 'user_artists2'
 USER_ARTIST = 'user_artist'
 USER_ARTIST_2 = 'user_artist2'
+SEARCH = 'search'
 CHANNEL = 'channel'
 CHANNEL_VID = 'vid_channel'
 HISTORY = 'history'

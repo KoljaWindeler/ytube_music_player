@@ -138,6 +138,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playContinuous = True
 		self._signatureTimestamp = 0
 		self._x_to_idle = None # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
+		self._search = {"query": "", "filter": None, "limit": 20}
 		
 
 
@@ -153,6 +154,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					),
 				},
 				"async_call_method",
+			)
+			platform.async_register_entity_service(
+				SERVICE_SEARCH,
+				{
+					vol.Required(ATTR_QUERY): cv.string,
+					vol.Optional(ATTR_FILTER): cv.string,
+					vol.Optional(ATTR_LIMIT): vol.Coerce(int)
+				},
+				"async_search",
 			)
 		# run the api / get_cipher / update select as soon as possible
 		if hass.is_running:
@@ -1614,6 +1624,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self.log_me('error',"Command "+str(command)+" not implimented")
 		self.log_me('debug','END async_call_method')
 
+
+	async def async_search(self, query="", filter=None, limit=20):
+		self.log_debug_later("[S] async_search")
+		if(filter == None or filter in {'albums', 'playlists', 'songs'}):
+			self._search['query'] = query
+			self._search['filter'] = filter
+			self._search['limit'] = limit
+		else:
+			data = {"title": "yTubeMediaPlayer error", "message": "Please use a valid filter: 'albums', 'playlists', 'songs'"}
+			await self.hass.services.async_call("persistent_notification","create", data)
+		self.log_me('debug',"[E] async_search")
 	
 
 	def exc(self, resp="self"):
@@ -1636,15 +1657,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"async_browse_media")
 		await self.async_check_api()
 
+		s = None
+		if(self._search.get("query","") != ""):
+			s = self._search
+
 		if media_content_type in [None, "library"]:
-			return await self.hass.async_add_executor_job(library_payload, self._api)
+			return await self.hass.async_add_executor_job(lambda: library_payload(self._api,s))
 
 		payload = {
 			"search_type": media_content_type,
 			"search_id": media_content_id,
 		}
 
-		response = await build_item_response(self.hass, self._api, payload)
+		response = await build_item_response(self.hass, self._api, payload, s)
 		if response is None:
 			raise BrowseError(
 				f"Media not found: {media_content_type} / {media_content_id}"
