@@ -111,30 +111,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playlist_to_index = {}
 		self._tracks = []
 		self._attributes = {}
+		self.reset_attributs()
 		self._next_track_no = 0
 		self._allow_next = False
 		self._last_auto_advance = datetime.datetime.now()
 		self._started_by = None
 		self._interrupt_data = None
-		self._attributes['_media_type'] = None
-		self._attributes['_media_id'] = None
-		self._attributes['_player_state'] = STATE_OFF
 		self._attributes['_player_id'] = None
-		self._attributes['likeStatus'] = ""
-		self._attributes['current_playlist_title'] = ""
-
-		self._playing = False
-		self._state = STATE_OFF
 		self._volume = 0.0
 		self._is_mute = False
-		self._track_name = None
-		self._track_artist = None
-		self._track_album_name = None
-		self._track_album_cover = None
-		self._track_artist_cover = None
-		self._media_duration = None
-		self._media_position = None
-		self._media_position_updated = None
 		self._playContinuous = True
 		self._signatureTimestamp = 0
 		self._x_to_idle = None # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
@@ -163,6 +148,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					vol.Optional(ATTR_LIMIT): vol.Coerce(int)
 				},
 				"async_search",
+			)
+			platform.async_register_entity_service(
+				SERVICE_ADD_TO_PLAYLIST,
+				{
+					vol.Optional(ATTR_SONG_ID): cv.string,
+					vol.Optional(ATTR_PLAYLIST_ID): cv.string
+				},
+				"async_add_to_playlist",
 			)
 		# run the api / get_cipher / update select as soon as possible
 		if hass.is_running:
@@ -208,6 +201,28 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if self._debug_log_concat.find('[E]')>=0: # if the end part is in the messeage print it now
 			self.log_me("","")
 
+
+	# reset some common attributs
+	def reset_attributs(self):
+		self._playing = False
+		self._state = STATE_OFF
+		self._track_name = None
+		self._track_artist = None
+		self._track_album_name = None
+		self._track_album_cover = None
+		self._media_duration = None
+		self._media_position = None
+		self._media_position_updated = None
+		self._attributes['_player_state'] = STATE_OFF
+		self._attributes['likeStatus'] = ""
+		self._attributes['current_playlist_title'] = ""
+		self._attributes['videoId'] = ""
+		self._attributes['lyrics'] = ""
+		self._attributes['_media_type'] = ""
+		self._attributes['_media_id'] = ""
+		self._attributes['current_track'] = 0
+		self._attributes['_media_type'] = None
+		self._attributes['_media_id'] = None
 
 
 	# update will be called eventually BEFORE homeassistant is started completly
@@ -520,26 +535,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_turn_off_media_player(self, data=None):
 		self.log_me('debug',"[S] async_turn_off_media_player")
 		"""Fire the off action."""
-		self._playing = False
-		self._state = STATE_OFF
-		self._track_name = None
-		self._track_artist = None
-		self._track_album_name = None
-		self._track_album_cover = None
-		self._media_duration = None
-		self._media_position = None
-		self._media_position_updated = None
-		self._attributes['_player_state'] = STATE_OFF
-		self._attributes['likeStatus'] = ""
-		self._attributes['current_playlist_title'] = ""
-		self._attributes['videoId'] = ""
-		self._attributes['lyrics'] = ""
-		self._attributes['_media_type'] = ""
-		self._attributes['_media_id'] = ""
-		self._attributes['current_track'] = 0
+		self.reset_attributs()
 		if(self._like_in_name):
 			self._name = self._org_name
-
 		self.async_schedule_update_ha_state()
 		if(self._remote_player == ""):
 			if(not(await self.async_update_remote_player())):
@@ -1635,6 +1633,29 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			data = {"title": "yTubeMediaPlayer error", "message": "Please use a valid filter: 'albums', 'playlists', 'songs'"}
 			await self.hass.services.async_call("persistent_notification","create", data)
 		self.log_me('debug',"[E] async_search")
+
+	
+	async def async_add_to_playlist(self, song_id="", playlist_id=""):
+		self.log_debug_later("[S] async_add_to_playlist")
+		if(song_id==""):
+			if(self._attributes['videoId']!=""):
+				song_id = self._attributes['videoId']
+			else:
+				self.log_me('error',"no song_id given, but also currently not playing, so I don't know what to add")
+		if(song_id!="" and playlist_id==""):
+			if(self._attributes['_media_type'] in [MEDIA_TYPE_PLAYLIST, CHANNEL]):
+				playlist_id = self._attributes['_media_id']
+			else:
+				self.log_me('error',"No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
+		if(song_id!="" and playlist_id!=""):
+			self.log_me('debug',"add_playlist_items(playlistId="+playlist_id+", videoIds=["+song_id+"]))")
+			try:
+				res = await self.hass.async_add_executor_job(lambda:self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
+				res = 'song added'
+			except:
+				res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
+			self.log_me('debug',res)
+		self.log_me('debug',"[E] async_add_to_playlist")
 	
 
 	def exc(self, resp="self"):

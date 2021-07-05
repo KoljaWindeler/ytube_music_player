@@ -173,12 +173,12 @@ async def async_check_data(hass, user_input):
 		key = []
 		value = []
 		c = "" # reset
-		remove_keys = {":authority", ":method", ":path", ":scheme", "origin"} # ytubemusic api doesn't like certain arguments
+		remove_keys = {":authority", ":method", ":path", ":scheme"} # ytubemusic api doesn't like the google chrome arguments
 		for i in range(0,len(cs)-1): # we're grabbing [i] and [i+1], so skip the last and go only to len()-1
 			key.append(cs[i][cs[i].rfind(' ')+1:]) # find the last STRING in the current element
 			value.append(cs[i+1]) # add the next element as value. This will contain the NEXT key which we're erasing later
 			if(i>0): # once we have more then one value
-				value[i-1] = value[i-1].replace(key[i],'') # remove the current key from the last value
+				value[i-1] = value[i-1].replace(' '+key[i],'') # remove the current key from the last value
 				if(key[i-1] not in remove_keys):
 					c += key[i-1]+": "+value[i-1]+'\n' # re-join and add missing line break
 			if(i==len(cs)-2): # add last key value pair

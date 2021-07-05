@@ -118,10 +118,13 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 )
 
 SERVICE_SEARCH = "search"
+SERVICE_ADD_TO_PLAYLIST = "add_to_playlist"
 ATTR_PARAMETERS = "parameters"
 ATTR_QUERY = "query"
 ATTR_FILTER = "filter"
 ATTR_LIMIT = "limit"
+ATTR_SONG_ID = "song_id"
+ATTR_PLAYLIST_ID = "playlist_id"
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_RATE_TRACK = "rate_track"
 SERVICE_CALL_THUMB_UP = "thumb_up"
