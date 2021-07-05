@@ -1648,12 +1648,16 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			else:
 				self.log_me('error',"No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
 		if(song_id!="" and playlist_id!=""):
-			self.log_me('debug',"add_playlist_items(playlistId="+playlist_id+", videoIds=["+song_id+"]))")
-			try:
-				res = await self.hass.async_add_executor_job(lambda:self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
-				res = 'song added'
-			except:
-				res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
+			#self.log_me('debug',"add_playlist_items(playlistId="+playlist_id+", videoIds=["+song_id+"]))")
+			if(playlist_id=="LM"):
+				await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_UP])
+				res = 'song added by liking it'
+			else:
+				try:
+					res = await self.hass.async_add_executor_job(lambda:self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
+					res = 'song added'
+				except:
+					res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
 			self.log_me('debug',res)
 		self.log_me('debug',"[E] async_add_to_playlist")
 	
