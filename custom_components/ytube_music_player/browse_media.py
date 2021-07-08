@@ -49,65 +49,269 @@ class UnknownMediaType(BrowseError):
 
 async def build_item_response(hass, media_library, payload, search=None):
     """Create response payload for the provided media query."""
-    search_id = payload["search_id"]
-    search_type = payload["search_type"]
+    search_id = payload[SEARCH_ID]
+    search_type = payload[SEARCH_TYPE]
 
+    children = []
     thumbnail = None
     title = None
     media = None
     p1 = datetime.datetime.now()
     _LOGGER.debug("- build_item_response for: "+search_type)
     
-    if search_type == LIB_PLAYLIST: # playlist OVERVIEW
+    if search_type == LIB_PLAYLIST: # playlist OVERVIEW -> lists playlists
         media = await hass.async_add_executor_job(media_library.get_library_playlists,BROWSER_LIMIT)
-        title = "Library Playlists" # single playlist
-    elif search_type == MEDIA_TYPE_PLAYLIST:
-        res = await hass.async_add_executor_job(media_library.get_playlist,search_id, BROWSER_LIMIT)
-        media = res['tracks']
-        title = res['title']
-    elif search_type == LIB_ALBUM: # album OVERVIEW
+        title = LIB_PLAYLIST_TITLE # single playlist
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_PLAYLIST,
+                media_content_type = MEDIA_TYPE_PLAYLIST,
+                media_content_id = f"{item['playlistId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+        
+
+    elif search_type == MEDIA_TYPE_PLAYLIST: # single playlist -> lists tracks
+        media = await hass.async_add_executor_job(media_library.get_playlist,search_id, BROWSER_LIMIT)
+        title = media['title']
+
+        for item in media['tracks']:
+            item_title = f"{item['title']}"
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"],str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"],list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    item_title = artist +" - "+item_title
+            
+            thumbnail = ''
+            if 'thumbnails' in item:
+                if isinstance(item['thumbnails'],list):
+                    thumbnail = item['thumbnails'][-1]['url']
+
+            children.append(BrowseMedia(
+                title = item_title,
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = thumbnail,
+            ))
+        
+    elif search_type == LIB_ALBUM: # LIB! album OVERVIEW, not uploaded -> lists albums
         media = await hass.async_add_executor_job(media_library.get_library_albums, BROWSER_LIMIT)
-        title = "Library Albums"
-    elif search_type == MEDIA_TYPE_ALBUM: # single album (NOT uploaded)
+        title = LIB_ALBUM_TITLE
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_ALBUM,
+                media_content_type = MEDIA_TYPE_ALBUM,
+                media_content_id = f"{item['browseId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
+    elif search_type == MEDIA_TYPE_ALBUM: # single album (NOT uploaded) -> lists tracks
         res = await hass.async_add_executor_job(media_library.get_album,search_id)
         media = res['tracks']
         title = res['title']
-    elif search_type == LIB_TRACKS: # liked songs (direct list, NOT uploaded)
-        media = await hass.async_add_executor_job(media_library.get_library_songs)
-        title = "Library Songs"
-    elif search_type == HISTORY: # history songs (direct list)
+        
+        for item in media:
+            thumbnail = item['thumbnails'][-1]['url'] # here to expose it also for the header
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = thumbnail,
+            ))
+
+    elif search_type == LIB_TRACKS: # liked songs (direct list, NOT uploaded) -> lists tracks
+        media = await hass.async_add_executor_job(lambda: media_library.get_library_songs(limit=BROWSER_LIMIT))
+        title = LIB_TRACKS_TITLE
+
+        for item in media:
+            item_title = f"{item['title']}"
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"],str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"],list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    item_title = artist +" - "+item_title
+
+            children.append(BrowseMedia(
+                title = item_title,
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
+    elif search_type == HISTORY: # history songs (direct list) -> lists tracks
         media = await hass.async_add_executor_job(media_library.get_history)
         search_id = HISTORY
-        title = "Last played songs"
-    elif search_type == USER_TRACKS: 
+        title = HISTORY_TITLE
+
+        for item in media:
+            item_title = f"{item['title']}"
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"],str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"],list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    item_title = artist +" - "+item_title
+
+            children.append(BrowseMedia(
+                title = item_title,
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
+    elif search_type == USER_TRACKS:  # list all uploaded songs -> lists tracks
         media = await hass.async_add_executor_job(media_library.get_library_upload_songs,BROWSER_LIMIT)
         search_id = USER_TRACKS
-        title = "Uploaded songs"
-    elif search_type == USER_ALBUMS:
+        title = USER_TRACKS_TITLE
+
+        for item in media:
+            item_title = f"{item['title']}"
+            if("artist" in item):
+                artist = ""
+                if(isinstance(item["artist"],str)):
+                    artist = item["artist"]
+                elif(isinstance(item["artist"],list)):
+                    artist = item["artist"][0]["name"]
+                if(artist):
+                    item_title = artist +" - "+item_title
+
+            children.append(BrowseMedia(
+                title = item_title,
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
+    elif search_type == USER_ALBUMS: # uploaded album overview!! -> lists user albums
         media = await hass.async_add_executor_job(media_library.get_library_upload_albums,BROWSER_LIMIT)
-        for i in media:
-            i['type'] = USER_ALBUM
-        title = "Uploaded Albums"
-    elif search_type == USER_ALBUM:
+        title = USER_ALBUMS_TITLE
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_ALBUM,
+                media_content_type = USER_ALBUM,
+                media_content_id = f"{item['browseId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
+    elif search_type == USER_ALBUM: # single uploaded album -> lists tracks
         res = await hass.async_add_executor_job(media_library.get_library_upload_album,search_id)
         media = res['tracks']
         title = res['title']
+
+        for item in media:
+            try:
+                thumbnail = item['thumbnails'][-1]['url']
+            except:
+                thumbnail = ""
+
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = thumbnail,
+            ))
+
     elif search_type == USER_ARTISTS: # with S
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
-        title = "Uploaded Artists"
+        title = USER_ARTISTS_TITLE
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['artist']}",
+                media_class = MEDIA_CLASS_ARTIST,
+                media_content_type = USER_ARTIST,
+                media_content_id = f"{item['browseId']}",
+                can_play = False,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
     elif search_type == USER_ARTISTS_2: # list all artists now, but follow up will be the albums of that artist
         media = await hass.async_add_executor_job(media_library.get_library_upload_artists,BROWSER_LIMIT)
-        title = "Uploaded Artists -> Album"
+        title = USER_ARTISTS_2_TITLE
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['artist']}",
+                media_class = MEDIA_CLASS_ARTIST,
+                media_content_type = USER_ARTIST_2,
+                media_content_id = f"{item['browseId']}",
+                can_play = False,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
     elif search_type == USER_ARTIST: # without S
         media = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
-        title = "Uploaded Artist"
+        title = USER_ARTIST_TITLE
         if(isinstance(media,list)):
             if('artist' in media[0]):
                 if(isinstance(media[0]['artist'],list)):
                     if('name' in media[0]['artist'][0]):
                         title = media[0]['artist'][0]['name']
+
+        for item in media:
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"],str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"],list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    title = artist +" - "+title
+
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = MEDIA_TYPE_TRACK,
+                media_content_id = f"{item['videoId']}",
+                can_play = True,
+                can_expand = False,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
+
     elif search_type == USER_ARTIST_2: # list each album of an uploaded artists only once .. next will be uploaded album view 'USER_ALBUM'
         media_all = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
+        title = USER_ARTIST_2_TITLE
         media = list()
         for item in media_all:
             if('album' in item):
@@ -119,13 +323,26 @@ async def build_item_response(hass, media_library, payload, search=None):
                             'title': item['album']['name'],
                             'thumbnails': item['thumbnails']
                         })
-        title = "Uploaded Album"
         if('artist' in media_all[0]):
                 if(isinstance(media_all[0]['artist'],list)):
                     if('name' in media_all[0]['artist'][0]):
                         title = "Uploaded albums of "+media_all[0]['artist'][0]['name']
-        search_type = USER_ALBUMS
+        
+
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_ALBUM,
+                media_content_type = USER_ALBUM,
+                media_content_id = f"{item['browseId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))        
+
+
     elif search_type == SEARCH:
+        title = SEARCH_TITLE
         #_LOGGER.debug("search entry")
         #_LOGGER.debug(search.get('filter',None))
         #_LOGGER.debug(search.get('limit',None))
@@ -141,27 +358,72 @@ async def build_item_response(hass, media_library, payload, search=None):
             for a in media_all:
                 if(a['resultType'] == 'song'):
                     media.append({'type': LIB_TRACKS, 'videoId': a['videoId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                    children.append(BrowseMedia(
+                        title = helper.get(a['resultType'],"")+a['title'],
+                        media_class = MEDIA_CLASS_TRACK,
+                        media_content_type = LIB_TRACKS,
+                        media_content_id = a['videoId'],
+                        can_play = True,
+                        can_expand = False,
+                        thumbnail = a['thumbnails'][-1]['url'],
+                    ))
                 elif(a['resultType'] == 'playlist'):
-                    media.append({'type': LIB_PLAYLIST, 'playlistId': a['browseId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                    children.append(BrowseMedia(
+                        title = helper.get(a['resultType'],"")+a['title'],
+                        media_class = MEDIA_CLASS_PLAYLIST,
+                        media_content_type = MEDIA_TYPE_PLAYLIST,
+                        media_content_id = f"{item['playlistId']}",
+                        can_play = True,
+                        can_expand = True,
+                        thumbnail = a['thumbnails'][-1]['url'],
+                    ))
                 elif(a['resultType'] == 'album'):
-                    media.append({'type': LIB_ALBUM, 'browseId': a['browseId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
+                     for item in media:
+                        children.append(BrowseMedia(
+                            title = helper.get(a['resultType'],"")+a['title'],
+                            media_class = MEDIA_CLASS_ALBUM,
+                            media_content_type = LIB_ALBUM,
+                            media_content_id = f"{item['browseId']}",
+                            can_play = True,
+                            can_expand = True,
+                            thumbnail = a['thumbnails'][-1]['url'],
+                        ))
                 else: # video / artists / uploads are currently ignored
                     continue
+
         #_LOGGER.debug("search entry end")
-        
-    if media is None:
-        return None
+    elif search_type == MOOD_OVERVIEW:
+        media_all = await hass.async_add_executor_job(lambda: media_library.get_mood_categories())
+        title = MOOD_TITLE
+        for cap in media_all:
+            for e in media_all[cap]:
+                children.append(BrowseMedia(
+                    title = cap+' - '+e['title'],
+                    media_class = MEDIA_CLASS_PLAYLIST,
+                    media_content_type = MOOD_PLAYLISTS,
+                    media_content_id = e['params'],
+                    can_play = False,
+                    can_expand = True,
+                    thumbnail = "",
+                ))
+    elif search_type == MOOD_PLAYLISTS:
+        media = await hass.async_add_executor_job(lambda: media_library.get_mood_playlists(search_id))
+        title = MOOD_TITLE
+        for item in media:
+            children.append(BrowseMedia(
+                title = f"{item['title']}",
+                media_class = MEDIA_CLASS_PLAYLIST,
+                media_content_type = MEDIA_TYPE_PLAYLIST,
+                media_content_id = f"{item['playlistId']}",
+                can_play = True,
+                can_expand = True,
+                thumbnail = item['thumbnails'][-1]['url'],
+            ))
 
-    children = []
-    for item in media:
-        try:
-            children.append(item_payload(item, media_library,search_type))
-        except UnknownMediaType:
-            pass
+
+    ############################################ END ###############
+
     children.sort(key=lambda x: x.title, reverse=False)
-
-
-
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
             search_type, MEDIA_CLASS_DIRECTORY
@@ -184,102 +446,6 @@ async def build_item_response(hass, media_library, payload, search=None):
     return response
 
 
-def item_payload(item, media_library,search_type):
-    """
-    Create response payload for a single media item.
-
-    Used by async_browse_media.
-    """
-    # happens way to often
-    #_LOGGER.debug('item_payload')
-    #_LOGGER.debug(item)
-    #_LOGGER.debug(search_type)
-
-
-    media_class = None
-    title = ""
-    media_content_type = None
-    media_content_id = ""
-    can_play = False
-    can_expand = False
-    thumbnail = ""
-
-    if "playlistId" in item: #playlist
-        title = f"{item['title']}"
-        media_class = MEDIA_CLASS_PLAYLIST
-        thumbnail = item['thumbnails'][-1]['url']
-        media_content_type = MEDIA_TYPE_PLAYLIST
-        media_content_id = f"{item['playlistId']}"
-        can_play = True
-        can_expand = True
-    elif "videoId" in item: #tracks
-        title = f"{item['title']}"
-        if("artists" in item):
-            artist = ""
-            if(isinstance(item["artists"],str)):
-                artist = item["artists"]
-            elif(isinstance(item["artists"],list)):
-                artist = item["artists"][0]["name"]
-            if(artist):
-                title = artist +" - "+title
-        media_class = MEDIA_CLASS_TRACK
-        if 'thumbnails' in item:
-            if isinstance(item['thumbnails'],list):
-                thumbnail = item['thumbnails'][-1]['url']
-        media_content_type = MEDIA_TYPE_TRACK
-        media_content_id = f"{item['videoId']}"
-        can_play = True
-        can_expand = False
-    elif search_type == USER_ARTISTS or search_type == USER_ARTISTS_2: # user uploaded artists overview
-        title = f"{item['artist']}"
-        media_class = MEDIA_CLASS_ARTIST
-        thumbnail = item['thumbnails'][-1]['url']
-        media_content_type = USER_ARTIST # send to single artist
-        if(search_type == USER_ARTISTS_2):
-            media_content_type = USER_ARTIST_2 # send to single artist -> Album
-        media_content_id = f"{item['browseId']}"
-        can_play = True #?
-        can_expand = True #?
-    elif (search_type in [USER_ALBUMS, LIB_ALBUM]) or ((item.get('type',None)==LIB_ALBUM) and (item.get('title',None) is not None)):
-        title = f"{item['title']}"
-        media_class = MEDIA_CLASS_ALBUM
-        thumbnail = item['thumbnails'][-1]['url']
-        media_content_type = MEDIA_TYPE_ALBUM
-        if search_type == USER_ALBUMS:
-            media_content_type = USER_ALBUM
-        media_content_id = f"{item['browseId']}"
-        can_play = True
-        can_expand = True
-    
-    else:
-        # this case is for the top folder of each type
-        # possible content types: album, artist, movie, library_music, tvshow, channel
-        media_class = item["class"]
-        media_content_type = item["type"]
-        media_content_id = ""
-        can_play = False
-        can_expand = True
-        title = item["label"]
-
-    if media_class is None:
-        try:
-            media_class = CHILD_TYPE_MEDIA_CLASS[media_content_type]
-        except KeyError as err:
-            _LOGGER.debug("Unknown media type received: %s", media_content_type)
-            raise UnknownMediaType from err
-
-    #_LOGGER.debug(title+' / '+media_class+' / '+media_content_id+' / '+media_content_type+' / '+str(can_play))
-
-    return BrowseMedia(
-        title=title,
-        media_class=media_class,
-        media_content_type=media_content_type,
-        media_content_id=media_content_id,
-        can_play=can_play,
-        can_expand=can_expand,
-        thumbnail=thumbnail,
-    )
-
 
 def library_payload(media_library,search=None):
     """
@@ -299,24 +465,29 @@ def library_payload(media_library,search=None):
     )
 
     library = {
-        LIB_PLAYLIST: ["Playlists",MEDIA_CLASS_PLAYLIST],
-        LIB_ALBUM: ["Albums",MEDIA_CLASS_ALBUM],
-        LIB_TRACKS: ["Tracks", MEDIA_CLASS_TRACK],
-        HISTORY: ["History", MEDIA_CLASS_TRACK],
-        USER_TRACKS: ["Tracks uploaded", MEDIA_CLASS_TRACK],
-        USER_ALBUMS: ["Albums uploaded", MEDIA_CLASS_ALBUM],
-        USER_ARTISTS: ["Artists uploaded", MEDIA_CLASS_ARTIST],
-        USER_ARTISTS_2: ["Artists uploaded -> Album", MEDIA_CLASS_ARTIST]
+        LIB_PLAYLIST: [LIB_PLAYLIST_TITLE,MEDIA_CLASS_PLAYLIST],
+        LIB_ALBUM: [LIB_ALBUM_TITLE,MEDIA_CLASS_ALBUM],
+        LIB_TRACKS: [LIB_TRACKS_TITLE, MEDIA_CLASS_TRACK],
+        HISTORY: [HISTORY_TITLE, MEDIA_CLASS_TRACK],
+        USER_TRACKS: [USER_TRACKS_TITLE, MEDIA_CLASS_TRACK],
+        USER_ALBUMS: [USER_ALBUMS_TITLE, MEDIA_CLASS_ALBUM],
+        USER_ARTISTS: [USER_ARTISTS_TITLE, MEDIA_CLASS_ARTIST],
+        USER_ARTISTS_2: [USER_ARTISTS_2_TITLE, MEDIA_CLASS_ARTIST],
+        MOOD_OVERVIEW: [MOOD_TITLE, MEDIA_CLASS_PLAYLIST]
     }
     if(search!=None):
         library.update({SEARCH: ["Results for \""+str(search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
     
     for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
-            item_payload(
-                {"label": item["label"], "type": item["type"], "uri": item["type"], "class": item["class"]},
-                media_library,
-                None
+            BrowseMedia(
+                title=item["label"],
+                media_class=item["class"],
+                media_content_type=item["type"],
+                media_content_id="",
+                can_play=False,
+                can_expand=True,
+                thumbnail="",
             )
         )
 

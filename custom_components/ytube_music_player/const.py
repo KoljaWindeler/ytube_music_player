@@ -190,20 +190,48 @@ PLAYMODE_RANDOM = "Random"
 PLAYMODE_SHUFFLE_RANDOM = "Shuffle Random"
 PLAYMODE_DIRECT = "Direct"
 
+SEARCH_ID = "search_id"
+SEARCH_TYPE = "search_type"
 LIB_PLAYLIST = 'library_playlists'
+LIB_PLAYLIST_TITLE = "Library Playlists"
+
 LIB_ALBUM = 'library_albums'
+LIB_ALBUM_TITLE = "Library Albums"
+
 LIB_TRACKS = 'library_tracks'
+LIB_TRACKS_TITLE = "Library Songs"
+
+HISTORY = 'history'
+HISTORY_TITLE = "Last played songs"
+
 USER_TRACKS = 'user_tracks'
+USER_TRACKS_TITLE = "Uploaded songs"
+
 USER_ALBUMS = 'user_albums'
+USER_ALBUMS_TITLE = "Uploaded Albums"
 USER_ALBUM = 'user_album'
+
 USER_ARTISTS = 'user_artists'
+USER_ARTISTS_TITLE = "Uploaded Artists"
+
 USER_ARTISTS_2 = 'user_artists2'
+USER_ARTISTS_2_TITLE = "Uploaded Artists -> Album"
+
 USER_ARTIST = 'user_artist'
+USER_ARTIST_TITLE = "Uploaded Artist"
+
 USER_ARTIST_2 = 'user_artist2'
+USER_ARTIST_2_TITLE = "Uploaded Album"
+
 SEARCH = 'search'
+SEARCH_TITLE = "Search results" 
+
+MOOD_OVERVIEW = 'mood_overview'
+MOOD_PLAYLISTS = 'mood_playlists'
+MOOD_TITLE = 'Moods & Genres'
+
 CHANNEL = 'channel'
 CHANNEL_VID = 'vid_channel'
-HISTORY = 'history'
 STATE_OFF_1X = 'OFF_1X'
 BROWSER_LIMIT = 500
 
