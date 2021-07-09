@@ -866,6 +866,26 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				speakersList[i] = speakersList[i].replace(DOMAIN_MP+".","")
 		except:
 			speakersList = list()
+
+		# generate the speaker list in any case (will be needed for the media_browser)
+		defaultPlayer = ''
+		if(len(speakersList)<=1):
+			if(len(speakersList) == 1):
+				defaultPlayer = speakersList[0]
+			all_entities = await self.hass.async_add_executor_job(self.hass.states.all) 
+			for e in all_entities:
+				if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
+					speakersList.append(e.entity_id.replace(DOMAIN_MP+".",""))
+		
+		# create friendly speakerlist
+		self._friendly_speakersList = dict()
+		for a in speakersList:
+			state = self.hass.states.get(DOMAIN_MP+"."+a)
+			friendly_name = state.attributes.get(ATTR_FRIENDLY_NAME)
+			if(friendly_name == None):
+				friendly_name = a
+			self._friendly_speakersList.update({a:friendly_name})	
+
 		# check if the drop down exists
 		if(self._select_mediaPlayer == ""):
 			self.log_me('debug',"- Drop down for media player not found")
@@ -875,24 +895,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(await self.async_update_remote_player(remote_player=speakersList[0])):
 					self.log_me('debug',"- Choosing "+self._remote_player+" as player")
 		else: #dropdown exists
-			defaultPlayer = ''
-			if(len(speakersList)<=1):
-				if(len(speakersList) == 1):
-					defaultPlayer = speakersList[0]
-				all_entities = await self.hass.async_add_executor_job(self.hass.states.all) 
-				for e in all_entities:
-					if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
-						speakersList.append(e.entity_id.replace(DOMAIN_MP+".",""))
-			
-			# create friendly speakerlist
-			self._friendly_speakersList = dict()
-			for a in speakersList:
-				state = self.hass.states.get(DOMAIN_MP+"."+a)
-				friendly_name = state.attributes.get(ATTR_FRIENDLY_NAME)
-				if(friendly_name == None):
-					friendly_name = a
-				self._friendly_speakersList.update({a:friendly_name})			
-			
 			self.log_me('debug',"- Adding "+str(len(self._friendly_speakersList))+" player to the dropdown")
 			data = {input_select.ATTR_OPTIONS: list(self._friendly_speakersList.values()), ATTR_ENTITY_ID: self._select_mediaPlayer}
 			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
