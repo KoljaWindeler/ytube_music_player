@@ -348,8 +348,7 @@ async def build_item_response(hass, media_library, payload, search=None):
         #_LOGGER.debug(search.get('limit',None))
         if search is not None:
             media_all = await hass.async_add_executor_job(lambda: media_library.search(query=search.get('query',""), filter=search.get('filter',None), limit=int(search.get('limit',20))))
-            media = list()
-            
+
             if(search.get('filter',None) is not None):
                 helper = {}
             else:
@@ -357,11 +356,10 @@ async def build_item_response(hass, media_library, payload, search=None):
 
             for a in media_all:
                 if(a['resultType'] == 'song'):
-                    media.append({'type': LIB_TRACKS, 'videoId': a['videoId'], 'title': helper.get(a['resultType'],"")+a['title'], 'thumbnails': a['thumbnails']})
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'],"")+a['title'],
                         media_class = MEDIA_CLASS_TRACK,
-                        media_content_type = LIB_TRACKS,
+                        media_content_type = MEDIA_TYPE_TRACK,
                         media_content_id = a['videoId'],
                         can_play = True,
                         can_expand = False,
@@ -372,22 +370,21 @@ async def build_item_response(hass, media_library, payload, search=None):
                         title = helper.get(a['resultType'],"")+a['title'],
                         media_class = MEDIA_CLASS_PLAYLIST,
                         media_content_type = MEDIA_TYPE_PLAYLIST,
-                        media_content_id = f"{item['playlistId']}",
+                        media_content_id = f"{a['browseId']}",
                         can_play = True,
                         can_expand = True,
                         thumbnail = a['thumbnails'][-1]['url'],
                     ))
                 elif(a['resultType'] == 'album'):
-                     for item in media:
-                        children.append(BrowseMedia(
-                            title = helper.get(a['resultType'],"")+a['title'],
-                            media_class = MEDIA_CLASS_ALBUM,
-                            media_content_type = LIB_ALBUM,
-                            media_content_id = f"{item['browseId']}",
-                            can_play = True,
-                            can_expand = True,
-                            thumbnail = a['thumbnails'][-1]['url'],
-                        ))
+                    children.append(BrowseMedia(
+                        title = helper.get(a['resultType'],"")+a['title'],
+                        media_class = MEDIA_CLASS_ALBUM,
+                        media_content_type = MEDIA_TYPE_ALBUM,
+                        media_content_id = f"{a['browseId']}",
+                        can_play = True,
+                        can_expand = True,
+                        thumbnail = a['thumbnails'][-1]['url'],
+                    ))
                 else: # video / artists / uploads are currently ignored
                     continue
 
