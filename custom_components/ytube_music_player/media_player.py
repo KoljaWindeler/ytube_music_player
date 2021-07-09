@@ -1363,6 +1363,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
 				crash_extra = 'get_library_upload_artist(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_artist,media_id,BROWSER_LIMIT)
+			elif(media_type == CONF_RECEIVERS): # a bit funky, but this enables us to select the player via the media browser .. 
+				await self.async_select_source(media_id)
+			elif(media_type==CUR_PLAYLIST_COMMAND): # a bit funky, but this enables us to just in the current playlist
+				await self.async_call_method(SERVICE_CALL_GOTO_TRACK,media_id) 
+				return # INSTANT leave after this call to prevent any further shuffeling etc
 			else:
 				self.log_me('debug',"- error during fetching play_media, turning off")
 				await self.async_turn_off()
@@ -1615,12 +1620,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._name = self._org_name + " - " + self._attributes['likeStatus']
 			self.log_me('debug',"Showing like status in name until restart")
 		elif(command == SERVICE_CALL_GOTO_TRACK):
-			self.log_me('debug',"Going to Track "+str(all_params[0])+".")
-			self._next_track_no = min(max(int(all_params[0])-1-1,-1),len(self._tracks)-1)
-			await self.async_get_track() 
+			self.log_me('debug',"Going to Track "+str(parameters)+".")
+			self._next_track_no = min(max(int(parameters)-1-1,-1),len(self._tracks)-1)
+			prev_shuffle = self._shuffle # store current shuffle setting
+			self._shuffle = False # set false, otherwise async_get_track will override next_track
+			await self.async_get_track()
+			self._shuffle = prev_shuffle # restore
 		else:
 			self.log_me('error',"Command "+str(command)+" not implimented")
-		self.log_me('debug','END async_call_method')
+		self.log_me('debug',"[E] async_call_method")
 
 
 	async def async_search(self, query="", filter=None, limit=20):
@@ -1682,19 +1690,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"async_browse_media")
 		await self.async_check_api()
 
-		s = None
-		if(self._search.get("query","") != ""):
-			s = self._search
+		
 
 		if media_content_type in [None, "library"]:
-			return await self.hass.async_add_executor_job(lambda: library_payload(self._api,s))
+			return await self.hass.async_add_executor_job(lambda: library_payload(self))
 
 		payload = {
 			"search_type": media_content_type,
 			"search_id": media_content_id,
 		}
 
-		response = await build_item_response(self.hass, self._api, payload, s)
+		response = await build_item_response(self, payload)
 		if response is None:
 			raise BrowseError(
 				f"Media not found: {media_content_type} / {media_content_id}"

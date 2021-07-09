@@ -226,9 +226,15 @@ USER_ARTIST_2_TITLE = "Uploaded Album"
 SEARCH = 'search'
 SEARCH_TITLE = "Search results" 
 
+PLAYER_TITLE = "Playback device"
+
 MOOD_OVERVIEW = 'mood_overview'
 MOOD_PLAYLISTS = 'mood_playlists'
 MOOD_TITLE = 'Moods & Genres'
+
+CUR_PLAYLIST = 'cur_playlists'
+CUR_PLAYLIST_TITLE = "Current Playlists"
+CUR_PLAYLIST_COMMAND = "PLAYLIST_GOTO_TRACK"
 
 CHANNEL = 'channel'
 CHANNEL_VID = 'vid_channel'

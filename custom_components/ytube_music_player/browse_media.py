@@ -47,15 +47,18 @@ class UnknownMediaType(BrowseError):
     """Unknown media type."""
 
 
-async def build_item_response(hass, media_library, payload, search=None):
+async def build_item_response(ytmusicplayer, payload):
     """Create response payload for the provided media query."""
     search_id = payload[SEARCH_ID]
     search_type = payload[SEARCH_TYPE]
+    media_library = ytmusicplayer._api
+    hass = ytmusicplayer.hass
 
     children = []
     thumbnail = None
     title = None
     media = None
+    sort_list = True
     p1 = datetime.datetime.now()
     _LOGGER.debug("- build_item_response for: "+search_type)
     
@@ -343,13 +346,10 @@ async def build_item_response(hass, media_library, payload, search=None):
 
     elif search_type == SEARCH:
         title = SEARCH_TITLE
-        #_LOGGER.debug("search entry")
-        #_LOGGER.debug(search.get('filter',None))
-        #_LOGGER.debug(search.get('limit',None))
-        if search is not None:
-            media_all = await hass.async_add_executor_job(lambda: media_library.search(query=search.get('query',""), filter=search.get('filter',None), limit=int(search.get('limit',20))))
+        if ytmusicplayer._search is not None:
+            media_all = await hass.async_add_executor_job(lambda: media_library.search(query=ytmusicplayer._search.get('query',""), filter=ytmusicplayer._search.get('filter',None), limit=int(ytmusicplayer._search.get('limit',20))))
 
-            if(search.get('filter',None) is not None):
+            if(ytmusicplayer._search.get('filter',None) is not None):
                 helper = {}
             else:
                 helper = {'song':"Track: ", 'playlist': "Playlist: ",'album':"Album: "}
@@ -416,11 +416,53 @@ async def build_item_response(hass, media_library, payload, search=None):
                 can_expand = True,
                 thumbnail = item['thumbnails'][-1]['url'],
             ))
+    elif search_type == CONF_RECEIVERS:
+        title = PLAYER_TITLE
+        for e,f in ytmusicplayer._friendly_speakersList.items():
+            children.append(BrowseMedia(
+                title = f,
+                media_class = MEDIA_CLASS_TV_SHOW,
+                media_content_type = CONF_RECEIVERS,
+                media_content_id = e,
+                can_play = True,
+                can_expand = False,
+                thumbnail = "",
+            ))
+    elif search_type == CUR_PLAYLIST:
+        title = CUR_PLAYLIST_TITLE
+        sort_list = False
+        i = 1
+        for item in ytmusicplayer._tracks:
+            item_title = item["title"]
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"],str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"],list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    item_title = artist +" - "+item_title
 
+            item_thumbnail = ""
+            if 'thumbnails' in item:
+                item_thumbnail = item['thumbnails'][-1]['url']
+
+            children.append(BrowseMedia(
+                title = item_title,
+                media_class = MEDIA_CLASS_TRACK,
+                media_content_type = CUR_PLAYLIST_COMMAND,
+                media_content_id = i,
+                can_play = True,
+                can_expand = False,
+                thumbnail = item_thumbnail,
+            ))
+            i+=1
+
+        
 
     ############################################ END ###############
-
-    children.sort(key=lambda x: x.title, reverse=False)
+    if sort_list:
+        children.sort(key=lambda x: x.title, reverse=False)
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
             search_type, MEDIA_CLASS_DIRECTORY
@@ -444,12 +486,16 @@ async def build_item_response(hass, media_library, payload, search=None):
 
 
 
-def library_payload(media_library,search=None):
+def library_payload(ytmusicplayer):
     """
     Create response payload to describe contents of a specific library.
 
     Used by async_browse_media.
     """
+    #media_library = ytmusicplayer._api
+    search = None
+    if(ytmusicplayer._search.get("query","") != ""):
+	    search = ytmusicplayer._search
 
     library_info = BrowseMedia(
         media_class=MEDIA_CLASS_DIRECTORY,
@@ -470,10 +516,12 @@ def library_payload(media_library,search=None):
         USER_ALBUMS: [USER_ALBUMS_TITLE, MEDIA_CLASS_ALBUM],
         USER_ARTISTS: [USER_ARTISTS_TITLE, MEDIA_CLASS_ARTIST],
         USER_ARTISTS_2: [USER_ARTISTS_2_TITLE, MEDIA_CLASS_ARTIST],
-        MOOD_OVERVIEW: [MOOD_TITLE, MEDIA_CLASS_PLAYLIST]
+        MOOD_OVERVIEW: [MOOD_TITLE, MEDIA_CLASS_PLAYLIST],
+        CONF_RECEIVERS: [PLAYER_TITLE, MEDIA_CLASS_TV_SHOW],
+        CUR_PLAYLIST: [CUR_PLAYLIST_TITLE, MEDIA_CLASS_PLAYLIST],
     }
-    if(search!=None):
-        library.update({SEARCH: ["Results for \""+str(search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
+    if(ytmusicplayer._search.get("query","") != ""):
+        library.update({SEARCH: ["Results for \""+str(ytmusicplayer._search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
     
     for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
