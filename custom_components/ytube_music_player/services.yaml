@@ -10,6 +10,7 @@ call_method:
     parameters:
       description: Array of additional parameters, optional and depends on command.
       example: "thumb_up"
+
 search:
   description: Search for music / album / etc on Ytube Music
   fields:
@@ -24,6 +25,7 @@ search:
     limit:
       description: Limits the amount of resuls
       example: "20"
+
 add_to_playlist:
   description: Adds a song to a playlist
   fields:
@@ -35,4 +37,17 @@ add_to_playlist:
       example: ""
     playlist_id:
       description: The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior.
+      example: ""
+
+rate_track:
+  description: Rates a song
+  fields:
+    entity_id:
+      description: Name(s) of the yTube music player entity where to run the custom command.
+      example: "media_player.ytube_music_player"
+    rating:
+      description: The rating of the song, can be 'thumb_up' / 'thumb_down' / 'thumb_middle' / 'thumb_toggle_up_middle'.
+      example: "thumb_up"
+    song_id:
+      description: The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior.
       example: ""

@@ -157,6 +157,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				},
 				"async_add_to_playlist",
 			)
+			platform.async_register_entity_service(
+				SERVICE_CALL_RATE_TRACK,
+				{
+					vol.Required(ATTR_RATING): cv.string,
+					vol.Optional(ATTR_SONG_ID): cv.string
+				},
+				"async_rate_track",
+			)
 		# run the api / get_cipher / update select as soon as possible
 		if hass.is_running:
 			self._update_needed = True
@@ -869,8 +877,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# generate the speaker list in any case (will be needed for the media_browser)
 		defaultPlayer = ''
-		if(len(speakersList)<=1):
-			if(len(speakersList) == 1):
+		if(len(speakersList)<=1): # if one player is in the speakersList -> grab all available player and preselect the one that was given, if the list contains two or more: don't add all other avilable, leave it as is
+			if(len(speakersList) == 1): 
 				defaultPlayer = speakersList[0]
 			all_entities = await self.hass.async_add_executor_job(self.hass.states.all) 
 			for e in all_entities:
@@ -1542,33 +1550,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',parameters)
 		if(command == SERVICE_CALL_RATE_TRACK):
 			if(len(all_params)>=1):
-				try:
-					arg = 'LIKE'
-					if(all_params[0]==SERVICE_CALL_THUMB_UP):
-						self.log_me('debug',"rate thumb up")
-						arg = 'LIKE'
-					elif(all_params[0]==SERVICE_CALL_THUMB_DOWN):
-						self.log_me('debug',"rate thumb down")
-						arg = 'DISLIKE'
-					elif(all_params[0]==SERVICE_CALL_THUMB_MIDDLE):
-						self.log_me('debug',"rate thumb middle")
-						arg = 'INDIFFERENT'
-					elif(all_params[0]==SERVICE_CALL_TOGGLE_THUMB_UP_MIDDLE):
-						if('likeStatus' in self._attributes):
-							if(self._attributes['likeStatus']=='LIKE'):
-								self.log_me('debug',"rate thumb middle")
-								arg = 'INDIFFERENT'
-							else:
-								self.log_me('debug',"rate thumb up")
-								arg = 'LIKE'
-					await self.hass.async_add_executor_job(self._api.rate_song,self._attributes['videoId'],arg)
-					self._attributes['likeStatus'] = arg
-					if(self._like_in_name):
-						self._name = self._org_name + " - " + arg
-					self.async_schedule_update_ha_state()
-					self._tracks[self._next_track_no]['likeStatus'] = arg
-				except:
-					self.exc()
+				await self.async_rate_track(rating=all_params[0])
 		elif(command == SERVICE_CALL_INTERRUPT_START):
 			await self.async_update_remote_player()
 			#_LOGGER.error(self._remote_player)
@@ -1670,6 +1652,47 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
 			self.log_me('debug',res)
 		self.log_me('debug',"[E] async_add_to_playlist")
+
+	async def async_rate_track(self, rating="", song_id=""):
+		self.log_debug_later("[S] async_rate_track")
+		if(rating==""):
+			self.log_me('error',"No Rating given, stopping")
+		if(song_id==""):
+			if(self._attributes['videoId']!=""):
+				self.log_me('debug',"No song Id given, taking current song")
+				song_id = self._attributes['videoId']
+			else:
+				self.log_me('error',"No song Id given and currently not playing, giving up")
+		
+		if(song_id!="" and rating!=""):
+			try:
+				arg = 'LIKE'
+				if(rating==SERVICE_CALL_THUMB_UP):
+					self.log_me('debug',"rate thumb up")
+					arg = 'LIKE'
+				elif(rating==SERVICE_CALL_THUMB_DOWN):
+					self.log_me('debug',"rate thumb down")
+					arg = 'DISLIKE'
+				elif(rating==SERVICE_CALL_THUMB_MIDDLE):
+					self.log_me('debug',"rate thumb middle")
+					arg = 'INDIFFERENT'
+				elif(rating==SERVICE_CALL_TOGGLE_THUMB_UP_MIDDLE):
+					if('likeStatus' in self._attributes):
+						if(self._attributes['likeStatus']=='LIKE'):
+							self.log_me('debug',"rate thumb middle")
+							arg = 'INDIFFERENT'
+						else:
+							self.log_me('debug',"rate thumb up")
+							arg = 'LIKE'
+				await self.hass.async_add_executor_job(self._api.rate_song,song_id,arg)
+				self._attributes['likeStatus'] = arg
+				if(self._like_in_name):
+					self._name = self._org_name + " - " + arg
+				self.async_schedule_update_ha_state()
+				self._tracks[self._next_track_no]['likeStatus'] = arg
+			except:
+				self.exc()
+		self.log_me('debug',"[E] async_rate_track")
 	
 
 	def exc(self, resp="self"):
