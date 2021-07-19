@@ -1373,7 +1373,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
 				video_info = await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp)) # no limit needed
-				self._attributes['current_playlist_title'] = "Radio of "+str(video_info['title'])
+				title = "unknown title"
+				if("videoDetails" in video_info):
+					if("title" in video_info["videoDetails"]):
+						title = video_info['videoDetails']['title']
+				self._attributes['current_playlist_title'] = "Radio of "+str(title)
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_album(media_id, limit=self._trackLimit))
