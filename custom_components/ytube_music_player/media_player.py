@@ -165,6 +165,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				},
 				"async_rate_track",
 			)
+			platform.async_register_entity_service(
+				SERVICE_LIMIT_COUNT,
+				{
+					vol.Required(ATTR_LIMIT): vol.Coerce(int)
+				},
+				"async_limit_count",
+			)
 		# run the api / get_cipher / update select as soon as possible
 		if hass.is_running:
 			self._update_needed = True
@@ -1317,27 +1324,28 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if(media_type == MEDIA_TYPE_PLAYLIST):
 				crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
 				playlist_info = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
-				self._tracks = playlist_info['tracks']
+				self._tracks = playlist_info['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 				self._attributes['current_playlist_title'] = str(playlist_info['title'])
 			elif(media_type == MEDIA_TYPE_ALBUM):
 				crash_extra = 'get_album(browseId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_album,media_id)
-				self._tracks = self._tracks['tracks']
+				self._tracks = await self.hass.async_add_executor_job(self._api.get_album,media_id) # no limit needed
+				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 			elif(media_type == MEDIA_TYPE_TRACK):
 				crash_extra = 'get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')'
-				self._tracks = [await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))]
+				self._tracks = [await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))] # no limit needed
 				self._tracks[0] = self._tracks[0]['videoDetails']
 			elif(media_id == HISTORY):
 				crash_extra = 'get_history()'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_history)
+				self._tracks = await self.hass.async_add_executor_job(self._api.get_history) # no limit needed
 			elif(media_id == USER_TRACKS):
 				crash_extra = 'get_library_upload_songs(limit=999)'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_songs,self._trackLimit*10)
+				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_songs,self._trackLimit)
+				self._tracks = self._tracks[:self._trackLimit] # limit function doesn't really work ... seems like
 			elif(media_type == CHANNEL):
 				if(self._legacyRadio):
 					# get original playlist from the media_id
-					crash_extra = 'get_playlist(playlistId='+str(media_id)+')'
-					self._tracks = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+					crash_extra = 'get_playlist(playlistId='+str(media_id)+',limit='+str(self._trackLimit)+')'
+					self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
 					self._tracks = self._tracks['tracks']
 					# select on track randomly
 					if(isinstance(self._tracks, list)):
@@ -1349,30 +1357,31 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							else:
 								r_track = self._tracks[0]
 							# get a 'channel' based on that random track
-							crash_extra += ' ... get_watch_playlist(videoId='+str(r_track['videoId'])+')'
-							self._tracks = await self.hass.async_add_executor_job(self._api.get_watch_playlist,r_track['videoId'])
-							self._tracks = self._tracks['tracks']
+							crash_extra += ' ... get_watch_playlist(videoId='+str(r_track['videoId'])+',limit='+str(self._trackLimit)+')'
+							self._tracks = await self.hass.async_add_executor_job(lambda:self._api.get_watch_playlist(r_track['videoId'], limit=self._trackLimit))
+							self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 				else:
 					crash_extra = 'get_watch_playlist(playlistId=RDAMPL'+str(media_id)+')'
-					self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAMPL"+str(media_id)))
-					self._tracks = self._tracks['tracks']
+					self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(playlistId="RDAMPL"+str(media_id), limit=self._trackLimit))
+					self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
-				playlist_info = await self.hass.async_add_executor_job(self._api.get_playlist,media_id)
+				playlist_info = await self.hass.async_add_executor_job(lambda:self._api.get_playlist(media_id, limit=self._trackLimit))
 				self._attributes['current_playlist_title'] = "Radio of "+str(playlist_info['title'])
 			elif(media_type == CHANNEL_VID):
 				crash_extra = 'get_watch_playlist(videoId=RDAMVM'+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(videoId=str(media_id)))
-				self._tracks = self._tracks['tracks']
+				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(videoId=str(media_id), limit=self._trackLimit))
+				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 				self._started_by = "UI" # technically wrong, but this will enable auto-reload playlist once all tracks are played
-				video_info = await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))
+				video_info = await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp)) # no limit needed
 				self._attributes['current_playlist_title'] = "Radio of "+str(video_info['title'])
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_album,media_id)
-				self._tracks = self._tracks['tracks']
+				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_album(media_id, limit=self._trackLimit))
+				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
 			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
 				crash_extra = 'get_library_upload_artist(browseId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(self._api.get_library_upload_artist,media_id,BROWSER_LIMIT)
+				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_artist(media_id, limit=self._trackLimit))
+				self._tracks = self._tracks[:self._trackLimit] # limit function doesn't really work ... seems like
 			elif(media_type == CONF_RECEIVERS): # a bit funky, but this enables us to select the player via the media browser .. 
 				await self.async_select_source(media_id)
 			elif(media_type==CUR_PLAYLIST_COMMAND): # a bit funky, but this enables us to just in the current playlist
@@ -1653,6 +1662,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self.log_me('debug',res)
 		self.log_me('debug',"[E] async_add_to_playlist")
 
+	async def async_limit_count(self, limit):
+		self.log_debug_later("[S] async_limit_count")
+		self._trackLimit = limit
+		self.log_me("debug","New limit: "+str(self._trackLimit))
+		self.log_me("debug","[E] async_limit_count")
+
 	async def async_rate_track(self, rating="", song_id=""):
 		self.log_debug_later("[S] async_rate_track")
 		if(rating==""):
@@ -1663,7 +1678,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				song_id = self._attributes['videoId']
 			else:
 				self.log_me('error',"No song Id given and currently not playing, giving up")
-		
+
 		if(song_id!="" and rating!=""):
 			try:
 				arg = 'LIKE'

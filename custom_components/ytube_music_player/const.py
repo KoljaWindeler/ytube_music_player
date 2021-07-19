@@ -119,6 +119,7 @@ SUPPORT_YTUBEMUSIC_PLAYER = (
 
 SERVICE_SEARCH = "search"
 SERVICE_ADD_TO_PLAYLIST = "add_to_playlist"
+SERVICE_LIMIT_COUNT = "limit_count"
 ATTR_PARAMETERS = "parameters"
 ATTR_QUERY = "query"
 ATTR_FILTER = "filter"

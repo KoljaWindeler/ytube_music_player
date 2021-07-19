@@ -51,3 +51,13 @@ rate_track:
     song_id:
       description: The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior.
       example: ""
+
+limit_count:
+  description: Limits the count of loaded tracks
+  fields:
+    entity_id:
+      description: Name(s) of the yTube music player entity where to run the custom command.
+      example: "media_player.ytube_music_player"
+    limit:
+      description: The amount of tracks, loaded per call
+      example: "20"
