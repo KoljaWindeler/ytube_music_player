@@ -110,6 +110,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playlists = []
 		self._playlist_to_index = {}
 		self._tracks = []
+		self._trackLimitUser = -1
 		self._attributes = {}
 		self.reset_attributs()
 		self._next_track_no = 0
@@ -956,7 +957,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playlist_to_index = {}
 		try:
 			try:
-				self._playlists = await self.hass.async_add_executor_job(self._api.get_library_playlists,self._trackLimit)
+				self._playlists = await self.hass.async_add_executor_job(self._api.get_library_playlists)
 				self.log_me('debug'," - "+str(len(self._playlists))+" Playlists loaded")
 			except:
 				self._api = None
@@ -1416,7 +1417,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			await self.async_turn_off()
 			return
 
-
+		# limit list now
+		if(self._trackLimitUser > 0):
+			self.log_me('debug',"Limiting playlist from "+str(len(self._tracks))+" to "+str(self._trackLimitUser)+" items")
+			self._tracks = self._tracks[:self._trackLimitUser]
 		self._tracks_to_attribute()
 
 		# grab track from tracks[] and forward to remote player
@@ -1668,8 +1672,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	async def async_limit_count(self, limit):
 		self.log_debug_later("[S] async_limit_count")
-		self._trackLimit = limit
-		self.log_me("debug","New limit: "+str(self._trackLimit))
+		self._trackLimitUser = limit
+		if(self._trackLimitUser > self._trackLimit): # having a tracklimit (requests from the api) smaller than the user limit (limits the list AFTER generation) is pointless, so lets adjust this here as well
+			self._trackLimit = self._trackLimitUser
+		self.log_me("debug","New limit: "+str(self._trackLimitUser))
 		self.log_me("debug","[E] async_limit_count")
 
 	async def async_rate_track(self, rating="", song_id=""):
