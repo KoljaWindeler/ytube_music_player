@@ -226,6 +226,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_artist = None
 		self._track_album_name = None
 		self._track_album_cover = None
+		self._track_album_id = None
 		self._media_duration = None
 		self._media_position = None
 		self._media_position_updated = None
@@ -568,7 +569,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	async def async_update_remote_player(self, remote_player=""):
 		self.log_debug_later("[S] async_update_remote_player(Input "+str(remote_player)+"/ current "+str(self._remote_player)+") ")
-		if(remote_player == self._remote_player):
+		if(remote_player == self._remote_player and remote_player !=""):
 			self.log_me('debug'," no change [E]")
 			return
 
@@ -737,6 +738,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		info['track_name'] = ""
 		info['track_artist'] = ""
 		info['track_album_cover'] = ""
+		info['track_album_id'] = ""
 
 		try:
 			if 'title' in _track:
@@ -773,6 +775,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
 		except: 
 			pass
+
+		try:
+			if 'album' in _track:
+				if 'id' in _track['album']:
+					info['track_album_id'] = _track['album']['id']
+		except:
+			pass
+
 		return info
 
 
@@ -1068,7 +1078,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._next_track_no = random.randrange(len(self._tracks)) - 1
 		else:
 			self._next_track_no = self._next_track_no + 1
-			self.log_me('debug',"- Playing track nr "+str(self._next_track_no)+" / "+str(len(self._tracks)))
+			self.log_me('debug',"- Playing track nr "+str(self._next_track_no+1)+" / "+str(len(self._tracks))) # technically +1 is wrong, but is still less confusing
 			if self._next_track_no >= len(self._tracks):
 				# we've reached the end of the playlist
 				if(self._playContinuous):
@@ -1117,6 +1127,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_name = info['track_name']
 		self._track_artist = info['track_artist']
 		self._track_album_cover = info['track_album_cover']
+		self._track_album_id = info['track_album_id']
 		
 		self.async_schedule_update_ha_state()
 
@@ -1331,6 +1342,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				crash_extra = 'get_album(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_album,media_id) # no limit needed
 				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
+				for i in range(0,len(self._tracks)):
+					self._tracks[i].update({'album':{'id':media_id}})
 			elif(media_type == MEDIA_TYPE_TRACK):
 				crash_extra = 'get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')'
 				self._tracks = [await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id,self._signatureTimestamp))] # no limit needed
@@ -1381,8 +1394,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._attributes['current_playlist_title'] = "Radio of "+str(title)
 			elif(media_type == USER_ALBUM):
 				crash_extra = 'get_library_upload_album(browseId='+str(media_id)+')'
-				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_album(media_id, limit=self._trackLimit))
-				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function doesn't really work ... seems like
+				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_album(media_id))
+				self._tracks = self._tracks['tracks'][:self._trackLimit] # limit function here not supported 
 			elif(media_type == USER_ARTIST or media_type == USER_ARTIST_2): # Artist -> Track or Artist [-> Album ->] Track
 				crash_extra = 'get_library_upload_artist(browseId='+str(media_id)+')'
 				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_upload_artist(media_id, limit=self._trackLimit))

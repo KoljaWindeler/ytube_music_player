@@ -228,6 +228,9 @@ USER_ARTIST_2_TITLE = "Uploaded Album"
 SEARCH = 'search'
 SEARCH_TITLE = "Search results" 
 
+ALBUM_OF_TRACK = 'album_of_track'
+ALBUM_OF_TRACK_TITLE = 'Album of current Track'
+
 PLAYER_TITLE = "Playback device"
 
 MOOD_OVERVIEW = 'mood_overview'
