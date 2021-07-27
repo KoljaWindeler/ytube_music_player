@@ -903,7 +903,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP+"."+DOMAIN))):
 					speakersList.append(e.entity_id.replace(DOMAIN_MP+".",""))
 		
-		# create friendly speakerlist
+		# create friendly speakerlist based on the current speakerLlist
 		self._friendly_speakersList = dict()
 		for a in speakersList:
 			state = self.hass.states.get(DOMAIN_MP+"."+a)
@@ -916,8 +916,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._select_mediaPlayer == ""):
 			self.log_me('debug',"- Drop down for media player not found")
 			self._select_mediaPlayer = ""
-			# if exactly one unit is provided, stick with it, if it existst
-			if(len(speakersList) == 1):
+			# if exactly one unit is provided (meaning defaultPlayer is set), stick with it, if it existst
+			if(defaultPlayer!=''):
 				if(await self.async_update_remote_player(remote_player=speakersList[0])):
 					self.log_me('debug',"- Choosing "+self._remote_player+" as player")
 		else: #dropdown exists
