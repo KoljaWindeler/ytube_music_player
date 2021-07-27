@@ -762,17 +762,21 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			pass
 
 		try:
+			_album_art_ref = None
 			if 'thumbnail' in _track:
 				_album_art_ref = _track['thumbnail']   ## returns a list,
 				if 'thumbnails' in _album_art_ref:
 					_album_art_ref = _album_art_ref['thumbnails']
-				# thumbnail [0] is super tiny 32x32? / thumbnail [1] is ok-ish / thumbnail [2] is quite nice quality
-				if isinstance(_album_art_ref,list):
-					info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
 			elif 'thumbnails' in _track:
 				_album_art_ref = _track['thumbnails']   ## returns a list
-				if isinstance(_album_art_ref,list):
-					info['track_album_cover'] = _album_art_ref[len(_album_art_ref)-1]['url']
+
+			if isinstance(_album_art_ref,list):
+				th_width = 0
+				for th in _album_art_ref:
+					if('width' in th and 'url' in th):
+						if(th['width']>th_width):
+							th_width = th['width']
+							info['track_album_cover'] = th['url']
 		except: 
 			pass
 
@@ -1240,7 +1244,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					#self.log_me('debug','found stream')
 					#self.log_me('debug',streamingData[i])
 					if('audioQuality' in streamingData[i]):
-						self.log_me('debug','- found stream with audioQuality '+streamingData[i]['audioQuality']+' ('+str(i)+')')
+						# self.log_me('debug','- found stream with audioQuality '+streamingData[i]['audioQuality']+' ('+str(i)+')')
 						# store only stream with better quality, accept 0 once
 						if(quality_mapper.get(streamingData[i]['audioQuality'],0) > found_quality):
 							found_quality = quality_mapper.get(streamingData[i]['audioQuality'],0)
