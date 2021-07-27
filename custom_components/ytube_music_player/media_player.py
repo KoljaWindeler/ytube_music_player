@@ -754,10 +754,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(isinstance(_track["artists"],str)):
 					info['track_artist'] = _track["artists"]
 				elif(isinstance(_track["artists"],list)):
-					if 'name' in _track['artists'][0]:
-						info['track_artist'] = _track['artists'][0]['name']
-					else:
-						info['track_artist'] = _track['artists'][0]
+					for t in _track['artists']:
+						if 'name' in t:
+							name = t['name']
+						else:
+							name = t
+						if(info['track_artist']==""):
+							info['track_artist'] = name
+						else:
+							info['track_artist'] += " / "+ name
 		except:
 			pass
 
@@ -1077,7 +1082,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		""" Get a track and play it from the track_queue. """
 		""" grab next track from prefetched list """
 		_track = None
-		# get next track nr (randomly or by increasing). 
+		### get next track nr (randomly or by increasing). ###
 		if self._shuffle and self._shuffle_mode != 1 and len(self._tracks)>1: #1 will use the list as is (shuffled). 2 and 3 will also take songs randomized
 			self._next_track_no = random.randrange(len(self._tracks)) - 1
 		else:
@@ -1092,6 +1097,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					_LOGGER.info("- End of playlist and playcontinuous is off")
 					await self.async_turn_off_media_player()
 					return
+		
+		### get track from array of _trackS ###
 		try:
 			_track = self._tracks[self._next_track_no]
 		except IndexError:
@@ -1104,6 +1111,16 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			await self.async_turn_off_media_player()
 			return
 
+		### make sure there is a videoId ###
+		if not('videoId' in _track):
+			_LOGGER.error("- Failed to get ID for track: (%s)", _track)
+			_LOGGER.error(_track)
+			if retry < 1:
+				await self.async_turn_off_media_player()
+				return
+			return await self.async_get_track(retry=retry-1)
+		
+		### updates attributes ###
 		self._attributes['current_track'] = self._next_track_no
 		self._attributes['videoId'] = _track['videoId']
 		if('likeStatus' in _track):
@@ -1114,17 +1131,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._attributes['likeStatus'] = ""
 			if(self._like_in_name):
 				self._name = self._org_name
-
-
-		""" Find the unique track id. """
-		if not('videoId' in _track):
-			_LOGGER.error("- Failed to get ID for track: (%s)", _track)
-			_LOGGER.error(_track)
-			if retry < 1:
-				await self.async_turn_off_media_player()
-				return
-			return await self.async_get_track(retry=retry-1)
-
+		# this will quickly update the information although the thumbnail might not super great, we'll update that later
 		info = self.extract_info(_track)
 		self._track_album_name = info['track_album_name']
 		self._track_artist_cover = info['track_artist_cover']
@@ -1132,10 +1139,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._track_artist = info['track_artist']
 		self._track_album_cover = info['track_album_cover']
 		self._track_album_id = info['track_album_id']
-		
 		self.async_schedule_update_ha_state()
 
-		"""@@@ Get the stream URL and play on media_player @@@"""
+		### Get the stream URL and play on media_player ###
 		_url = await self.async_get_url(_track['videoId'])
 		if(_url == ""):
 			if retry < 1:
@@ -1146,7 +1152,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_LOGGER.error("- Retry with: (%i)", retry)
 			return await self.async_get_track(retry=retry-1)
 
-		# proxy playback, needed e.g. for sonos
+		### proxy playback, needed e.g. for sonos ###
 		try:
 			if(self._proxy_url!="" and self._proxy_path!=""):
 				p1 = datetime.datetime.now()
@@ -1190,7 +1196,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug',"- forwarding url to player "+str(self._remote_player))
 		await self.hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
 
-		### get lyrics after playback started ###
+		### get lyrics and more info after playback started ###
 		self._attributes['lyrics'] = 'No lyrics available'
 		try:
 			l_id = await self.hass.async_add_executor_job(self._api.get_watch_playlist,_track['videoId'])
@@ -1198,6 +1204,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(l_id['lyrics'] != None):
 					lyrics = await self.hass.async_add_executor_job(self._api.get_lyrics,l_id['lyrics'])
 					self._attributes['lyrics'] = lyrics['lyrics']
+			# the nice thing about this 'get_watch_playlist' is that one gets also extra info about the current track
+			# like a better thumbnail. The original thumbnail from get_playlist has poor quality.
+			for vid in l_id['tracks']:
+				if(('videoId' in vid) and (vid['videoId']==_track['videoId'])):
+					info = self.extract_info(vid)
+					if(self._track_album_cover != info['track_album_cover']):
+						self._track_album_cover = info['track_album_cover']
+						self.async_schedule_update_ha_state()
+					break
 		except:
 			pass
 		async_call_later(self.hass, 15, self.async_sync_player)
@@ -1218,7 +1233,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				response = await self.hass.async_add_executor_job(lambda:self._api.get_song(videoId,self._signatureTimestamp))
 			except:
 				self._api = None
-				self.log_me('error','self.get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
+				self.log_me('error','self.get_song(videoId='+str(videoId)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
 				self.exc()
 				return
 			streamingData = []
@@ -1229,8 +1244,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					streamingData += response['streamingData']['formats']
 				if(len(streamingData)==0):
 					self.log_me('error','No adaptiveFormat and no formats found')
-					self.log_me('error','self.get_song(videoId='+str(media_id)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
-					self.log_me('error', s)
+					self.log_me('error','self.get_song(videoId='+str(videoId)+',signatureTimestamp='+str(self._signatureTimestamp)+')')
 					stop = True
 			else:
 				stop = True
