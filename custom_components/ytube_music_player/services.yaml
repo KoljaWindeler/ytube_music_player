@@ -61,3 +61,10 @@ limit_count:
     limit:
       description: The amount of tracks, loaded per call
       example: "20"
+
+start_radio:
+  description: Creates a radio of the current track
+  fields:
+    entity_id:
+      description: Name(s) of the yTube music player entity where to run the command.
+      example: "media_player.ytube_music_player"

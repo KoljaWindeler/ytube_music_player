@@ -173,6 +173,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				},
 				"async_limit_count",
 			)
+			platform.async_register_entity_service(
+				SERVICE_RADIO,
+				{},
+				"async_start_radio",
+			)
+			
 		# run the api / get_cipher / update select as soon as possible
 		if hass.is_running:
 			self._update_needed = True
@@ -1126,7 +1132,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if('likeStatus' in _track):
 			self._attributes['likeStatus'] = _track['likeStatus']
 			if(self._like_in_name):
-				self._name = self._org_name + " - " + _track['likeStatus']
+				self._name = self._org_name + " - " + str(_track['likeStatus'])
 		else:	
 			self._attributes['likeStatus'] = ""
 			if(self._like_in_name):
@@ -1338,8 +1344,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_media_type'] = media_type
 		self._attributes['_media_id'] = media_id
 
-		if(False == (await self.async_prepare_play())):
-			return
+		if(media_type != CONF_RECEIVERS): # don't to this for the speaker configuration (it will fail)
+			if(False == (await self.async_prepare_play())):
+				return
 
 		# Update player if we got an input 
 		if _player is not None:
@@ -1649,7 +1656,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self.log_me('debug',"Posting debug messages as error until restart")
 		elif(command == SERVICE_CALL_LIKE_IN_NAME):
 			self._like_in_name = True
-			self._name = self._org_name + " - " + self._attributes['likeStatus']
+			self._name = self._org_name + " - " + str(self._attributes['likeStatus'])
 			self.log_me('debug',"Showing like status in name until restart")
 		elif(command == SERVICE_CALL_GOTO_TRACK):
 			self.log_me('debug',"Going to Track "+str(parameters)+".")
@@ -1701,6 +1708,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self.log_me('debug',res)
 		self.log_me('debug',"[E] async_add_to_playlist")
 
+
 	async def async_limit_count(self, limit):
 		self.log_debug_later("[S] async_limit_count")
 		self._trackLimitUser = limit
@@ -1708,6 +1716,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._trackLimit = self._trackLimitUser
 		self.log_me("debug","New limit: "+str(self._trackLimitUser))
 		self.log_me("debug","[E] async_limit_count")
+
+
+	async def async_start_radio(self):
+		self.log_debug_later("[S] async_start_radio")
+		if(self._attributes['videoId']==""):
+			self.log_me('debug',"Currently not playing anything so I don't know what to base the radio on")
+		else:
+			self.log_me('debug',"Starting radio based on "+str(self._attributes['videoId']))
+			await self.async_play_media(CHANNEL_VID,self._attributes['videoId'])
+		self.log_me("debug","[E] async_start_radio")
+
 
 	async def async_rate_track(self, rating="", song_id=""):
 		self.log_debug_later("[S] async_rate_track")

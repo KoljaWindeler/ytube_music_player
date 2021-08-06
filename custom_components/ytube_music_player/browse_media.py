@@ -129,15 +129,15 @@ async def build_item_response(ytmusicplayer, payload):
         media = res['tracks']
         title = res['title']
 
-        children.append(BrowseMedia(
-            title = f"All tracks",
-            media_class = MEDIA_CLASS_ALBUM,
-            media_content_type = MEDIA_TYPE_ALBUM,
-            media_content_id = search_id,
-            can_play = True,
-            can_expand = False,
-            thumbnail = "",
-        ))
+        #children.append(BrowseMedia(
+        #    title = f"All tracks",
+        #    media_class = MEDIA_CLASS_ALBUM,
+        #    media_content_type = MEDIA_TYPE_ALBUM,
+        #    media_content_id = search_id,
+        #    can_play = True,
+        #    can_expand = False,
+        #    thumbnail = "",
+        #))
         
         for item in media:
             thumbnail = item['thumbnails'][-1]['url'] # here to expose it also for the header
@@ -147,7 +147,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_type = MEDIA_TYPE_TRACK,
                 media_content_id = f"{item['videoId']}",
                 can_play = True,
-                can_expand = True,
+                can_expand = False,
                 thumbnail = thumbnail,
             ))
 
@@ -503,7 +503,7 @@ async def build_item_response(ytmusicplayer, payload):
                 ))
         except:
             pass
-        
+
 
     ############################################ END ###############
     if sort_list:
@@ -552,6 +552,7 @@ def library_payload(ytmusicplayer):
         children=[],
     )
 
+    # default items
     library = {
         LIB_PLAYLIST: [LIB_PLAYLIST_TITLE,MEDIA_CLASS_PLAYLIST],
         LIB_ALBUM: [LIB_ALBUM_TITLE,MEDIA_CLASS_ALBUM],
@@ -565,12 +566,16 @@ def library_payload(ytmusicplayer):
         CONF_RECEIVERS: [PLAYER_TITLE, MEDIA_CLASS_TV_SHOW],
         CUR_PLAYLIST: [CUR_PLAYLIST_TITLE, MEDIA_CLASS_PLAYLIST],
     }
+
+    # add search button if possible
     if(ytmusicplayer._search.get("query","") != ""):
         library.update({SEARCH: ["Results for \""+str(ytmusicplayer._search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
 
+    # add "go to album of track" if possible
     if(ytmusicplayer._track_album_id not in ["", None] and ytmusicplayer._track_name not in ["", None]):
         library.update({ALBUM_OF_TRACK: ["Album of \""+str(ytmusicplayer._track_name)+"\"", MEDIA_CLASS_ALBUM]})
-    
+
+    # create list of items above
     for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
             BrowseMedia(
@@ -580,6 +585,20 @@ def library_payload(ytmusicplayer):
                 media_content_id="",
                 can_play=False,
                 can_expand=True,
+                thumbnail="",
+            )
+        )
+
+    # add "radio of track" if possible
+    if(ytmusicplayer._attributes['videoId'] != ""):
+        library_info.children.append(
+            BrowseMedia(
+                title="Radio of \""+str(ytmusicplayer._track_name)+"\"",
+                media_class=MEDIA_CLASS_PLAYLIST,
+                media_content_type=CHANNEL_VID,
+                media_content_id=ytmusicplayer._attributes['videoId'],
+                can_play=True,
+                can_expand=False,
                 thumbnail="",
             )
         )
