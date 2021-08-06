@@ -138,6 +138,7 @@ Service | parameter | details
 `ytube_music_player.limit_count` | `entity_id`: media_player.ytube_media_player, `limit`: number of tracks | Limits the amount of tracks that is loaded into the playlist, e.g. to stop playing after 3 tracks. Setting -1 as value disables the feature again.
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: reload_dropdowns | Reloads the dropdown list of all media_players and also the playlists. Might be nice to reload those lists without reboot HA
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_start | Special animal 1/2: This will stop the current track, but note the position in the track. It will also store the track number in the playlist and the playlist. Finally it will UNTRACK the media_player. As result you can e.g. play another sound on that player, like a door bell or a warning
+`ytube_music_player.start_radio` | `entity_id`: media_player.ytube_media_player | Starts a radio, based on the current playing track
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
 
 
