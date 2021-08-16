@@ -556,7 +556,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		await self.async_turn_off_media_player()
 
 	async def async_turn_off_media_player(self, data=None):
-		self.log_me('debug',"[S] async_turn_off_media_player")
+		self.log_debug_later("[S] async_turn_off_media_player")
 		"""Fire the off action."""
 		self.reset_attributs()
 		if(self._like_in_name):
@@ -570,6 +570,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			data = {ATTR_ENTITY_ID: self._remote_player}
 			await self.hass.services.async_call(DOMAIN_MP, 'media_stop', data)
 			await self.hass.services.async_call(DOMAIN_MP, 'turn_off', data)
+		
+		#unsubscribe from remote media_player
+		if(self._untrack_remote_player is not None):
+			try:
+				self._untrack_remote_player()
+			except:
+				pass
+			self._untrack_remote_player = None
+
 		self.log_me('debug',"[E] async_turn_off_media_player")
 
 
@@ -619,6 +628,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self._untrack_remote_player()
 				except:
 					pass
+				self._untrack_remote_player = None
+		if(self._untrack_remote_player is None):
 			self._untrack_remote_player = async_track_state_change(self.hass, self._remote_player, self.async_sync_player)
 		self.log_me('debug',"[E] async_update_remote_player")
 		return True
@@ -656,6 +667,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if('media_position' in _player.attributes):
 			self._media_position = _player.attributes['media_position']
 			self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
+
+		if('app_id' in _player.attributes):
+			if (_player.attributes['app_id'] != 'CC1AD845'):
+				self.log_me('debug',"detected different app _id, shuttiung down without interruption")
+				await self.async_turn_off_media_player('skip_remote_player')
+				return
 
 		""" entity_id of selected speakers. """
 		self._attributes['_player_id'] = _player.entity_id
@@ -1630,6 +1647,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				except:
 					#_LOGGER.error("untrack failed!!")
 					pass
+				self._untrack_remote_player = None
+
 		elif(command == SERVICE_CALL_INTERRUPT_RESUME):
 			if(self._interrupt_data['player']):
 				await self.async_update_remote_player(remote_player=self._interrupt_data['player'])
@@ -1818,6 +1837,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			except:
 				self.log_me('debug',"- untrack failed")
 				pass
+			self._untrack_remote_player_selector = None
 		self._untrack_remote_player_selector = async_track_state_change(self.hass, self._select_mediaPlayer, self.async_select_source_helper)
 		self.log_me('debug',"- untrack resub")	
 

@@ -15,6 +15,7 @@ PLAYABLE_MEDIA_TYPES = [
     LIB_TRACKS,
     HISTORY,
     USER_TRACKS,
+    ALBUM_OF_TRACK
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
@@ -476,15 +477,15 @@ async def build_item_response(ytmusicplayer, payload):
             media = res['tracks']
             title = res['title']
 
-            children.append(BrowseMedia(
-                title = f"All tracks",
-                media_class = MEDIA_CLASS_ALBUM,
-                media_content_type = MEDIA_TYPE_ALBUM,
-                media_content_id = ytmusicplayer._track_album_id,
-                can_play = True,
-                can_expand = False,
-                thumbnail = "",
-            ))
+#            children.append(BrowseMedia(
+#                title = f"All tracks",
+#                media_class = MEDIA_CLASS_ALBUM,
+#                media_content_type = MEDIA_TYPE_ALBUM,
+#                media_content_id = ytmusicplayer._track_album_id,
+#                can_play = True,
+#                can_expand = False,
+#                thumbnail = "",
+#            ))
 
             for item in media:
                 try:
@@ -537,70 +538,36 @@ def library_payload(ytmusicplayer):
 
     Used by async_browse_media.
     """
-    #media_library = ytmusicplayer._api
-    search = None
-    if(ytmusicplayer._search.get("query","") != ""):
-	    search = ytmusicplayer._search
+    library_info = BrowseMedia(media_class=MEDIA_CLASS_DIRECTORY, media_content_id="library", media_content_type="library", title="Media Library", can_play=False, can_expand=True, children=[])
 
-    library_info = BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id="library",
-        media_content_type="library",
-        title="Media Library",
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
-
-    # default items
-    library = {
-        LIB_PLAYLIST: [LIB_PLAYLIST_TITLE,MEDIA_CLASS_PLAYLIST],
-        LIB_ALBUM: [LIB_ALBUM_TITLE,MEDIA_CLASS_ALBUM],
-        LIB_TRACKS: [LIB_TRACKS_TITLE, MEDIA_CLASS_TRACK],
-        HISTORY: [HISTORY_TITLE, MEDIA_CLASS_TRACK],
-        USER_TRACKS: [USER_TRACKS_TITLE, MEDIA_CLASS_TRACK],
-        USER_ALBUMS: [USER_ALBUMS_TITLE, MEDIA_CLASS_ALBUM],
-        USER_ARTISTS: [USER_ARTISTS_TITLE, MEDIA_CLASS_ARTIST],
-        USER_ARTISTS_2: [USER_ARTISTS_2_TITLE, MEDIA_CLASS_ARTIST],
-        MOOD_OVERVIEW: [MOOD_TITLE, MEDIA_CLASS_PLAYLIST],
-        CONF_RECEIVERS: [PLAYER_TITLE, MEDIA_CLASS_TV_SHOW],
-        CUR_PLAYLIST: [CUR_PLAYLIST_TITLE, MEDIA_CLASS_PLAYLIST],
-    }
+    library_info.children.append(BrowseMedia(title=LIB_PLAYLIST_TITLE,   media_class=MEDIA_CLASS_PLAYLIST, media_content_type=LIB_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=LIB_ALBUM_TITLE,      media_class=MEDIA_CLASS_ALBUM,    media_content_type=LIB_ALBUM,      media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=LIB_TRACKS_TITLE,     media_class=MEDIA_CLASS_TRACK,    media_content_type=LIB_TRACKS,     media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=HISTORY_TITLE,        media_class=MEDIA_CLASS_TRACK,    media_content_type=HISTORY,        media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=USER_TRACKS_TITLE,    media_class=MEDIA_CLASS_TRACK,    media_content_type=USER_TRACKS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=USER_ALBUMS_TITLE,    media_class=MEDIA_CLASS_ALBUM,    media_content_type=USER_ALBUMS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=USER_ARTISTS_TITLE,   media_class=MEDIA_CLASS_ARTIST,   media_content_type=USER_ARTISTS,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=USER_ARTISTS_2_TITLE, media_class=MEDIA_CLASS_ARTIST,   media_content_type=USER_ARTISTS_2, media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=MOOD_TITLE,           media_class=MEDIA_CLASS_PLAYLIST, media_content_type=MOOD_OVERVIEW,  media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=PLAYER_TITLE,         media_class=MEDIA_CLASS_TV_SHOW,  media_content_type=CONF_RECEIVERS, media_content_id="", can_play=False, can_expand=True, thumbnail=""))
+    library_info.children.append(BrowseMedia(title=CUR_PLAYLIST_TITLE,   media_class=MEDIA_CLASS_PLAYLIST, media_content_type=CUR_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))
 
     # add search button if possible
     if(ytmusicplayer._search.get("query","") != ""):
-        library.update({SEARCH: ["Results for \""+str(ytmusicplayer._search.get("query","No search"))+"\"", MEDIA_CLASS_DIRECTORY]})
+        library_info.children.append(
+            BrowseMedia(title="Results for \""+str(ytmusicplayer._search.get("query","No search"))+"\"", media_class=MEDIA_CLASS_DIRECTORY, media_content_type=SEARCH, media_content_id="", can_play=False, can_expand=True, thumbnail="")
+        )
 
     # add "go to album of track" if possible
     if(ytmusicplayer._track_album_id not in ["", None] and ytmusicplayer._track_name not in ["", None]):
-        library.update({ALBUM_OF_TRACK: ["Album of \""+str(ytmusicplayer._track_name)+"\"", MEDIA_CLASS_ALBUM]})
-
-    # create list of items above
-    for item in [{"label": extra[0], "type": type_, "class": extra[1]} for type_, extra in library.items()]:
         library_info.children.append(
-            BrowseMedia(
-                title=item["label"],
-                media_class=item["class"],
-                media_content_type=item["type"],
-                media_content_id="",
-                can_play=False,
-                can_expand=True,
-                thumbnail="",
-            )
+            BrowseMedia(title="Album of \""+str(ytmusicplayer._track_name)+"\"", media_class=MEDIA_CLASS_ALBUM, media_content_type=ALBUM_OF_TRACK, media_content_id="1", can_play=True, can_expand=True, thumbnail=ytmusicplayer._track_album_cover)
         )
 
     # add "radio of track" if possible
     if(ytmusicplayer._attributes['videoId'] != ""):
         library_info.children.append(
-            BrowseMedia(
-                title="Radio of \""+str(ytmusicplayer._track_name)+"\"",
-                media_class=MEDIA_CLASS_PLAYLIST,
-                media_content_type=CHANNEL_VID,
-                media_content_id=ytmusicplayer._attributes['videoId'],
-                can_play=True,
-                can_expand=False,
-                thumbnail="",
-            )
+            BrowseMedia(title="Radio of \""+str(ytmusicplayer._track_name)+"\"", media_class=MEDIA_CLASS_PLAYLIST, media_content_type=CHANNEL_VID, media_content_id=ytmusicplayer._attributes['videoId'], can_play=True, can_expand=False, thumbnail="")
         )
 
     return library_info
