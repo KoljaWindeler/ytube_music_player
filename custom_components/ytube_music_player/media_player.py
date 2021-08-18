@@ -36,7 +36,7 @@ from pytube import request
 from pytube import extract
 from pytube.cipher import Cipher
 import ytmusicapi
-#from ytmusicapi import YTMusic # use this to work with local version
+#from .ytmusicapi import YTMusic # use this to work with local version (and make sure that the local package is also only loading local files)
 
 
 _LOGGER = logging.getLogger(__name__)

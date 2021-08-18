@@ -5,7 +5,7 @@
   "config_flow": true,
   "issue_tracker": "https://github.com/KoljaWindeler/ytube_music_player/issues",
   "requirements": [
-    "ytmusicapi==0.19.0",
+    "ytmusicapi==0.19.1",
     "pytube==10.5.1",
     "integrationhelper==0.2.2"
   ],
@@ -16,5 +16,5 @@
     "@KoljaWindeler"
   ],
   "iot_class": "cloud_polling",
-  "version": "20210816.01"
+  "version": "20210818.01"
 }
