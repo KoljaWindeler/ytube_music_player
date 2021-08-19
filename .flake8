@@ -1,0 +1,9 @@
+[flake8]
+#E117 over-indented??
+#E722 bare except
+
+#W191 indentation contains tabs
+#F403 'from .const import *' used; unable to detect undefined names
+#F405 may be undefined, or defined from star imports: .const
+#E501 line too long
+ignore = W191,E501,E117,E303,F405,E722,F403
