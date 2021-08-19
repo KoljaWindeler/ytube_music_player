@@ -675,11 +675,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# _player = The selected speakers #
 		_player = self.hass.states.get(self._remote_player)
 
-		if('media_duration' in _player.attributes):
-			self._media_duration = _player.attributes['media_duration']
-		if('media_position' in _player.attributes):
-			self._media_position = _player.attributes['media_position']
-			self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
+		# Only update the duration and especially the position if we're not in pause
+		# else the mini-media-player will advance during our pause state
+		if(self._state != STATE_PAUSED):
+			if('media_duration' in _player.attributes):
+				self._media_duration = _player.attributes['media_duration']
+			if('media_position' in _player.attributes):
+				self._media_position = _player.attributes['media_position']
+				self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
 
 		if('app_id' in _player.attributes):
 			if (_player.attributes['app_id'] != 'CC1AD845'):
@@ -724,12 +727,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self.log_me('debug', "media player got turned off")
 					await self.async_turn_off()
 			# workaround for SONOS (changes to PAUSED at the end of a track)
-
 			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED and  # noqa: W504
 								(datetime.datetime.now() - self._last_auto_advance).total_seconds() > 10 and  # noqa: W504
 								self._x_to_idle == STATE_PAUSED):
 				self._allow_next = False
 				await self.async_get_track()
+			# set this player in to pause state when the remote player does
+			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED):
+				return await self.async_media_pause()
+			# resume playback when the player does
+			elif(old_state.state == STATE_PAUSED and new_state.state == STATE_PLAYING and self._state == STATE_PAUSED):
+				return await self.async_media_play()
+			# player changes itsself from pause -> idle (while we where in pause state)
 			elif(old_state.state == STATE_PAUSED and new_state.state == STATE_IDLE and self._state == STATE_PAUSED):
 				self.log_me('debug', "Remote Player changed from PAUSED to IDLE withouth our interaction, so likely another source is using the player now. I'll step back and swich myself off")
 				await self.async_turn_off_media_player('skip_remote_player')
@@ -1498,7 +1507,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[E] play_media")
 
 
-	async def async_media_play(self, entity_id, old_state, new_state, **kwargs):
+	async def async_media_play(self, entity_id=None, old_state=None, new_state=None, **kwargs):
 		self.log_me('debug', "[S] media_play")
 
 		# Send play command.
@@ -1516,6 +1525,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "media_pause")
 		# Send media pause command to media player
 		self._state = STATE_PAUSED
+		self._media_position = None  # set it to none, otherwise player like mini-media-player will continue
 		# _LOGGER.error(" PAUSE ")
 		self.async_schedule_update_ha_state()
 		data = {ATTR_ENTITY_ID: self._remote_player}
