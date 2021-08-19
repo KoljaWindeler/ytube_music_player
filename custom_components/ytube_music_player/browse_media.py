@@ -1,8 +1,7 @@
 """Support for media browsing."""
 import logging
-
-from .const import *
 from homeassistant.components.media_player import BrowseError, BrowseMedia
+from .const import *
 
 
 PLAYABLE_MEDIA_TYPES = [
