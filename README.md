@@ -55,7 +55,7 @@ Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/
 
 # Setup
 
-You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below.
+You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below. It is highly recommended to use Google chrome for this step!
 
 ![setup](setup.png)
 
