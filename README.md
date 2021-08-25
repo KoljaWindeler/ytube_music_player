@@ -140,6 +140,7 @@ Service | parameter | details
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_start | Special animal 1/2: This will stop the current track, but note the position in the track. It will also store the track number in the playlist and the playlist. Finally it will UNTRACK the media_player. As result you can e.g. play another sound on that player, like a door bell or a warning
 `ytube_music_player.start_radio` | `entity_id`: media_player.ytube_media_player | Starts a radio, based on the current playing track
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
+`ytube_music_player.add_to_playlist` | `entity_id`: media_player.ytube_media_player,  `song_id`: define the ID of the song you want to add. Skip this parameter if you want to add the song that is currently playing,  `playlist_id`: define the ID of the playlist, skip this if you've started a channel based on your own playlist and want to add the song to that playlist | Adds a song to a playlist
 
 
 
