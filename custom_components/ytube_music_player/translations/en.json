@@ -27,7 +27,8 @@
                     "debug_as_error": "Show all debug output as ERROR in the log",
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
-                    "legacy_radio": "Create radio as watchlist of random playlist track"
+                    "legacy_radio": "Create radio as watchlist of random playlist track",
+                    "extra_sensor": "Create sensor that provide extra information"
                 }
             }
         },
@@ -68,7 +69,8 @@
                     "debug_as_error": "Show all debug output as ERROR in the log",
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
-                    "legacy_radio": "Create radio as watchlist of random playlist track"
+                    "legacy_radio": "Create radio as watchlist of random playlist track",
+                    "extra_sensor": "Create sensor that provide extra information"
                 }
             }
         },
