@@ -1,11 +1,6 @@
 """Provide the initial setup."""
 import logging
-import asyncio
-from integrationhelper.const import CC_STARTUP_VERSION
-from ytmusicapi import YTMusic
 from .const import *
-from homeassistant.helpers.storage import STORAGE_DIR
-import os.path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,27 +15,33 @@ async def async_setup_entry(hass, config_entry):
 	config_entry.data = ensure_config(config_entry.data)  # make sure that missing storage values will be default (const function)
 	config_entry.options = config_entry.data
 	config_entry.add_update_listener(update_listener)
+
+	hass.data.setdefault(DOMAIN, {})
+
 	# Add sensor
-	hass.async_add_job(
-		hass.config_entries.async_forward_entry_setup(config_entry, PLATFORM)
-	)
+	for platform in PLATFORMS:
+		hass.async_add_job(
+			hass.config_entries.async_forward_entry_setup(config_entry, platform)
+		)
 	return True
 
 
 
 async def async_remove_entry(hass, config_entry):
 	"""Handle removal of an entry."""
-	try:
-		await hass.config_entries.async_forward_entry_unload(config_entry, PLATFORM)
-		_LOGGER.info(
-			"Successfully removed sensor from the integration"
-		)
-	except ValueError:
-		pass
+	for platform in PLATFORMS:
+		try:
+			await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+			_LOGGER.info(
+				"Successfully removed sensor from the integration"
+			)
+		except ValueError:
+			pass
 
 
 async def update_listener(hass, entry):
 	"""Update listener."""
 	entry.data = entry.options
-	await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
-	hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, PLATFORM))
+	for platform in PLATFORMS:
+		await hass.config_entries.async_forward_entry_unload(entry, platform)
+		hass.async_add_job(hass.config_entries.async_forward_entry_setup(entry, platform))
