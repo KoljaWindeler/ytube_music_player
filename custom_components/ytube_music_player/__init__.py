@@ -17,6 +17,7 @@ async def async_setup_entry(hass, config_entry):
 	config_entry.add_update_listener(update_listener)
 
 	hass.data.setdefault(DOMAIN, {})
+	hass.data[DOMAIN][config_entry.entry_id] = {}
 
 	# Add sensor
 	for platform in PLATFORMS:
