@@ -1061,7 +1061,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 			# sort with case-ignore
 			playlists = sorted(list(self._playlist_to_index.keys()), key=str.casefold)
-			await self.async_update_extra_sensor('playlists',playlists)  # update extra sensor
+			await self.async_update_extra_sensor('playlists', playlists)  # update extra sensor
 
 			data = {"options": list(playlists), "entity_id": self._select_playlist}
 			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
@@ -1075,12 +1075,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	async def _tracks_to_attribute(self):
 		self.log_debug_later("[S] _tracks_to_attribute")
-		await self.async_update_extra_sensor('total_tracks',len(self._tracks))
+		await self.async_update_extra_sensor('total_tracks', len(self._tracks))
 		track_attributes = []
 		for track in self._tracks:
 			info = self.extract_info(track)
 			track_attributes.append(info['track_artist'] + " - " + info['track_name'])
-		await self.async_update_extra_sensor('tracks',track_attributes)  # update extra sensor
+		await self.async_update_extra_sensor('tracks', track_attributes)  # update extra sensor
 
 		self.log_me('debug', "[E] _tracks_to_attribute")
 
@@ -1262,7 +1262,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		await self.hass.services.async_call(DOMAIN_MP, SERVICE_PLAY_MEDIA, data)
 
 		# get lyrics and more info after playback started
-		await self.async_update_extra_sensor('lyrics','No lyrics available')
+		await self.async_update_extra_sensor('lyrics', 'No lyrics available')
 		
 
 		try:
@@ -1270,7 +1270,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if 'lyrics' in l_id:
 				if(l_id['lyrics'] is not None):
 					lyrics = await self.hass.async_add_executor_job(self._api.get_lyrics, l_id['lyrics'])
-					await self.async_update_extra_sensor('lyrics',lyrics['lyrics'])
+					await self.async_update_extra_sensor('lyrics', lyrics['lyrics'])
 			# the nice thing about this 'get_watch_playlist' is that one gets also extra info about the current track
 			# like a better thumbnail. The original thumbnail from get_playlist has poor quality.
 			for vid in l_id['tracks']:
@@ -1669,7 +1669,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if(len(all_params) >= 1):
 				await self.async_rate_track(rating=all_params[0])
 		elif(command == SERVICE_CALL_INTERRUPT_START):
-			if(self._state not in (STATE_PLAYING,STATE_PAUSED)):
+			if(self._state not in (STATE_PLAYING, STATE_PAUSED)):
 				self._interrupt_data = None
 				return
 			await self.async_update_remote_player()
@@ -1698,7 +1698,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._untrack_remote_player = None
 
 		elif(command == SERVICE_CALL_INTERRUPT_RESUME):
-			if(self._interrupt_data == None):
+			if(self._interrupt_data is None):
 				return
 			if('player' in self._interrupt_data):
 				await self.async_update_remote_player(remote_player=self._interrupt_data['player'])
@@ -1751,11 +1751,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				search_results = list()
 				# execute search and store informtion for the extra sensor
 				media_all = await self.hass.async_add_executor_job(lambda: self._api.search(query=query, filter=filter, limit=limit))
-				supported_media = [['song','videoId'],['playlist','browseId'], ['album','browseId']]
+				supported_media = [['song', 'videoId'], ['playlist', 'browseId'], ['album', 'browseId']]
 				for media_type in supported_media:
 					for result in media_all:
 						if(result['resultType'] == media_type[0]):
-							search_results.append({'type':media_type[0], 'title': result['title'], 'id':result[media_type[1]], 'thumbnail':result['thumbnails'][-1]['url']})
+							search_results.append({'type': media_type[0], 'title': result['title'], 'id': result[media_type[1]], 'thumbnail': result['thumbnails'][-1]['url']})
 				
 				try:
 					await self.async_update_extra_sensor('search',search_results)
