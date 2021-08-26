@@ -1263,7 +1263,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# get lyrics and more info after playback started
 		await self.async_update_extra_sensor('lyrics', 'No lyrics available')
-		
+
 
 		try:
 			l_id = await self.hass.async_add_executor_job(self._api.get_watch_playlist, _track['videoId'])
@@ -1756,10 +1756,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					for result in media_all:
 						if(result['resultType'] == media_type[0]):
 							search_results.append({'type': media_type[0], 'title': result['title'], 'id': result[media_type[1]], 'thumbnail': result['thumbnails'][-1]['url']})
-				
+
 				try:
-					await self.async_update_extra_sensor('search',search_results)
-				except: 
+					await self.async_update_extra_sensor('search', search_results)
+				except:
 					pass
 
 		else:
