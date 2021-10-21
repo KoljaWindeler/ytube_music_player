@@ -1769,7 +1769,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[E] async_search")
 
 
-	async def async_add_to_playlist(self, song_id="", playlist_id=""):
+	async def async_add_to_playlist(self, song_id="", playlist_id="", playlist_name=""):
 		self.log_debug_later("[S] async_add_to_playlist")
 		if(song_id == ""):
 			if(self._attributes['videoId'] != ""):
@@ -1780,7 +1780,29 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			if(self._attributes['_media_type'] in [MEDIA_TYPE_PLAYLIST, CHANNEL]):
 				playlist_id = self._attributes['_media_id']
 			else:
-				self.log_me('error', "No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
+				if(song_id != "" and playlist_name != ""):
+					# find playlist_id based on playlist_name					
+					playlist_id = self._playlist_to_index.get(playlist_name)
+					if playlist_id is None:
+						_LOGGER.error("playlist to index is none!")
+						await self.async_turn_off_media_player()
+						self.log_me('debug', "[E] (fail) TURNON")
+						return
+										
+					# self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
+					if(playlist_id == "LM"):
+						await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_UP])
+						res = 'song added by liking it'
+					else:
+						try:
+							res = await self.hass.async_add_executor_job(lambda: self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
+							res = 'song added'
+						except:
+							res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
+					self.log_me('debug', res)
+				self.log_me('debug', "[E] async_add_to_playlist")
+				else:
+				self.log_me('error', "No playlist Id or playlist Name provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
 		if(song_id != "" and playlist_id != ""):
 			# self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
 			if(playlist_id == "LM"):
