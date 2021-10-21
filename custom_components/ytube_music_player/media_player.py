@@ -1788,8 +1788,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						await self.async_turn_off_media_player()
 						self.log_me('debug', "[E] (fail) TURNON")
 						return
-										
-					# self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
+					 	self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
+						 
 					if(playlist_id == "LM"):
 						await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_UP])
 						res = 'song added by liking it'
