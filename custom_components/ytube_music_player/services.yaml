@@ -38,6 +38,9 @@ add_to_playlist:
     playlist_id:
       description: The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior.
       example: ""
+    playlist_name:
+      description: The name of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior.
+      example: ""     
 
 rate_track:
   description: Rates a song
