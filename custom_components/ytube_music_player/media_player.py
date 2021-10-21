@@ -170,6 +170,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				{
 					vol.Optional(ATTR_SONG_ID): cv.string,
 					vol.Optional(ATTR_PLAYLIST_ID): cv.string
+					vol.Optional(ATTR_PLAYLIST_NAME): cv.string
 				},
 				"async_add_to_playlist",
 			)
