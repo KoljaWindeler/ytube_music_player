@@ -169,7 +169,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				SERVICE_ADD_TO_PLAYLIST,
 				{
 					vol.Optional(ATTR_SONG_ID): cv.string,
-					vol.Optional(ATTR_PLAYLIST_ID): cv.string,
+					vol.Optional(ATTR_PLAYLIST_ID): cv.string
 					vol.Optional(ATTR_PLAYLIST_NAME): cv.string
 				},
 				"async_add_to_playlist",
@@ -1800,9 +1800,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						except:
 							res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
 					self.log_me('debug', res)
-					self.log_me('debug', "[E] async_add_to_playlist")
+				self.log_me('debug', "[E] async_add_to_playlist")
 				else:
-					self.log_me('error', "No playlist Id or playlist Name provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
+				self.log_me('error', "No playlist Id or playlist Name provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
 		if(song_id != "" and playlist_id != ""):
 			# self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
 			if(playlist_id == "LM"):
