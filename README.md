@@ -141,6 +141,7 @@ Service | parameter | details
 `ytube_music_player.start_radio` | `entity_id`: media_player.ytube_media_player | Starts a radio, based on the current playing track
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
 `ytube_music_player.add_to_playlist` | `entity_id`: media_player.ytube_media_player,  `song_id`: define the ID of the song you want to add. Skip this parameter if you want to add the song that is currently playing,  `playlist_id`: define the ID of the playlist, skip this if you've started a channel based on your own playlist and want to add the song to that playlist | Adds a song to a playlist
+`ytube_music_player.remove_from_playlist` | `entity_id`: media_player.ytube_media_player,  `song_id`: define the ID of the song you want to remove. Skip this parameter if you want to remove the song that is currently playing,  `playlist_id`: define the ID of the playlist, skip this if you want to remove the song from the current playlist (requires that you've started playing via playlist) | Removes a song from a playlist
 
 
 
