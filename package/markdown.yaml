@@ -115,16 +115,14 @@ views:
                     parameters: thumb_toggle_up_middle
               - type: markdown
                 content: >-
-                  {% if is_state('media_player.ytube_music_player','playing')
-                  %}Currently playing track {{
-                  state_attr("media_player.ytube_music_player",
-                  "current_track")+1 }} of {{
-                  state_attr("media_player.ytube_music_player", "total_tracks")
-                  }}{% else %}Player off{% endif %}     
+                  {% if is_state('media_player.ytube_music_player_carlo','playing') %}
+                  {% for i in range(0,state_attr("sensor.ytube_music_player_extra","total_tracks")) %}
+                     {% if i == state_attr("media_player.ytube_music_player"current_track") %}**{% endif %}\[{{i+1}}]{{state_attr("sensor.ytube_music_player_extra", "tracks")[i] }}{% if i== state_attr("media_player.ytube_music_player", "current_track")%}**{% endif %}
+                  {%- endfor %}{% else %}Player off{% endif %}
       - type: markdown
         content: >-
           {% if is_state('media_player.ytube_music_player','playing') %}{{
-          state_attr("media_player.ytube_music_player", "lyrics") }}{% else
+          state_attr("sensor.ytube_music_player_extra", "lyrics") }}{% else
           %}Player off{% endif %}
     path: default_view
     title: Home
