@@ -39,6 +39,19 @@ add_to_playlist:
       description: The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior.
       example: ""
 
+remove_from_playlist:
+  description: Removes a song from a playlist
+  fields:
+    entity_id:
+      description: Name(s) of the yTube music player entity where to run the custom command.
+      example: "media_player.ytube_music_player"
+    song_id:
+      description: The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior.
+      example: ""
+    playlist_id:
+      description: The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior.
+      example: ""
+
 rate_track:
   description: Rates a song
   fields:

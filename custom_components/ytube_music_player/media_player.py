@@ -4,7 +4,7 @@ import logging
 import random
 import os.path
 import datetime
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.parse import unquote
 import requests
 
@@ -75,6 +75,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._speakersList = config.data.get(CONF_RECEIVERS)
 		self._trackLimit = config.data.get(CONF_TRACK_LIMIT)
 		self._legacyRadio = config.data.get(CONF_LEGACY_RADIO)
+		self._sortBrowser = config.data.get(CONF_SORT_BROWSER)
 		self._friendly_speakersList = dict()
 
 		# proxy settings
@@ -172,6 +173,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					vol.Optional(ATTR_PLAYLIST_ID): cv.string
 				},
 				"async_add_to_playlist",
+			)
+			platform.async_register_entity_service(
+				SERVICE_REMOVE_FROM_PLAYLIST,
+				{
+					vol.Optional(ATTR_SONG_ID): cv.string,
+					vol.Optional(ATTR_PLAYLIST_ID): cv.string
+				},
+				"async_remove_from_playlist",
 			)
 			platform.async_register_entity_service(
 				SERVICE_CALL_RATE_TRACK,
@@ -1218,10 +1227,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return await self.async_get_track(retry=retry - 1)
 
 		# proxy playback, needed e.g. for sonos
-		try:
-			if(self._proxy_url != "" and self._proxy_path != ""):
+		if(1):
+			if(self._proxy_url != "" and self._proxy_path != "" and self._proxy_url != " " and self._proxy_path != " "):
 				p1 = datetime.datetime.now()
-				_proxy_url = await self.hass.async_add_executor_job(urlopen, _url)
+				_proxy_url = await self.hass.async_add_executor_job(lambda:  urlopen(Request(_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})))
 				_proxy_file = open(os.path.join(self._proxy_path, PROXY_FILENAME), 'wb')
 				_proxy_url_content = await self.hass.async_add_executor_job(_proxy_url.read)
 				await self.hass.async_add_executor_job(_proxy_file.write, _proxy_url_content)
@@ -1230,7 +1239,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_url = self._proxy_url + "/" + PROXY_FILENAME
 				t = (datetime.datetime.now() - p1).total_seconds()
 				self.log_me('debug', "- proxy loading time: " + str(t) + " sec")
-		except:
+		else:
 			_LOGGER.error("The proxy method hit an error, turning off")
 			self.exc()
 			await self.async_turn_off_media_player()
@@ -1769,30 +1778,56 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_add_to_playlist(self, song_id="", playlist_id=""):
-		self.log_debug_later("[S] async_add_to_playlist")
+		await self.async_modify_playlist(song_id,playlist_id,mode="add")
+
+	async def async_remove_from_playlist(self, song_id="", playlist_id=""):
+		await self.async_modify_playlist(song_id,playlist_id,mode="remove")
+
+	async def async_modify_playlist(self, song_id="", playlist_id="", mode="add"):
+		self.log_debug_later("[S] async_modify_playlist")
 		if(song_id == ""):
 			if(self._attributes['videoId'] != ""):
 				song_id = self._attributes['videoId']
 			else:
-				self.log_me('error', "no song_id given, but also currently not playing, so I don't know what to add")
+				self.log_me('error', "no song_id given, but also currently not playing, so I don't know what to add/remove")
 		if(song_id != "" and playlist_id == ""):
 			if(self._attributes['_media_type'] in [MEDIA_TYPE_PLAYLIST, CHANNEL]):
 				playlist_id = self._attributes['_media_id']
 			else:
-				self.log_me('error', "No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add the track")
+				self.log_me('error', "No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add/remove the track")
 		if(song_id != "" and playlist_id != ""):
 			# self.log_me('debug', "add_playlist_items(playlistId=" + playlist_id + ", videoIds=[" + song_id + "]))")
 			if(playlist_id == "LM"):
-				await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_UP])
-				res = 'song added by liking it'
+				if(mode=="add"):
+					await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_UP])
+					res = 'song added by liking it'
+				else:
+					await self.async_call_method(command=SERVICE_CALL_RATE_TRACK, parameters=[SERVICE_CALL_THUMB_DOWN])
+					res = 'song removed by dis-liking it'
 			else:
-				try:
-					res = await self.hass.async_add_executor_job(lambda: self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
-					res = 'song added'
-				except:
-					res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
+				if(mode=="add"):
+					try:
+						res = await self.hass.async_add_executor_job(lambda: self._api.add_playlist_items(playlistId=str(playlist_id), videoIds=[str(song_id)]))
+						res = 'song added'
+					except:
+						res = 'You can\'t add songs to this playlist (are you the owner?), requrest failed'
+				else:
+					try:
+						extra_info = await self.hass.async_add_executor_job(self._api.get_playlist, str(playlist_id))
+						res = 'song not found in playlist'
+						if('tracks' in extra_info):
+							for track in extra_info['tracks']:
+								if track['videoId'] == song_id:
+									await self.hass.async_add_executor_job(lambda: self._api.remove_playlist_items(playlistId=str(playlist_id), videos=[track]))
+									res = 'song removed'
+									break
+					except:
+						res = 'You can\'t remove songs from this playlist (are you the owner?), requrest failed'
 			self.log_me('debug', res)
-		self.log_me('debug', "[E] async_add_to_playlist")
+		self.log_me('debug', "[E] async_modify_playlist")
+
+
+	
 
 
 	async def async_limit_count(self, limit):

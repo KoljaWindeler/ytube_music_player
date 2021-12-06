@@ -1,6 +1,7 @@
 """Support for media browsing."""
 import logging
 from homeassistant.components.media_player import BrowseError, BrowseMedia
+from ytmusicapi import ytmusic
 from .const import *
 
 
@@ -59,7 +60,7 @@ async def build_item_response(ytmusicplayer, payload):
     thumbnail = None
     title = None
     media = None
-    sort_list = True
+    sort_list = ytmusicplayer._sortBrowser
     p1 = datetime.datetime.now()
     _LOGGER.debug("- build_item_response for: " + search_type)
 

@@ -28,6 +28,7 @@
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
+                    "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information"
                 }
             }
@@ -70,6 +71,7 @@
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
+                    "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information"
                 }
             }
