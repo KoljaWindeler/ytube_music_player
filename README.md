@@ -341,7 +341,11 @@ Not yet tested, but should work in general. Please create two entities via the C
   - **[Q] Can I search for items**  
   [A] yes, please have a look at this little clip https://youtu.be/6pQJa0tvVMQ  
   basically call the service `ytube_music_player.search` and open the media_browser after that. There should be a new item that contains the results
-
+  
+  - **[Q] Why is my playlist limited to 25 entries**
+  [A] This is the default number that this integration will load. You can change this number via the configuration menu: 
+  "configuration" -> "integration" -> "ytube_music_player" -> "configure" -> "Show advance configuration" -> "Limit of simultaniously loaded tracks".
+  Raising that number will increase loading time slightly. Please also make sure that do didn't define a lower "limit_count" (see service section)
 
 ## Credits
 
