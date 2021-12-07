@@ -345,7 +345,7 @@ Not yet tested, but should work in general. Please create two entities via the C
   - **[Q] Why is my playlist limited to 25 entries**  
   [A] This is the default number that this integration will load. You can change this number via the configuration menu: 
   "configuration" -> "integration" -> "ytube_music_player" -> "configure" -> "Show advance configuration" -> "Limit of simultaniously loaded tracks".
-  Raising that number will increase loading time slightly. Please also make sure that do didn't define a lower "limit_count" (see service section)
+  Raising that number will increase loading time slightly. Please also make sure that didn't define a lower "limit_count" (see service section)
 
 ## Credits
 
