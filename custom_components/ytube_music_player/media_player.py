@@ -696,6 +696,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._media_duration = _player.attributes['media_duration']
 			if('media_position' in _player.attributes):
 				self._media_position = _player.attributes['media_position']
+			if('media_position_updated_at' in _player.attributes):
+				if(isinstance(_player.attributes['media_position_updated_at'],datetime.datetime)):
+					self._media_position_updated = _player.attributes['media_position_updated_at']
+				else:
+					self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
+			else:
 				self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
 
 		if('app_id' in _player.attributes):
