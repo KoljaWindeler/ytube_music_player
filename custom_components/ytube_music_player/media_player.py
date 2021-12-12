@@ -260,6 +260,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._media_duration = None
 		self._media_position = None
 		self._media_position_updated = None
+		self._app_id = None
 		self._attributes['remote_player_state'] = STATE_OFF
 		self._attributes['likeStatus'] = ""
 		self._attributes['current_playlist_title'] = ""
@@ -705,7 +706,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
 
 		if('app_id' in _player.attributes):
-			if (_player.attributes['app_id'] != 'CC1AD845'):
+			if(self._app_id == None):
+				self._app_id = _player.attributes['app_id']
+				self.log_me('debug', "detected app _id, "+str(self._app_id))
+			elif (_player.attributes['app_id'] != self._app_id):
 				self.log_me('debug', "detected different app _id, shuttiung down without interruption")
 				await self.async_turn_off_media_player('skip_remote_player')
 				return
