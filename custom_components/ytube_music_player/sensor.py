@@ -67,6 +67,6 @@ class yTubeMusicSensor(Entity):
 			pass  # we ignore this due to a harmless startup race condition
 
 	@property
-	def device_state_attributes(self):
+	def extra_state_attributes(self):
 		# Return the device state attributes.
 		return self._attributes
