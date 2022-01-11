@@ -1,7 +1,7 @@
 # yTube Music Player
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-![mini-media-player](./shortcuts.png)
+![mini-media-player](./media_player_with_buttons.png)
 
 The purpose of this integration is to provide easy access to media (Tracks/Playlists/Albums) of your YouTube Music premium subscription. The integration will let you login to your account and present you a [GUI](media_browser.png) similar to the YouTube website, where you can select your playlist/album/.. but in HomeAssistant, actually in the "Media Browser" of HomeAssistant.  
 
