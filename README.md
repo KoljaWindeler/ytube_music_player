@@ -75,7 +75,7 @@ To be able to do this, it needs a valid cookie from another browser session. Thi
 
 ## Installation went fine, what now?
 At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (top right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
-At this point you should hear some music from the remote_player. You don't? Please have a look at the troubleshooting guide below.
+At this point you should hear some music from the remote_player. 
 
 Ok, the media_browser is nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
 Well you don't have to use the media_browser. You can start a playback directly. All you need to know is the 'type' of the media (playlist / album / track / ..) and the 'id'.
