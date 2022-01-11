@@ -1,34 +1,30 @@
 # yTube Music Player
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg?style=for-the-badge)](https://github.com/custom-components/hacs)
 
-Adds a mediaplayer to Home Assistant that can stream tracks from your YouTube music premium subscription to a media player.
-
 ![mini-media-player](./shortcuts.png)
 
+The purpose of this integration is to provide easy access to media (Tracks/Playlists/Albums) of your YouTube Music premium subscription. The integration will let you login to your account and present you a [GUI](media_browser.png) similar to the YouTube website, where you can select your playlist/album/.. but in HomeAssistant, actually in the "Media Browser" of HomeAssistant.  
 
-With mini-media-player (https://github.com/kalkih/mini-media-player) and shortcuts
+Once you've selected what you want to listen (e.g. a Playlist) it will grab the YouTube ID (everything has unique IDs at YouTube) decode it to a streaming URL and forward that URL to a HomeAssistant media_player of your choice, the "remote_player". This works great in combination with Google Chromecasts but other media_player might work as well, as long as they can stream from a URL (the Alexa integration can't do this to my knowledge).
 
-![Example](screenshot.png)
-Or nativ in Homeassistant with dropdowns
+Media_player in Homeassistant are not designed to play multiple tracks, so the playback on the remote_player will usually just stop, once it reaches the end of the track. We as user often don't want that. We want to listen to a complete album or a playlist with multiple tracks. Hence this integration will buffer the playlist and supervise the status of the remote_player. Once it detects that the playback stopped it will start the next track of the playback ... so this integration is kind of a DJ, always making sure that you're entertained. :)
 
-Also supports media_browser
-![media-browser](media_browser.png)
+This integration will show up in homeassistant as media_player + sensor. The media_player itself is required to offer the media_browser dialog, the sensor will provide extra information like the buffered playlist.
+
 
 ## Features
-- Browse through all you library tracks / artists / playlists
+- Browse through all you library tracks / artists / playlists showing names and covers of the media
 - Either plays straight from the playlist or creates a radio based on the playlist
 - Forwards the streaming data to any generic mediaplayer
 - Keeps auto_playing as long as it is turned on
-- On the fly change of media_player (playlist will stay the same, and position in track will be submitted to next player)
-- Some proxy funcationality to support sonos player (currently testing_state)
+- On the fly change of the remove_player (playlist will stay the same, and position in track will be submitted to next player)
 
 # Support
 If you like what I've done and you want to help: buy me a coffee/beer. Thanks! 
 
 [![Beer](beers.png)](https://www.buymeacoffee.com/KoljaWindeler)
 
-
-# Step - by - step guide
+# Overview / Step - by - step guide
 
 1. Initial setup: [Videotutorial](https://www.youtube.com/watch?v=_UQv7fc3h5s)
 - (required) install the component via HACS [see Installation](#installation-via-hacs)
@@ -38,16 +34,14 @@ you can now use it via the media browser and the default mediaplayer card, but p
 
 2. Mini-media-player [Videotutorial](https://www.youtube.com/watch?v=YccSsBr3Tag)
 - (highly recommended) install the mini-media-player and use [see shortcut buttons](#shortcuts) 
-3. Dropdowns [Videotutorial](https://www.youtube.com/watch?v=J1unTpW5wcI)
-- (optional) add dropdowns to your configuration.yaml if you prefere them over the shortcuts [see how to](#dropdowns-buttons-and-marksdowns) 
-4. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#mpd-fix)
-5. (optional) install [automations](#Automations)
+3. (optional for mpd / sonos) install the automation to fix [see auto-advancing](#mpd-fix)
+4. (optional) install [automations](#Automations)
 
-when you find a bug, or want some extra informations
+if you find a bug, or want some extra informations
 
 6. (debug) enable [debug info](#debug-information)
 
-# Installation via HACS
+## Installation via HACS
 
 Please install this custom component via [HACS](https://hacs.xyz/docs/installation/prerequisites).
 
@@ -55,7 +49,8 @@ Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/
 
 # Setup
 
-You need to grab and convert a cookie from youTube Music. This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below. It is highly recommended to use Google chrome for this step!
+This is the complex part of the installation. The integration will interact with the YouTube Music server and act as browser. 
+To be able to do this, it needs a valid cookie from another browser session. This section describes how you can grab the cookie. The complete "why" is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers. Below is a step-by-step guide. It is highly recommended to use a incognito session in Google chrome for this step, not for privacy but the incognito session will make sure that no old cached cookie is used! 
 
 ![setup](setup.png)
 
@@ -78,12 +73,32 @@ You need to grab and convert a cookie from youTube Music. This is described in h
 
 **Although YAML configuration is still possible: Please remove it and configure the player via config_flow or several functions will be missing**
 
+## Installation went fine, what now?
+At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (top right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
+At this point you should hear some music from the remote_player. You don't? Please have a look at the troubleshooting guide below.
+
+Ok, the media_browser is nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
+Well you don't have to use the media_browser. You can start a playback directly. All you need to know is the 'type' of the media (playlist / album / track / ..) and the 'id'.
+
+The easiest way to get those information is to start the playback once with the media_browser and then (while it is still playing) checkout the media_player state.  Go to 'development tools' -> 'states' and find `media_player.ytube_music_player`. It will display some attributes. Note `_media_id` (e.g. 'PL1ua59sKbGkcgVVsiMuPxlq5vaIJn4Ise') and `_media_type` (e.g. 'playlist')
+Once you have those information, stop the playback. Go to the service tab ('development tools' -> 'services') and find the service called 'Media Player: Play media'. Click on 'fill example data' and you should see something like this:
+```
+service: media_player.play_media
+target:
+  entity_id: media_player.ytube_music_player
+data:
+  media_content_id: https://home-assistant.io/images/cast/splash.png
+  media_content_type: music
+```
+Replace the 'https://home-assistant.io/images/cast/splash.png' with your 'id' from `_media_id` above and music with the `_media_type` and hit 'call service'.  
+Now the same music should start playing. Neat right? From here you can go on and create your automations. (Also see 'Automations' section below).
+
 ## Shortcuts
 The screenshot below shows the mini-media-player from kalkih (https://github.com/kalkih/mini-media-player)
 
 ![mini-media-player](shortcuts.png)
 
-This mediaplayer offers shortcuts, which can be used to select the remote_player, album to play or playlist with a single click:
+This mediaplayer offers shortcuts, which can be used to directly start the playback of a album or playback. It can even be used to change the remote_player with a single click.
 
 ```
 - type: 'custom:mini-media-player'
@@ -113,19 +128,26 @@ This mediaplayer offers shortcuts, which can be used to select the remote_player
 ```
 
 ## Services
-The following commands are available:
+There are multiple services available the most important once are `media_player.select_source` and `media_player.play_media`.  
+`media_player.select_source` will change the 'remote_player', just pass the entity_id of the new remote speaker to it.
+
 mini-media-player shortcut type | service call | details
 -- | -- | --
 `source` | **media_player.select_source** *source=id and entity_id=[this]* | selects the media_player that plays the music. id can be an entity_id like `media_player.speaker123` or just the name `speaker123`
-`playlist` | media_player.play_media | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
-`channel` | media_player.play_media | Starts a radio based on a playlist. So the id has to be a **playlist_id**
-`vid_channel` | media_player.play_media | Starts a radio based on a videoId. So the id has to be a **video_id**
-`album` | media_player.play_media | plays an album. *You can  get the album Id from the Youtube Music website. Open an album from the library https://music.youtube.com/library/albums and copy the Id from the links*
-`track` | media_player.play_media | will play only one dedicated track
-`history` | media_player.play_media | will play a playlist from your recent listen music **on the website or the app** *the music that you play with this component will not show up in the list*
-`user_tracks` | media_player.play_media | this type will play the **uploaded** tracks of a user
-`user_album` | media_player.play_media | **uploaded** album of a user
-`user_artist` | media_player.play_media | play all **uploaded** tracks of an artists
+
+To start a playback use the `media_player.play_media` service. 
+
+type for mini-media-player or `media_content_type` for the service call | details
+--  | --
+`playlist` | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
+`channel` | Starts a radio based on a playlist. So the id has to be a **playlist_id**
+`vid_channel` | Starts a radio based on a videoId. So the id has to be a **video_id**
+`album` | plays an album. *You can  get the album Id from the Youtube Music website. Open an album from the library https://music.youtube.com/library/albums and copy the Id from the links*
+`track` | will play only one dedicated track
+`history` | will play a playlist from your recent listen music **on the website or the app** *the music that you play with this component will not show up in the list*
+`user_tracks` | this type will play the **uploaded** tracks of a user
+`user_album` | **uploaded** album of a user
+`user_artist` | play all **uploaded** tracks of an artists
 
 All calls to *media_player.play_media* need three arguments: media_content_id is the equivalent of the shortcut id, media_content_type represents the type (e.g. album) and the entity_id is always media_player.ytube_music_player
 
@@ -222,6 +244,8 @@ sequence:
 ```
 
 ## Sonos support / Proxy
+
+Update 01/2022: Playback on Sonos Speakers is not longer possible. YouTube Music reduced the download speed to something close to real-time. The solution below relied on a fast download and thus won't work any more (will take ~3min to buffer the song before it can be played on the Sonos speaker). 
 
 Playback on Sonos speakers has several issues. Just forwarding the stream to the media_player returns a "mime-type unknown" error. 
 I've done some testing on a Sonos Speaker of a friend and found that it is possible to download the current track and serve it from the webserver that homeassistant offers.
