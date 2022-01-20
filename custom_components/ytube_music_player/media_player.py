@@ -1794,7 +1794,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 	async def async_search(self, query="", filter=None, limit=20):
 		self.log_debug_later("[S] async_search")
-		if(filter is None or filter in {'albums', 'playlists', 'songs'}):
+		if(filter is None or filter in {'albums', 'playlists', 'songs', 'artists'}):
 			# store data for media_browser
 			self._search['query'] = query
 			self._search['filter'] = filter
@@ -1804,10 +1804,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				search_results = list()
 				# execute search and store informtion for the extra sensor
 				media_all = await self.hass.async_add_executor_job(lambda: self._api.search(query=query, filter=filter, limit=limit))
-				supported_media = [['song', 'videoId'], ['playlist', 'browseId'], ['album', 'browseId']]
+				self.log_me('debug',media_all)
+				supported_media = [['song', 'videoId'], ['playlist', 'browseId'], ['album', 'browseId'], ['artist','browseId']]
 				for media_type in supported_media:
 					for result in media_all:
 						if(result['resultType'] == media_type[0]):
+							if(not('title' in result) and ('artist' in result)):
+								result['title']=result['artist']
 							search_results.append({'type': media_type[0], 'title': result['title'], 'id': result[media_type[1]], 'thumbnail': result['thumbnails'][-1]['url']})
 
 				try:

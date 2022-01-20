@@ -8,7 +8,6 @@ from .const import *
 PLAYABLE_MEDIA_TYPES = [
     MEDIA_TYPE_ALBUM,
     USER_ALBUM,
-    MEDIA_TYPE_ARTIST,
     USER_ARTIST,
     MEDIA_TYPE_TRACK,
     MEDIA_TYPE_PLAYLIST,
@@ -130,19 +129,9 @@ async def build_item_response(ytmusicplayer, payload):
         res = await hass.async_add_executor_job(media_library.get_album, search_id)
         media = res['tracks']
         title = res['title']
-
-        # children.append(BrowseMedia(
-        #     title = f"All tracks",
-        #     media_class = MEDIA_CLASS_ALBUM,
-        #     media_content_type = MEDIA_TYPE_ALBUM,
-        #     media_content_id = search_id,
-        #     can_play = True,
-        #     can_expand = False,
-        #     thumbnail = "",
-        # ))
+        thumbnail = res['thumbnails'][-1]['url']  # here to expose it also for the header
 
         for item in media:
-            thumbnail = item['thumbnails'][-1]['url']  # here to expose it also for the header
             children.append(BrowseMedia(
                 title = f"{item['title']}",               # noqa: E251
                 media_class = MEDIA_CLASS_TRACK,          # noqa: E251
@@ -365,7 +354,7 @@ async def build_item_response(ytmusicplayer, payload):
             if(ytmusicplayer._search.get('filter', None) is not None):
                 helper = {}
             else:
-                helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: "}
+                helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist"}
 
             for a in media_all:
                 if(a['resultType'] == 'song'):
@@ -398,10 +387,47 @@ async def build_item_response(ytmusicplayer, payload):
                         can_expand = True,                                     # noqa: E251
                         thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
                     ))
+                elif(a['resultType'] == 'artist'):
+                    children.append(BrowseMedia(
+                        title = helper.get(a['resultType'], "") + a['artist'], # noqa: E251
+                        media_class = MEDIA_CLASS_ARTIST,                      # noqa: E251
+                        media_content_type = MEDIA_TYPE_ARTIST,                # noqa: E251
+                        media_content_id = f"{a['browseId']}",                 # noqa: E251
+                        can_play = False,                                      # noqa: E251
+                        can_expand = True,                                     # noqa: E251
+                        thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                    ))
                 else:  # video / artists / uploads are currently ignored
                     continue
 
         # _LOGGER.debug("search entry end")
+    elif search_type == MEDIA_TYPE_ARTIST:
+         media_all = await hass.async_add_executor_job(media_library.get_artist, search_id)
+         helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist"}
+
+         if('singles' in media_all):
+            for a in media_all['singles']['results']:
+              children.append(BrowseMedia(
+                  title = helper.get('song', "") + a['title'],           # noqa: E251
+                  media_class = MEDIA_CLASS_ALBUM,                       # noqa: E251
+                  media_content_type = MEDIA_TYPE_ALBUM,                 # noqa: E251
+                  media_content_id = a['browseId'],                      # noqa: E251
+                  can_play = True,                                       # noqa: E251
+                  can_expand = False,                                    # noqa: E251
+                  thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+              ))
+         if('albums' in media_all):
+            for a in media_all['albums']['results']:
+              children.append(BrowseMedia(
+                  title = helper.get('album', "") + a['title'],          # noqa: E251
+                  media_class = MEDIA_CLASS_ALBUM,                       # noqa: E251
+                  media_content_type = MEDIA_TYPE_ALBUM,                 # noqa: E251
+                  media_content_id = f"{a['browseId']}",                 # noqa: E251
+                  can_play = True,                                       # noqa: E251
+                  can_expand = True,                                     # noqa: E251
+                  thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+              ))
+
     elif search_type == MOOD_OVERVIEW:
         media_all = await hass.async_add_executor_job(lambda: media_library.get_mood_categories())
         title = MOOD_TITLE

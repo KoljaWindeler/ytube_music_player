@@ -21,7 +21,7 @@ search:
       description: The search query
       example: "2pm tetris"
     filter:
-      description: filter for query, values can be 'albums', 'playlists' or 'songs'. Leave this out to get all types.
+      description: filter for query, values can be 'albums', 'playlists','artists' or 'songs'. Leave this out to get all types.
     limit:
       description: Limits the amount of resuls
       example: "20"
