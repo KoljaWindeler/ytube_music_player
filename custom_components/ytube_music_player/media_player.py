@@ -1079,7 +1079,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playlist_to_index = {}
 		try:
 			try:
-				self._playlists = await self.hass.async_add_executor_job(self._api.get_library_playlists)
+				self._playlists = await self.hass.async_add_executor_job(lambda: self._api.get_library_playlists(limit=self._trackLimit))
+				self._playlists = self._playlists[:self._trackLimit]  # limit function doesn't really work ... loads at least 25
 				self.log_me('debug', " - " + str(len(self._playlists)) + " Playlists loaded")
 			except:
 				self._api = None
