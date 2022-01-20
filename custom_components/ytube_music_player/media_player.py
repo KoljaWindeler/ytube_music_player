@@ -22,7 +22,11 @@ import homeassistant.components.media_player as media_player
 from pytube import YouTube
 from pytube import request
 from pytube import extract
-from pytube.cipher import Cipher
+################### Temp FIX remove me! ###############################
+################### Temp FIX remove me! ###############################
+#from pytube.cipher import Cipher
+################### Temp FIX remove me! ###############################
+################### Temp FIX remove me! ###############################
 import ytmusicapi
 # use this to work with local version
 # and make sure that the local package is also only loading local files
@@ -31,6 +35,33 @@ from .browse_media import build_item_response, library_payload
 from .const import *
 
 
+################### Temp FIX remove me! ###############################
+################### Temp FIX remove me! ###############################
+import pytube, re
+# Another temporary hotfix https://github.com/pytube/pytube/issues/1199
+def patched__init__(self, js: str):
+    self.transform_plan: List[str] = pytube.cipher.get_transform_plan(js)
+    var_regex = re.compile(r"^\$*\w+\W")
+    var_match = var_regex.search(self.transform_plan[0])
+    if not var_match:
+        raise RegexMatchError(
+            caller="__init__", pattern=var_regex.pattern
+        )
+    var = var_match.group(0)[:-1]
+    self.transform_map = pytube.cipher.get_transform_map(js, var)
+    self.js_func_patterns = [
+        r"\w+\.(\w+)\(\w,(\d+)\)",
+        r"\w+\[(\"\w+\")\]\(\w,(\d+)\)"
+    ]
+
+#    self.throttling_plan = pytube.cipher.get_throttling_plan(js)
+#    self.throttling_array = pytube.cipher.get_throttling_function_array(js)
+
+    self.calculated_n = None
+
+pytube.cipher.Cipher.__init__ = patched__init__
+################### Temp FIX remove me! ###############################
+################### Temp FIX remove me! ###############################
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -669,7 +700,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		embed_html = await self.hass.async_add_executor_job(request.get, embed_url)
 		js_url = extract.js_url(embed_html)
 		self._js = await self.hass.async_add_executor_job(request.get, js_url)
-		self._cipher = Cipher(js=self._js)
+# Temp FIX remove me!
+		self._cipher = pytube.cipher.Cipher(js=self._js)
+#		self._cipher = Cipher(js=self._js)
 		# 2do some sort of check if tis worked
 		self.log_me('debug', "[E] async_get_cipher")
 
