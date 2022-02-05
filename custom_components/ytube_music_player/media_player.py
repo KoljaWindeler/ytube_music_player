@@ -973,6 +973,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if pos < old_player.attributes['media_duration']:
 						data = {'seek_position': pos, ATTR_ENTITY_ID: self._remote_player}
 						await self.hass.services.async_call(DOMAIN_MP, media_player.SERVICE_MEDIA_SEEK, data)
+		self.async_schedule_update_ha_state()
 		self.log_me('debug', "[E] async_select_source")
 
 
