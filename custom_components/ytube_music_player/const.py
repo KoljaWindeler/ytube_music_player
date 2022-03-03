@@ -129,6 +129,7 @@ ATTR_LIMIT = "limit"
 ATTR_SONG_ID = "song_id"
 ATTR_PLAYLIST_ID = "playlist_id"
 ATTR_RATING = "rating"
+ATTR_INTERRUPT = "interrupt"
 SERVICE_CALL_METHOD = "call_method"
 SERVICE_CALL_RATE_TRACK = "rate_track"
 SERVICE_CALL_THUMB_UP = "thumb_up"
@@ -249,6 +250,7 @@ CUR_PLAYLIST_COMMAND = "PLAYLIST_GOTO_TRACK"
 
 CHANNEL = 'channel'
 CHANNEL_VID = 'vid_channel'
+CHANNEL_VID_NO_INTERRUPT = 'vid_no_interrupt_channel'
 STATE_OFF_1X = 'OFF_1X'
 BROWSER_LIMIT = 500
 

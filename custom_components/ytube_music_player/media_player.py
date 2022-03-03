@@ -230,7 +230,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			)
 			platform.async_register_entity_service(
 				SERVICE_RADIO,
-				{},
+				{
+					vol.Optional(ATTR_INTERRUPT): vol.Coerce(bool)
+				},
 				"async_start_radio",
 			)
 
@@ -910,7 +912,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				source_entity_id = e
 				break
 		if(source_entity_id is None):
-			self.log_me('debug', "- Couldn't find " + source + " in dropdown list (" + self._friendly_speakersList.values() + "), giving up")
+			self.log_me('debug', "- Couldn't find " + source + " in dropdown list, giving up")
 			return
 		else:
 			self.log_me('debug', 'Translated friendly name ' + source + ' to entity id ' + source_entity_id)
@@ -1035,7 +1037,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					self.log_me('debug', "- Choosing " + self._remote_player + " as player")
 		else:  # dropdown exists
 			self.log_me('debug', "- Adding " + str(len(self._friendly_speakersList)) + " player to the dropdown")
-			data = {input_select.ATTR_OPTIONS: list(self._friendly_speakersList.values()), ATTR_ENTITY_ID: self._select_mediaPlayer}
+			data = {input_select.ATTR_OPTIONS: list(set(self._friendly_speakersList.values())), ATTR_ENTITY_ID: self._select_mediaPlayer}
 			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
 			if(defaultPlayer != ''):
 				if(defaultPlayer in self._friendly_speakersList):
@@ -1459,7 +1461,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_media_type'] = media_type
 		self._attributes['_media_id'] = media_id
 
-		if(media_type != CONF_RECEIVERS):  # don't to this for the speaker configuration (it will fail)
+		if(not(media_type in [CONF_RECEIVERS,CHANNEL_VID_NO_INTERRUPT])):  # don't to this for the speaker configuration (it will fail) and also skip it for the vid no interrupt
 			if(not(await self.async_prepare_play())):
 				return
 
@@ -1521,7 +1523,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._started_by = "UI"  # technically wrong, but this will enable auto-reload playlist once all tracks are played
 				playlist_info = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
 				self._attributes['current_playlist_title'] = "Radio of " + str(playlist_info['title'])
-			elif(media_type == CHANNEL_VID):
+			elif(media_type == CHANNEL_VID or media_type==CHANNEL_VID_NO_INTERRUPT):
 				crash_extra = 'get_watch_playlist(videoId=RDAMVM' + str(media_id) + ')'
 				self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_watch_playlist(videoId=str(media_id), limit=self._trackLimit))
 				self._tracks = self._tracks['tracks'][:self._trackLimit]  # limit function doesn't really work ... seems like
@@ -1578,7 +1580,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# grab track from tracks[] and forward to remote player
 		self._next_track_no = -1
-		await self.async_play()
+		if(media_type != CHANNEL_VID_NO_INTERRUPT):
+			await self.async_play()
 		self.log_me('debug', "[E] play_media")
 
 
@@ -1889,13 +1892,16 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me("debug", "[E] async_limit_count")
 
 
-	async def async_start_radio(self):
+	async def async_start_radio(self, interrupt=True):
 		self.log_debug_later("[S] async_start_radio")
 		if(self._attributes['videoId'] == ""):
 			self.log_me('debug', "Currently not playing anything so I don't know what to base the radio on")
 		else:
 			self.log_me('debug', "Starting radio based on " + str(self._attributes['videoId']))
-			await self.async_play_media(CHANNEL_VID, self._attributes['videoId'])
+			media_type = CHANNEL_VID_NO_INTERRUPT
+			if(interrupt):
+				media_type = CHANNEL_VID
+			await self.async_play_media(media_type, self._attributes['videoId'])
 		self.log_me("debug", "[E] async_start_radio")
 
 
