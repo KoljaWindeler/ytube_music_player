@@ -1,0 +1,89 @@
+{
+    "title": "yTubeMediaPlayer",
+    "config": {
+        "step": {
+            "user": {
+                "description": "Por favor, insira o caminho e os dados do cookie. Mais informações disponíveis em https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "name": "Nome da entidade (sem o prefixo 'media_player')",
+                    "cookie": "Digite o texto do cookie copiado do navegador",
+                    "speakers": "Selecione o speaker de saída padrão",
+                    "header_path": "Caminho do arquivo para o arquivo do cabeçalho",
+                    "advance_config": "Mostrar configuração avançada"
+                }
+            },
+            "finish": {
+                "description": "Aqui você pode alterar para IDs de entidade de campos selecionados, se você não usar os menus suspensos, deixe-os como estão",
+                "data": {
+                    "brand_id": "Insira um ID de marca se estiver usando uma conta de marca",
+                    "select_speakers": "ID da entidade do input_select para seleção de alto-falante",
+                    "select_playmode":"ID da entidade do input_select para seleção do modo de reprodução",
+                    "select_source":"ID da entidade do input_select para seleção de playlist/rádio",
+                    "select_playlist":"ID da entidade do input_select para seleção de lista de reprodução",
+                    "select_playcontinuous":"ID da entidade do input_boolean para reprodução de seleção contínua",
+                    "proxy_path": "Caminho local para o modo proxy, deixe em branco se não precisar",
+                    "proxy_url": "URL base para o modo proxy, deixe em branco se não precisar",
+                    "like_in_name": "Mostrar status como no nome",
+                    "debug_as_error": "Mostrar todas as saídas de depuração como ERROR no log",
+                    "shuffle": "Ativar reprodução aleatória na inicialização",
+                    "track_limit": "Limite de faixas carregadas simultaneamente",
+                    "legacy_radio": "Criar rádio como lista de observação de faixa de lista de reprodução aleatória",
+                    "sort_browser": "Classifique os resultados no navegador de mídia",
+                    "extra_sensor": "Crie um sensor que forneça informações extras"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "Algo com seu cookie não estava certo. O formato e os campos estão corretos, mas o login falhou",
+            "ERROR_AUTH_USER": "Não é possível encontrar o campo 'X-Goog-AuthUser', verifique sua entrada",
+            "ERROR_COOKIE":  "Não é possível encontrar o campo 'Cookie', verifique sua entrada",
+            "ERROR_CONTENTS": "O formato do cookie está OK, encontrou '__Secure-3PAPISID' e '__Secure-3PSID', mas não pode recuperar nenhum dado com essas configurações, talvez você não tenha copiado todos os dados?",
+            "ERROR_FORMAT": "O formato do cookie NÃO está correto, provavelmente faltando '__Secure-3PAPISID' ou '__Secure-3PSID'",
+            "ERROR_NONE": "O formato do cookie está OK, mas o valor retornado da subAPI é Nenhum",
+            "ERROR_FORBIDDEN": "O YouTube retornou um erro 403, o que significa que seus dados de login não são mais válidos. Por favor, atualize o cookie"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Por favor, insira o caminho e os dados do cookie. Mais informações disponíveis em https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "name": "Nome da entidade (sem o prefixo 'media_player')",
+                    "cookie": "Digite o texto do cookie copiado do navegador",
+                    "speakers": "Selecione o speaker de saída padrão",
+                    "header_path": "Caminho do arquivo para o arquivo do cabeçalho",
+                    "advance_config": "Mostrar configuração avançada"
+                }
+            },
+            "finish": {
+                "description": "Aqui você pode alterar para IDs de entidade de campos selecionados, se você não usar os menus suspensos, deixe-os como estão",
+                "data": {
+                    "brand_id": "Insira um ID de marca se estiver usando uma conta de marca",
+                    "select_speakers": "ID da entidade do input_select para seleção de alto-falante",
+                    "select_playmode":"ID da entidade do input_select para seleção do modo de reprodução",
+                    "select_source":"ID da entidade do input_select para seleção de playlist/rádio",
+                    "select_playlist":"ID da entidade do input_select para seleção de lista de reprodução",
+                    "select_playcontinuous":"ID da entidade do input_boolean para reprodução de seleção contínua",
+                    "proxy_path": "Caminho local para o modo proxy, deixe em branco se não precisar",
+                    "proxy_url": "URL base para o modo proxy, deixe em branco se não precisar",
+                    "like_in_name": "Mostrar status como no nome",
+                    "debug_as_error": "Mostrar todas as saídas de depuração como ERROR no log",
+                    "shuffle": "Ativar reprodução aleatória na inicialização",
+                    "track_limit": "Limite de faixas carregadas simultaneamente",
+                    "legacy_radio": "Criar rádio como lista de observação de faixa de lista de reprodução aleatória",
+                    "sort_browser": "Classifique os resultados no navegador de mídia",
+                    "extra_sensor": "Crie um sensor que forneça informações extras"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "Algo com seu cookie não estava certo. O formato e os campos estão corretos, mas o login falhou",
+            "ERROR_AUTH_USER": "Não é possível encontrar o campo 'X-Goog-AuthUser', verifique sua entrada",
+            "ERROR_COOKIE":  "Não é possível encontrar o campo 'Cookie', verifique sua entrada",
+            "ERROR_CONTENTS": "O formato do cookie está OK, encontrou '__Secure-3PAPISID' e '__Secure-3PSID', mas não pode recuperar nenhum dado com essas configurações, talvez você não tenha copiado todos os dados?",
+            "ERROR_FORMAT": "O formato do cookie NÃO está correto, provavelmente faltando '__Secure-3PAPISID' ou '__Secure-3PSID'",
+            "ERROR_NONE": "O formato do cookie está OK, mas o valor retornado da subAPI é Nenhum",
+            "ERROR_FORBIDDEN": "O YouTube retornou um erro 403, o que significa que seus dados de login não são mais válidos. Por favor, atualize o cookie"
+        }
+    }
+}
