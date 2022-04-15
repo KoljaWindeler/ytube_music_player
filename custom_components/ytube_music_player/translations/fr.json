@@ -1,0 +1,89 @@
+{
+    "title": "yTubeMediaPlayer",
+    "config": {
+        "step": {
+            "user": {
+                "description": "Veuillez entrer le chemin et les données du cookie. Plus d'informations disponibles sur https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "name": "Nom de l'entité (sans le préfixe 'media_player')",
+                    "cookie": "Saisissez le texte du cookie, copié depuis le navigateur",
+                    "speakers": "Sélectionnez le périphérique de sortie par défaut",
+                    "header_path": "Chemin d'accès au fichier d'en-tête",
+                    "advance_config": "Afficher la configuration avancée"
+                }
+            },
+            "finish": {
+                "description": "Ici, vous pouvez modifier les identifiants d'entité de certains champs, si vous n'utilisez pas les listes déroulantes, laissez-les tels quels",
+                "data": {
+                    "brand_id": "Entrez un identifiant de marque si vous utilisez un compte de marque",
+                    "select_speakers": "ID de l'entité input_select pour la sélection du haut-parleur",
+                    "select_playmode":"ID de l'entité input_select pour la sélection du mode de lecture",
+                    "select_source":"ID de l'entité input_select pour la sélection de playlist/radio",
+                    "select_playlist":"ID de l'entité input_select pour la sélection de la liste de lecture",
+                    "select_playcontinuous":"ID de l'entité input_boolean pour la sélection de lecture continue",
+                    "proxy_path": "Chemin local pour le mode proxy, laissez vide si vous n'en avez pas besoin",
+                    "proxy_url": "URL de base pour le mode proxy, laissez vide si vous n'en avez pas besoin",
+                    "like_in_name": "Afficher le statut aime dans le nom",
+                    "debug_as_error": "Afficher toutes les sorties de débogage en tant qu'erreur dans le journal",
+                    "shuffle": "Activer la lecture aléatoire au démarrage",
+                    "track_limit": "Limite de pistes chargées simultanément",
+                    "legacy_radio": "Créer une radio en tant que piste dans une liste de lecture aléatoire",
+                    "sort_browser": "Trier les résultats dans le navigateur multimédia",
+                    "extra_sensor": "Créer un capteur qui fournit des informations supplémentaires"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "Quelque chose n'allait pas avec votre cookie. Le format et les champs sont corrects mais la connexion a échoué",
+            "ERROR_AUTH_USER": "Impossible de trouver le champ 'X-Goog-AuthUser', veuillez vérifier votre saisie",
+            "ERROR_COOKIE":  "Impossible de trouver le champ 'Cookie', veuillez vérifier votre saisie",
+            "ERROR_CONTENTS": "Le format du cookie est correct, trouvé '__Secure-3PAPISID' et '__Secure-3PSID' mais ne peut récupérer aucune donnée avec ces paramètres, peut-être que vous n'avez pas copié toutes les données ?",
+            "ERROR_FORMAT": "Le format du cookie n'est pas correct, il manque probablement '__Secure-3PAPISID' ou '__Secure-3PSID'",
+            "ERROR_NONE": "Le format du cookie semble correct, mais l'objet renvoyé est Aucun",
+            "ERROR_FORBIDDEN": "YouTube a renvoyé une erreur 403, ce qui signifie que vos données de connexion ne sont plus valides. Veuillez mettre à jour le cookie"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "description": "Veuillez entrer le chemin et les données du cookie. Plus d'informations disponibles sur https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "name": "Nom de l'entité (sans le préfixe 'media_player')",
+                    "cookie": "Saisissez le texte du cookie, copié depuis le navigateur",
+                    "speakers": "Sélectionnez le périphérique de sortie par défaut",
+                    "header_path": "Chemin d'accès au fichier d'en-tête",
+                    "advance_config": "Afficher la configuration avancée"
+                }
+            },
+            "finish": {
+                "description": "Ici, vous pouvez modifier les identifiants d'entité de certains champs, si vous n'utilisez pas les listes déroulantes, laissez-les tels quels",
+                "data": {
+                    "brand_id": "Entrez un identifiant de marque si vous utilisez un compte de marque",
+                    "select_speakers": "ID de l'entité input_select pour la sélection du haut-parleur",
+                    "select_playmode":"ID de l'entité input_select pour la sélection du mode de lecture",
+                    "select_source":"ID de l'entité input_select pour la sélection de playlist/radio",
+                    "select_playlist":"ID de l'entité input_select pour la sélection de la liste de lecture",
+                    "select_playcontinuous":"ID de l'entité input_boolean pour la sélection de lecture continue",
+                    "proxy_path": "Chemin local pour le mode proxy, laissez vide si vous n'en avez pas besoin",
+                    "proxy_url": "URL de base pour le mode proxy, laissez vide si vous n'en avez pas besoin",
+                    "like_in_name": "Afficher le statut aime dans le nom",
+                    "debug_as_error": "Afficher toutes les sorties de débogage en tant qu'erreur dans le journal",
+                    "shuffle": "Activer la lecture aléatoire au démarrage",
+                    "track_limit": "Limite de pistes chargées simultanément",
+                    "legacy_radio": "Créer une radio en tant que piste dans une liste de lecture aléatoire",
+                    "sort_browser": "Trier les résultats dans le navigateur multimédia",
+                    "extra_sensor": "Créer un capteur qui fournit des informations supplémentaires"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "Quelque chose n'allait pas avec votre cookie. Le format et les champs sont corrects mais la connexion a échoué",
+            "ERROR_AUTH_USER": "Impossible de trouver le champ 'X-Goog-AuthUser', veuillez vérifier votre saisie",
+            "ERROR_COOKIE":  "Impossible de trouver le champ 'Cookie', veuillez vérifier votre saisie",
+            "ERROR_CONTENTS": "Le format du cookie est correct, trouvé '__Secure-3PAPISID' et '__Secure-3PSID' mais ne peut récupérer aucune donnée avec ces paramètres, peut-être que vous n'avez pas copié toutes les données ?",
+            "ERROR_FORMAT": "Le format du cookie n'est pas correct, il manque probablement '__Secure-3PAPISID' ou '__Secure-3PSID'",
+            "ERROR_NONE": "Le format du cookie semble correct, mais l'objet renvoyé est Aucun",
+            "ERROR_FORBIDDEN": "YouTube a renvoyé une erreur 403, ce qui signifie que vos données de connexion ne sont plus valides. Veuillez mettre à jour le cookie"
+        }
+    }
+}
