@@ -1482,6 +1482,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._attributes['current_playlist_title'] = str(playlist_info['title'])
 			elif(media_type == MEDIA_TYPE_ALBUM):
 				crash_extra = 'get_album(browseId=' + str(media_id) + ')'
+				if media_id[:7] == "OLAK5uy": #Sharing over Android app sends 'bad' album id. Checking and converting.
+					media_id = await self.hass.async_add_executor_job(self._api.get_album_browse_id, media_id)
 				self._tracks = await self.hass.async_add_executor_job(self._api.get_album, media_id)  # no limit needed
 				self._tracks = self._tracks['tracks'][:self._trackLimit]  # limit function doesn't really work ... seems like
 				for i in range(0, len(self._tracks)):
