@@ -29,6 +29,6 @@ input_select:
     - "Direct"
 
 input_boolean:
-   ytube_music_player_playcontinuous:
-     initial: true
-     name: "Countinuous playback"
+  ytube_music_player_playcontinuous:
+    initial: true
+    name: "Countinuous playback"
