@@ -116,6 +116,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 			self._errors = await async_check_data(self.hass,user_input)
 			if self._errors == {}:
 				self.data.update(user_input)
+
+				# enable the short proxy endpoint if we were conifgured with it
+				if self.data[CONF_PROXY_REDIR]:
+					from . import http_api
+					await http_api.async_setup(self.hass)
+
+
 				return self.async_create_entry(title="yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,''), data=self.data)
 		elif self.data is not None:
 			# if we came straight from init

@@ -113,7 +113,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._proxy_url = config.data.get(CONF_PROXY_URL, "")
 		self._proxy_path = config.data.get(CONF_PROXY_PATH, "")
 		self._proxy_redir = config.data.get(CONF_PROXY_REDIR, False)
-		self._proxy_redir_url = hass.data[DOMAIN]["short_proxy_url"]
+		self._proxy_redir_url = hass.data[DOMAIN].get(DOMAIN_PROXY_REDIR_URL, "")
 		self._proxy_redir_dict = {}
 
 
@@ -130,6 +130,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "- like_in_name: " + str(self._like_in_name))
 		self.log_me('debug', "- track_limit: " + str(self._trackLimit))
 		self.log_me('debug', "- legacy_radio: " + str(self._legacyRadio))
+		self.log_me('debug', "- short proxy enabed: " + str(self._proxy_redir))
+		self.log_me('debug', "- short proxy url: " + str(self._proxy_redir_url))
 
 		self._brand_id = str(config.data.get(CONF_BRAND_ID, ""))
 		self._api = None

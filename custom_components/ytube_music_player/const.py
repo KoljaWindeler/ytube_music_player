@@ -144,6 +144,7 @@ SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
 SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
 SERVICE_CALL_GOTO_TRACK = "goto_track"
+DOMAIN_PROXY_REDIR_URL = "short_proxy_url"
 URL_PROXY_SHORT = "/api/ytmp/s/{player_name}/{key}"
 
 

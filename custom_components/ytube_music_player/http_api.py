@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.network import get_url
 
-from .const import DOMAIN, URL_PROXY_SHORT
+from .const import DOMAIN, DOMAIN_PROXY_REDIR_URL, URL_PROXY_SHORT
 from .media_player import yTubeMusicComponent
 
 
@@ -17,10 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass: HomeAssistant) -> None:
 	"""Handles setup for HTTP API endpoints."""
+	if hass.data[DOMAIN].get(DOMAIN_PROXY_REDIR_URL):
+		return
+
 	hass.http.register_view(YTubeShortProxyView)
 
 	hass.data.setdefault(DOMAIN, {})
-	hass.data[DOMAIN]["short_proxy_url"] = await get_proxy_url(hass)
+	hass.data[DOMAIN][DOMAIN_PROXY_REDIR_URL] = await get_proxy_url(hass)
 
 	_LOGGER.info("registered short proxy redirector")
 
@@ -54,16 +57,22 @@ class YTubeShortProxyView(HomeAssistantView):
 
 		raise web.HTTPFound(url)
 
+
 async def get_music_player_instance(hass: HomeAssistant, player_name: str) -> yTubeMusicComponent | None:
 	"""Finds the requested music player instance in the ytube_music_player platform."""
 	entities = entity_platform.async_get_platforms(hass, 'ytube_music_player')
 	media_player_domain = [*filter(lambda e: e.domain == "media_player", entities)]
-	if len(media_player_domain) != 1:
-		_LOGGER.warning("found more than one domain in the ytube_music_player platform")
-		return None
 
-	media_players = cast(dict[str, yTubeMusicComponent], media_player_domain[0].entities)
-	return media_players.get(player_name)
+	# iterate the domain entities in reverse since in case the user updated the player settings
+	# while HA is running. it looks like the collection sticks around but the player itself will be
+	# moved between the entities dict.
+	for domain_entities in reversed(media_player_domain):
+		player = domain_entities.entities.get(player_name)
+		if player:
+			return cast(yTubeMusicComponent, player)
+	
+	return None
+
 
 async def get_proxy_url(hass: HomeAssistant) -> str:
 	"""Gets the full proxy url base used to send to music players."""

@@ -1,7 +1,5 @@
 """Provide the initial setup."""
 import logging
-
-from . import http_api
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -9,7 +7,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
 	"""Provide Setup of platform."""
-	await http_api.async_setup(hass)
 	return True
 
 
@@ -21,6 +18,11 @@ async def async_setup_entry(hass, config_entry):
 
 	hass.data.setdefault(DOMAIN, {})
 	hass.data[DOMAIN][config_entry.entry_id] = {}
+
+	# only register our endpoint on demand if we have a player configured for it
+	if config_entry.data[CONF_PROXY_REDIR]:
+		from . import http_api
+		await http_api.async_setup(hass)
 
 	# Add sensor
 	for platform in PLATFORMS:
