@@ -112,6 +112,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# proxy settings
 		self._proxy_url = config.data.get(CONF_PROXY_URL, "")
 		self._proxy_path = config.data.get(CONF_PROXY_PATH, "")
+		self._proxy_redir = config.data.get(CONF_PROXY_REDIR, False)
+		self._proxy_redir_url = hass.data[DOMAIN]["short_proxy_url"]
+		self._proxy_redir_dict = {}
 
 
 		self.log_me('debug', "YtubeMediaPlayer config: ")
@@ -303,6 +306,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['current_track'] = 0
 		self._attributes['_media_type'] = None
 		self._attributes['_media_id'] = None
+		self._proxy_redir_dict = {}
 
 		self.hass.data[DOMAIN][self._unique_id]['lyrics'] = ""
 		self.hass.data[DOMAIN][self._unique_id]['search'] = ""
@@ -614,6 +618,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# Turn off the selected media_player
 		self.log_me('debug', "turn_off")
 		self._playing = False
+		self._proxy_redir_dict = {}
 		await self.async_turn_off_media_player()
 
 	async def async_turn_off_media_player(self, data=None):
@@ -1297,6 +1302,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playing = True
 		self.async_schedule_update_ha_state()
 		self._last_auto_advance = datetime.datetime.now()  # avoid auto_advance
+
+		if self._proxy_redir:
+			from hashlib import md5
+			key = md5(_url.encode("utf-8"), usedforsecurity=False).hexdigest()
+			self._proxy_redir_dict[key] = _url
+			_url = self._proxy_redir_url.format(player_name=self.entity_id, key=key)
+
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
 			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
@@ -1998,3 +2010,5 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._untrack_remote_player_selector = async_track_state_change(
 			self.hass, self._select_mediaPlayer, self.async_select_source_helper)
 		self.log_me('debug', "- untrack resub")
+
+# vim:sw=4:sts=4:ts=4:noet

@@ -29,7 +29,8 @@
                     "track_limit": "Limit of simultaneously loaded tracks",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
-                    "extra_sensor": "Create sensor that provide extra information"
+                    "extra_sensor": "Create sensor that provide extra information",
+                    "proxy_redir": "Enable alternate local proxy to redirect long URLs"
                 }
             }
         },
@@ -72,7 +73,8 @@
                     "track_limit": "Limit of simultaneously loaded tracks",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
-                    "extra_sensor": "Create sensor that provide extra information"
+                    "extra_sensor": "Create sensor that provide extra information",
+                    "proxy_redir": "Enable alternate local proxy to redirect long URLs"
                 }
             }
         },

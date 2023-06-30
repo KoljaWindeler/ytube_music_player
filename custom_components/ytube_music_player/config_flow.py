@@ -159,6 +159,7 @@ async def async_create_form(hass, user_input, page=1):
 
 		data_schema[vol.Optional(CONF_PROXY_PATH, default=user_input[CONF_PROXY_PATH])] = str # select of input_boolean -> continuous on/off
 		data_schema[vol.Optional(CONF_PROXY_URL, default=user_input[CONF_PROXY_URL])] = str # select of input_boolean -> continuous on/off
+		data_schema[vol.Optional(CONF_PROXY_REDIR, default=user_input[CONF_PROXY_REDIR])] = vol.Coerce(bool) # enable local redir for long urls
 
 	return data_schema
 

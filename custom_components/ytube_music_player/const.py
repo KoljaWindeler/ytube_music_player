@@ -144,6 +144,7 @@ SERVICE_CALL_PAUSED_IS_IDLE = "paused_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
 SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
 SERVICE_CALL_GOTO_TRACK = "goto_track"
+URL_PROXY_SHORT = "/api/ytmp/s/{player_name}/{key}"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
@@ -162,6 +163,7 @@ CONF_INIT_EXTRA_SENSOR = 'extra_sensor'
 CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PATH = 'proxy_path'
+CONF_PROXY_REDIR = 'proxy_redir'
 
 CONF_SELECT_SOURCE = 'select_source'
 CONF_SELECT_PLAYLIST = 'select_playlist'
@@ -361,6 +363,7 @@ def ensure_config(user_input):
 	out[CONF_LEGACY_RADIO] = DEFAULT_LEGACY_RADIO
 	out[CONF_SORT_BROWSER] = DEFAULT_SORT_BROWSER
 	out[CONF_INIT_EXTRA_SENSOR] = DEFAULT_INIT_EXTRA_SENSOR
+	out[CONF_PROXY_REDIR] = False
 
 	if user_input is not None:
 		out.update(user_input)

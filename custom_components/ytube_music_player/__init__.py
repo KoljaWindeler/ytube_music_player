@@ -1,5 +1,7 @@
 """Provide the initial setup."""
 import logging
+
+from . import http_api
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -7,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
 	"""Provide Setup of platform."""
+	await http_api.async_setup(hass)
 	return True
 
 
