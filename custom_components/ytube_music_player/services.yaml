@@ -81,3 +81,6 @@ start_radio:
     entity_id:
       description: Name(s) of the yTube music player entity where to run the command.
       example: "media_player.ytube_music_player"
+    interrupt:
+      description: interrupt the current playback or not
+      example: "true"

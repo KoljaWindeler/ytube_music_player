@@ -2,17 +2,22 @@
     "title": "yTubeMediaPlayer",
     "config": {
         "step": {
-            "user": {
-                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+            "oauth": {
+                "description": "Please open the URL below in a seperate browser window. Once you completed the setup please return to this page and go on",
+                "data": {
+                    "code": "Google Device Code"
+                }
+            },
+            "finish": {
+                "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
                     "name": "Name for the entity (without 'media_player' prefix)",
-                    "cookie": "Enter cookie text, copied from browser",
                     "speakers": "Select the default output device",
                     "header_path": "File path for the header file",
                     "advance_config": "Show advance configuration"
                 }
             },
-            "finish": {
+            "adv_finish": {
                 "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
                 "data": {
                     "brand_id": "Enter a brand id if you are using a brand account",
@@ -34,28 +39,21 @@
             }
         },
         "error": {
-            "ERROR_GENERIC": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
-            "ERROR_AUTH_USER": "Can't find the 'X-Goog-AuthUser' field, please check your input",
-            "ERROR_COOKIE":  "Can't find the 'Cookie' field, please check your input",
-            "ERROR_CONTENTS": "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?",
-            "ERROR_FORMAT": "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'",
-            "ERROR_NONE": "Format of cookie seams OK, but the returned sub API object is None",
-            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie"
+            "ERROR_GENERIC": "It looks like you haven't granted access to our request, please try again"
         }
     },
     "options": {
         "step": {
-            "init": {
-                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+            "finish": {
+                "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
                     "name": "Name for the entity (without 'media_player' prefix)",
-                    "cookie": "Enter cookie text, copied from browser",
                     "speakers": "Select the default output device",
                     "header_path": "File path for the header file",
                     "advance_config": "Show advance configuration"
                 }
             },
-            "finish": {
+            "adv_finish": {
                 "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
                 "data": {
                     "brand_id": "Enter a brand id if you are using a brand account",
