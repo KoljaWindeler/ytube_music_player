@@ -49,15 +49,12 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 	# lets check if oauth worked
 	async def async_step_oauth(self, user_input=None):   # pylint: disable=unused-argument
 		self._errors = {}
-		_LOGGER.error("in oauth")
-		_LOGGER.error(self.code)
 		try:
 			self.token = await self.hass.async_add_executor_job(lambda: self.oauth.get_token_from_code(self.code["device_code"])) 
 		except:
 			self._errors["base"] = ERROR_GENERIC
 			user_input[CONF_CODE] = self.code
 			return self.async_show_form(step_id="oauth", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
-		#_LOGGER.error(self.token)
 		# if we get here then Oauth worked, right?
 		user_input[CONF_HEADER_PATH] = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
@@ -126,7 +123,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 			os.rename(self.data[CONF_HEADER_PATH],user_input[CONF_HEADER_PATH])
 		self.data.update(user_input)
 		if(self.data[CONF_ADVANCE_CONFIG]):
-			return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,3)), errors=self._errors)
+			return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,self.data,3)), errors=self._errors)
 		else:
 			return self.async_create_entry(title="yTubeMusic "+self.data[CONF_NAME].replace(DOMAIN,''), data=self.data)
 	
@@ -140,7 +137,6 @@ async def async_create_form(hass, user_input, page=1):
 	"""Create form for UI setup."""
 	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
-
 	all_media_player = dict()
 	all_entities = await hass.async_add_executor_job(hass.states.all) 
 	for e in all_entities:
