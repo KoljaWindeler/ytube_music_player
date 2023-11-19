@@ -88,7 +88,6 @@ rate_track:
       required: true
       selector:
         select:
-          translation_key: "rating_options"
           options:
             - "thumb_up"
             - "thumb_down"
