@@ -40,7 +40,7 @@ search:
       selector:
         number:
           min: 1
-          
+          max: 1000
 
 add_to_playlist:
   fields:
@@ -84,6 +84,15 @@ rate_track:
           domain: media_player
     rating:
       example: "thumb_up"
+      translation_key: "rating_options"
+      required: true
+      selector:
+        select:
+          options:
+            - "thumb_up"
+            - "thumb_down"
+            - "thumb_middle"
+            - "thumb_toggle_up_middle"
     song_id:
       example: ""
 
@@ -101,6 +110,7 @@ limit_count:
       selector:
         number:
           min: 1
+          max: 1000
 
 start_radio:
   fields:
