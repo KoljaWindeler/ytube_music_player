@@ -37,6 +37,7 @@ search:
     limit:
       required: false
       example: "20"
+      default: 20
       selector:
         number:
           min: 1
@@ -84,10 +85,10 @@ rate_track:
           domain: media_player
     rating:
       example: "thumb_up"
-      translation_key: "rating_options"
       required: true
       selector:
         select:
+          translation_key: "rating_options"
           options:
             - "thumb_up"
             - "thumb_down"
