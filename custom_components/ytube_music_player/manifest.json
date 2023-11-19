@@ -1,4 +1,6 @@
 {
+  "domain": "ytube_music_player",
+  "name": "YouTube Music Player",
   "codeowners": [
     "@KoljaWindeler"
   ],
@@ -7,14 +9,12 @@
     "persistent_notification"
   ],
   "documentation": "https://github.com/KoljaWindeler/ytube_music_player",
-  "domain": "ytube_music_player",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/KoljaWindeler/ytube_music_player/issues",
-  "name": "YouTube Music Player",
   "requirements": [
     "ytmusicapi==1.3.2",
     "pytube==10.5.1",
     "integrationhelper==0.2.2"
   ],
-  "version": "20231117.01"
+  "version": "20231119.01"
 }

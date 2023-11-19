@@ -75,13 +75,130 @@
             }
         },
         "error": {
-            "ERROR_GENERIC": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
-            "ERROR_AUTH_USER": "Can't find the 'X-Goog-AuthUser' field, please check your input",
-            "ERROR_COOKIE":  "Can't find the 'Cookie' field, please check your input",
-            "ERROR_CONTENTS": "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?",
-            "ERROR_FORMAT": "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'",
-            "ERROR_NONE": "Format of cookie seams OK, but the returned sub API object is None",
-            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie"
+            "ERROR_GENERIC": "It looks like you haven't granted access to our request, please try again"
+        }
+    },
+    "services": {
+        "add_to_playlist": {
+            "name": "Add song to playlist",
+            "description": "Adds a song to a playlist",
+            "fields": {
+                "entity_id": {
+                    "name": "Entity ID",
+                    "description": "Entity ID of the ytube media player"
+                },
+                "song_id": {
+                    "name": "Song ID",
+                    "description": "The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior."
+                },
+                "playlist_id": {
+                    "name": "Playlist ID",
+                    "description": "The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior."
+                }
+            }
+        },
+        "remove_from_playlist": {
+            "name": "Remove song from playlist",
+            "description": "Removes a song from a playlist",
+            "fields": {
+                "entity_id": {
+                    "name": "Entity ID",
+                    "description": "Entity ID of the ytube media player"
+                },
+                "song_id": {
+                    "name": "Song ID",
+                    "description": "The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior."
+                },
+                "playlist_id": {
+                    "name": "Playlist ID",
+                    "description": "The id of the playlist, optional. By default the current playlist is used. Only provide an argument to override this behavior."
+                }
+            }
+        },
+        "call_method": {
+            "name": "Call a submethod of ytubemusic player",
+            "description": "Call a custom command.",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the yTube music player entity where to run the custom command.",
+                    "example": "media_player.ytube_music_player"
+                },
+                "command": {
+                    "description": "Command to pass to LyTube music player.",
+                    "example": "rate_track"
+                },
+                "parameters": {
+                    "description": "Array of additional parameters, optional and depends on command.",
+                    "example": "thumb_up"
+                }
+            }
+        },
+        "search": {
+            "description": "Search for music / album / etc on Ytube YouTube Music Player",
+            "name": "Search",
+            "fields":{
+                "entity_id": {
+                    "description": "Name(s) of the yTube music player entity where to run the custom command.",
+                    "example": "media_player.ytube_music_player"
+                },
+                "query": {
+                    "description": "The search query",
+                    "example": "2pm tetris"
+                },
+                "filter": {
+                    "description": "filter for query, values can be 'albums', 'playlists','artists' or 'songs'. Leave this out to get all types."
+                },
+                "limit": {
+                    "description": "Limits the amount of resuls",
+                    "example": "20"
+                }
+            }
+        },
+        "rate_track": {
+            "name": "Rate a track",
+            "description": "Rates a song",
+            "fields":  {
+                "entity_id": {
+                    "description": "Name(s) of the yTube music player entity where to run the custom command.",
+                    "example": "media_player.ytube_music_player"
+                },
+                "rating": {
+                    "description": "The rating of the song, can be 'thumb_up' / 'thumb_down' / 'thumb_middle' / 'thumb_toggle_up_middle'.",
+                    "example": "thumb_up"
+                },
+                "song_id": {
+                    "description": "The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior.",
+                    "example": ""
+                }
+            }
+        },
+        "limit_count": {
+            "name": "Limit song count",
+            "description": "Limits the count of loaded tracks",
+            "fields": {
+                "entity_id": {
+                    "description": "Name(s) of the yTube music player entity where to run the custom command.",
+                    "example": "media_player.ytube_music_player"
+                },
+                "limit": {
+                    "description": "The amount of tracks, loaded per call",
+                    "example": "20"
+                }
+            }
+        },
+        "start_radio": {
+            "name": "Radio",
+            "description": "Creates a radio of the current track",
+            "fields": {
+              "entity_id": {
+                "description": "Name(s) of the yTube music player entity where to run the command.",
+                "example": "media_player.ytube_music_player"
+              },
+              "interrupt": {
+                "description": "interrupt the current playback or not",
+                "example": "true"
+              }
+            }
         }
     }
 }
