@@ -120,14 +120,17 @@
             "description": "Call a custom command.",
             "fields": {
                 "entity_id": {
+                    "name": "Entity ID",
                     "description": "Name(s) of the yTube music player entity where to run the custom command.",
                     "example": "media_player.ytube_music_player"
                 },
                 "command": {
+                    "name": "Command",
                     "description": "Command to pass to LyTube music player.",
                     "example": "rate_track"
                 },
                 "parameters": {
+                    "name": "Parameter",
                     "description": "Array of additional parameters, optional and depends on command.",
                     "example": "thumb_up"
                 }
@@ -138,17 +141,21 @@
             "name": "Search",
             "fields":{
                 "entity_id": {
+                    "name": "Entity ID",
                     "description": "Name(s) of the yTube music player entity where to run the custom command.",
                     "example": "media_player.ytube_music_player"
                 },
                 "query": {
+                    "name": "Query",
                     "description": "The search query",
                     "example": "2pm tetris"
                 },
                 "filter": {
+                    "name": "Filter",
                     "description": "filter for query, values can be 'albums', 'playlists','artists' or 'songs'. Leave this out to get all types."
                 },
                 "limit": {
+                    "name": "Limit",
                     "description": "Limits the amount of resuls",
                     "example": "20"
                 }
@@ -159,14 +166,17 @@
             "description": "Rates a song",
             "fields":  {
                 "entity_id": {
+                    "name": "Entity ID",
                     "description": "Name(s) of the yTube music player entity where to run the custom command.",
                     "example": "media_player.ytube_music_player"
                 },
                 "rating": {
+                    "name":"Rating",
                     "description": "The rating of the song, can be 'thumb_up' / 'thumb_down' / 'thumb_middle' / 'thumb_toggle_up_middle'.",
                     "example": "thumb_up"
                 },
                 "song_id": {
+                    "name": "Song ID",
                     "description": "The id of the song, optional. By default the current song id is used. Only provide an argument to override this behavior.",
                     "example": ""
                 }
@@ -177,10 +187,12 @@
             "description": "Limits the count of loaded tracks",
             "fields": {
                 "entity_id": {
+                    "name": "Entity ID",
                     "description": "Name(s) of the yTube music player entity where to run the custom command.",
                     "example": "media_player.ytube_music_player"
                 },
                 "limit": {
+                    "name": "Limit",
                     "description": "The amount of tracks, loaded per call",
                     "example": "20"
                 }
@@ -191,10 +203,12 @@
             "description": "Creates a radio of the current track",
             "fields": {
               "entity_id": {
+                "name": "Entity ID",
                 "description": "Name(s) of the yTube music player entity where to run the command.",
                 "example": "media_player.ytube_music_player"
               },
               "interrupt": {
+                "name": "Interrupt",
                 "description": "interrupt the current playback or not",
                 "example": "true"
               }

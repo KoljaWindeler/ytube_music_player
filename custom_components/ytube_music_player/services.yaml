@@ -101,7 +101,6 @@ limit_count:
       selector:
         number:
           min: 1
-          default: 20
 
 start_radio:
   fields:
