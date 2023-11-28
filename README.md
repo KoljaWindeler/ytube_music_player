@@ -9,7 +9,7 @@ Once you've selected what you want to listen (e.g. a Playlist) it will grab the 
 
 Media_player in Homeassistant are not designed to play multiple tracks, so the playback on the remote_player will usually just stop, once it reaches the end of the track. We as user often don't want that. We want to listen to a complete album or a playlist with multiple tracks. Hence this integration will buffer the playlist and supervise the status of the remote_player. Once it detects that the playback stopped it will start the next track of the playback ... so this integration is kind of a DJ, always making sure that you're entertained. :)
 
-This integration will show up in homeassistant as media_player + sensor. The media_player itself is required to offer the media_browser dialog, the sensor will provide extra information like the buffered playlist.
+This integration will show up in homeassistant as media_player + (optional) sensor. The media_player itself is required to offer the media_browser dialog, the sensor will provide extra information like the buffered playlist.
 
 
 ## Features
@@ -48,33 +48,15 @@ Please install this custom component via [HACS](https://hacs.xyz/docs/installati
 Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/how-to-install-any-custom-component-from-github-in-less-than-5-minutes-ad84e6dc56ff) and install the yTube_music_player from the default HACS repository.
 
 # Setup
-
-This is the complex part of the installation. The integration will interact with the YouTube Music server and act as browser. 
-To be able to do this, it needs a valid cookie from another browser session. This section describes how you can grab the cookie. The complete "why" is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers. Below is a step-by-step guide. It is highly recommended to use a incognito session in Google chrome for this step, not for privacy but the incognito session will make sure that no old cached cookie is used! 
-
-![setup](setup.png)
-
-**1. Basic steps for grabbing**
-
-1. Open the development tools (I've used google chrome) [Crtl+Shift+I / F12]
-2. Open the Network tab
-3. Open https://music.youtube.com, log out, log in, browse a bit around like clicking on the library in the top menu
-4. Search for "browse" (for me only one item shows up)
-5. Go to "headers" -> "request headers" 
-6. copy everything starting after the "accept: */*" (mark with a mouse and copy to clipboard)
-
-**2. Please use the config flow of Home Assistant**
-
-7. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
+**Please use the config flow of Home Assistant**
+1. Go to Settings -> Devices -> "Add integration" -> "YouTube Music Player"
    1. If the integration didn't show up in the list please REFRESH the page
-9. Paste the cookie into the indicated field, all other fields are optional or provide default values 
-   1. It is highly recommended to enter the entity_id of your default output player, otherwise you have to set that after every reboot
-   2. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
-
-**Although YAML configuration is still possible: Please remove it and configure the player via config_flow or several functions will be missing**
+2. The integration will interact with the YouTube Music server via Googles oAuth method. You have to grand access for that. Copy the shown URL to a separate browser window and follow the instructions on the screen.
+3. On the second page you can configure the name of the player (handy if you want multiple players), define the default "remote player" and the oAuth file location (also needed if you want multiple player)
+4. The last (and optional) page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
 
 ## Installation went fine, what now?
-At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (top right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
+At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (lower right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
 At this point you should hear some music from the remote_player. 
 
 Ok, the media_browser is nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
