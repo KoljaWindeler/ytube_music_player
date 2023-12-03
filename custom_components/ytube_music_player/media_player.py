@@ -1080,6 +1080,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 
 		self._playlist_to_index = {}
+		playlists_to_extra = {}
 		try:
 			try:
 				self._playlists = await self.hass.async_add_executor_job(lambda: self._api.get_library_playlists(limit=self._trackLimit))
@@ -1111,13 +1112,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							self.log_me('debug', "- Failed to get_playlist, no playlist ID")
 						self.exc()
 						self._playlists[idx]['count'] = 25
+				playlists_to_extra[playlist['title']] = playlist['playlistId']
 
 			if(len(self._playlists) == 0):
 				self._playlist_to_index["No playlists found"] = 0
 
 			# sort with case-ignore
 			playlists = sorted(list(self._playlist_to_index.keys()), key=str.casefold)
-			await self.async_update_extra_sensor('playlists', playlists)  # update extra sensor
+			await self.async_update_extra_sensor('playlists', playlists_to_extra)  # update extra sensor
 
 			data = {"options": list(playlists), "entity_id": self._select_playlist}
 			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
