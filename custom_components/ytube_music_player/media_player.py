@@ -87,7 +87,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._debug_log_concat = ""
 		self._debug_as_error = config.data.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
-		self._name = self._org_name
 		self._attr_name = self._org_name
 		self._init_extra_sensor = config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
 
