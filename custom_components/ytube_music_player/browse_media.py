@@ -358,8 +358,15 @@ async def build_item_response(ytmusicplayer, payload):
 
             for a in media_all:
                 if(a['resultType'] == 'song'):
+                    
+                    artists = ""
+                    if("artist" in a):
+                        artists = a["artist"]
+                    if("artists" in a):
+                        artists = ', '.join(artist["name"] for artist in a["artists"] if "name" in artist)
+                        
                     children.append(BrowseMedia(
-                        title = helper.get(a['resultType'], "") + a['title'],  # noqa: E251
+                        title = helper.get(a['resultType'], "") + artists + " - " + a['title'],  # noqa: E251
                         media_class = MEDIA_CLASS_TRACK,                       # noqa: E251
                         media_content_type = MEDIA_TYPE_TRACK,                 # noqa: E251
                         media_content_id = a['videoId'],                       # noqa: E251
