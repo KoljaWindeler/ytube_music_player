@@ -354,7 +354,7 @@ async def build_item_response(ytmusicplayer, payload):
             if(ytmusicplayer._search.get('filter', None) is not None):
                 helper = {}
             else:
-                helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist"}
+                helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist: "}
 
             for a in media_all:
                 if(a['resultType'] == 'song'):
