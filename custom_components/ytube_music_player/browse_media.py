@@ -357,6 +357,9 @@ async def build_item_response(ytmusicplayer, payload):
                 helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist: "}
 
             for a in media_all:
+                if(a['category'] in ["Top result", "Podcast"]):
+                    continue
+
                 if(a['resultType'] == 'song'):
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + a['title'],  # noqa: E251
@@ -388,6 +391,7 @@ async def build_item_response(ytmusicplayer, payload):
                         thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
                     ))
                 elif(a['resultType'] == 'artist'):
+                    _LOGGER.debug("a: %s", a)
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + a['artist'], # noqa: E251
                         media_class = MEDIA_CLASS_ARTIST,                      # noqa: E251
