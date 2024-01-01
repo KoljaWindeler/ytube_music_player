@@ -148,7 +148,8 @@ async def async_create_form(hass, user_input, page=1):
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
 					"multiple": "true",
-					"filter": [{"domain": DOMAIN_MP}]
+					"filter": [{"domain": DOMAIN_MP, "supported_features": ["MediaPlayer.MediaPlayerEntityFeature.PLAY_MEDIA"]}],
+					"exclude_entities": [DOMAIN_MP+"."+user_input[CONF_NAME]]
                 }
             })
 		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
