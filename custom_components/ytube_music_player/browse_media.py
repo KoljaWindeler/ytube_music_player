@@ -496,6 +496,8 @@ async def build_item_response(ytmusicplayer, payload):
             item_thumbnail = ""
             if 'thumbnails' in item:
                 item_thumbnail = item['thumbnails'][-1]['url']
+            elif 'thumbnail' in item:
+                item_thumbnail = item['thumbnail'][-1]['url']
 
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
