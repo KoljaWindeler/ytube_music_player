@@ -1,5 +1,6 @@
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.media_player import (MediaPlayerEntityFeature)
 import voluptuous as vol
 import logging
 import datetime
@@ -99,22 +100,22 @@ PLATFORMS = {"media_player", "sensor"}
 DOMAIN = "ytube_music_player"
 
 SUPPORT_YTUBEMUSIC_PLAYER = (
-	SUPPORT_TURN_ON
-	| SUPPORT_TURN_OFF
-	| SUPPORT_PLAY
-	| SUPPORT_PLAY_MEDIA
-	| SUPPORT_PAUSE
-	| SUPPORT_STOP
-	| SUPPORT_VOLUME_SET
-	| SUPPORT_VOLUME_STEP
-	| SUPPORT_VOLUME_MUTE
-	| SUPPORT_PREVIOUS_TRACK
-	| SUPPORT_NEXT_TRACK
-	| SUPPORT_SHUFFLE_SET
-	| SUPPORT_REPEAT_SET
-	| SUPPORT_BROWSE_MEDIA
-	| SUPPORT_SELECT_SOURCE
-	| SUPPORT_SEEK
+	MediaPlayerEntityFeature.TURN_ON
+	| MediaPlayerEntityFeature.TURN_OFF
+	| MediaPlayerEntityFeature.PLAY
+	| MediaPlayerEntityFeature.PLAY_MEDIA
+	| MediaPlayerEntityFeature.PAUSE
+	| MediaPlayerEntityFeature.STOP
+	| MediaPlayerEntityFeature.VOLUME_SET
+	| MediaPlayerEntityFeature.VOLUME_STEP
+	| MediaPlayerEntityFeature.VOLUME_MUTE
+	| MediaPlayerEntityFeature.PREVIOUS_TRACK
+	| MediaPlayerEntityFeature.NEXT_TRACK
+	| MediaPlayerEntityFeature.SHUFFLE_SET
+	| MediaPlayerEntityFeature.REPEAT_SET
+	| MediaPlayerEntityFeature.BROWSE_MEDIA
+	| MediaPlayerEntityFeature.SELECT_SOURCE
+	| MediaPlayerEntityFeature.SEEK
 )
 
 SERVICE_SEARCH = "search"

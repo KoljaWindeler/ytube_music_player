@@ -390,7 +390,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		return 'mdi:music-circle'
 
 	@property
-	def supported_features(self):
+	def supported_features(self) -> media_player.MediaPlayerEntityFeature:
 		# Flag media player features that are supported.
 		return SUPPORT_YTUBEMUSIC_PLAYER
 
