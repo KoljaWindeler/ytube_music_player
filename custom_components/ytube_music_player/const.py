@@ -1,6 +1,7 @@
 from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.media_player import (MediaPlayerEntityFeature)
+from homeassistant.components.media_player import MediaPlayerState, MediaPlayerEntityFeature
+from homeassistant.components.media_player.const import MediaClass, MediaType, RepeatMode
 import voluptuous as vol
 import logging
 import datetime
@@ -24,30 +25,6 @@ from homeassistant.const import (
 	ATTR_COMMAND,
 )
 
-from homeassistant.components.media_player.const import (
-    MEDIA_CLASS_ALBUM,
-    MEDIA_CLASS_ARTIST,
-    MEDIA_CLASS_CHANNEL,
-    MEDIA_CLASS_DIRECTORY,
-    MEDIA_CLASS_EPISODE,
-    MEDIA_CLASS_MOVIE,
-    MEDIA_CLASS_MUSIC,
-    MEDIA_CLASS_PLAYLIST,
-    MEDIA_CLASS_SEASON,
-    MEDIA_CLASS_TRACK,
-    MEDIA_CLASS_TV_SHOW,
-    MEDIA_TYPE_ALBUM,
-    MEDIA_TYPE_ARTIST,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_SEASON,
-    MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_TVSHOW,
-)
-
-
 from homeassistant.components.media_player import (
 	MediaPlayerEntity,
 	PLATFORM_SCHEMA,
@@ -68,28 +45,6 @@ from homeassistant.components.input_boolean import (
 	SERVICE_TURN_OFF as IB_OFF,
 	SERVICE_TURN_ON as IB_ON,
 	DOMAIN as DOMAIN_IB,
-)
-
-from homeassistant.components.media_player.const import (
-	SUPPORT_STOP,
-	SUPPORT_PLAY,
-	SUPPORT_PAUSE,
-	SUPPORT_PLAY_MEDIA,
-	SUPPORT_PREVIOUS_TRACK,
-	SUPPORT_NEXT_TRACK,
-	SUPPORT_VOLUME_MUTE,
- 	SUPPORT_VOLUME_SET,
-	SUPPORT_VOLUME_STEP,
-	SUPPORT_TURN_ON,
-	SUPPORT_TURN_OFF,
-	SUPPORT_SHUFFLE_SET,
-	SUPPORT_BROWSE_MEDIA,
-	SUPPORT_REPEAT_SET,
-	SUPPORT_SELECT_SOURCE,
-	SUPPORT_SEEK,
-	MEDIA_TYPE_MUSIC,
-	REPEAT_MODE_ALL,
-    REPEAT_MODE_OFF,
 )
 
 import homeassistant.components.input_select as input_select

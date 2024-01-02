@@ -6,11 +6,11 @@ from .const import *
 
 
 PLAYABLE_MEDIA_TYPES = [
-    MEDIA_TYPE_ALBUM,
+    MediaType.ALBUM,
     USER_ALBUM,
     USER_ARTIST,
-    MEDIA_TYPE_TRACK,
-    MEDIA_TYPE_PLAYLIST,
+    MediaType.TRACK,
+    MediaType.PLAYLIST,
     LIB_TRACKS,
     HISTORY,
     USER_TRACKS,
@@ -18,27 +18,27 @@ PLAYABLE_MEDIA_TYPES = [
 ]
 
 CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS = {
-    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
-    LIB_ALBUM: MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    LIB_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    HISTORY: MEDIA_CLASS_PLAYLIST,
-    USER_TRACKS: MEDIA_CLASS_PLAYLIST,
-    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
-    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
+    MediaType.ALBUM: MediaClass.ALBUM,
+    LIB_ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
+    LIB_PLAYLIST: MediaClass.PLAYLIST,
+    HISTORY: MediaClass.PLAYLIST,
+    USER_TRACKS: MediaClass.PLAYLIST,
+    MediaType.SEASON: MediaClass.SEASON,
+    MediaType.TVSHOW: MediaClass.TV_SHOW,
 }
 
 CHILD_TYPE_MEDIA_CLASS = {
-    MEDIA_TYPE_SEASON: MEDIA_CLASS_SEASON,
-    MEDIA_TYPE_ALBUM: MEDIA_CLASS_ALBUM,
-    MEDIA_TYPE_ARTIST: MEDIA_CLASS_ARTIST,
-    MEDIA_TYPE_MOVIE: MEDIA_CLASS_MOVIE,
-    MEDIA_TYPE_PLAYLIST: MEDIA_CLASS_PLAYLIST,
-    MEDIA_TYPE_TRACK: MEDIA_CLASS_TRACK,
-    MEDIA_TYPE_TVSHOW: MEDIA_CLASS_TV_SHOW,
-    MEDIA_TYPE_CHANNEL: MEDIA_CLASS_CHANNEL,
-    MEDIA_TYPE_EPISODE: MEDIA_CLASS_EPISODE,
+    MediaType.SEASON: MediaClass.SEASON,
+    MediaType.ALBUM: MediaClass.ALBUM,
+    MediaType.ARTIST: MediaClass.ARTIST,
+    MediaType.MOVIE: MediaClass.MOVIE,
+    MediaType.PLAYLIST: MediaClass.PLAYLIST,
+    MediaType.TRACK: MediaClass.TRACK,
+    MediaType.TVSHOW: MediaClass.TV_SHOW,
+    MediaType.CHANNEL: MediaClass.CHANNEL,
+    MediaType.EPISODE: MediaClass.EPISODE,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,8 +70,8 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",                  # noqa: E251
-                media_class = MEDIA_CLASS_PLAYLIST,          # noqa: E251
-                media_content_type = MEDIA_TYPE_PLAYLIST,    # noqa: E251
+                media_class = MediaClass.PLAYLIST,          # noqa: E251
+                media_content_type = MediaType.PLAYLIST,    # noqa: E251
                 media_content_id = f"{item['playlistId']}",  # noqa: E251
                 can_play = True,                             # noqa: E251
                 can_expand = True,                           # noqa: E251
@@ -79,7 +79,7 @@ async def build_item_response(ytmusicplayer, payload):
             ))
 
 
-    elif search_type == MEDIA_TYPE_PLAYLIST:  # single playlist -> lists tracks
+    elif search_type == MediaType.PLAYLIST:  # single playlist -> lists tracks
         media = await hass.async_add_executor_job(media_library.get_playlist, search_id, BROWSER_LIMIT)
         title = media['title']
 
@@ -96,8 +96,8 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = item_title,                       # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,          # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,    # noqa: E251
+                media_class = MediaClass.TRACK,          # noqa: E251
+                media_content_type = MediaType.TRACK,    # noqa: E251
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
@@ -112,15 +112,15 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",                 # noqa: E251
-                media_class = MEDIA_CLASS_ALBUM,            # noqa: E251
-                media_content_type = MEDIA_TYPE_ALBUM,      # noqa: E251
+                media_class = MediaClass.ALBUM,            # noqa: E251
+                media_content_type = MediaType.ALBUM,      # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = True,                          # noqa: E251
                 thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
-    elif search_type == MEDIA_TYPE_ALBUM:  # single album (NOT uploaded) -> lists tracks
+    elif search_type == MediaType.ALBUM:  # single album (NOT uploaded) -> lists tracks
         res = await hass.async_add_executor_job(media_library.get_album, search_id)
         media = res['tracks']
         title = res['title']
@@ -128,8 +128,8 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",               # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,          # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,    # noqa: E251
+                media_class = MediaClass.TRACK,          # noqa: E251
+                media_content_type = MediaType.TRACK,    # noqa: E251
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
@@ -153,8 +153,8 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,            # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,      # noqa: E251
+                media_class = MediaClass.TRACK,            # noqa: E251
+                media_content_type = MediaType.TRACK,      # noqa: E251
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
@@ -179,8 +179,8 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,            # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,      # noqa: E251
+                media_class = MediaClass.TRACK,            # noqa: E251
+                media_content_type = MediaType.TRACK,      # noqa: E251
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
@@ -205,8 +205,8 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,            # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,      # noqa: E251
+                media_class = MediaClass.TRACK,            # noqa: E251
+                media_content_type = MediaType.TRACK,      # noqa: E251
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
@@ -220,7 +220,7 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",                 # noqa: E251
-                media_class = MEDIA_CLASS_ALBUM,            # noqa: E251
+                media_class = MediaClass.ALBUM,            # noqa: E251
                 media_content_type = USER_ALBUM,            # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
@@ -236,8 +236,8 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",               # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,          # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,    # noqa: E251
+                media_class = MediaClass.TRACK,          # noqa: E251
+                media_content_type = MediaType.TRACK,    # noqa: E251
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
@@ -251,7 +251,7 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['artist']}",                # noqa: E251
-                media_class = MEDIA_CLASS_ARTIST,           # noqa: E251
+                media_class = MediaClass.ARTIST,           # noqa: E251
                 media_content_type = USER_ARTIST,           # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = False,                           # noqa: E251
@@ -266,7 +266,7 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['artist']}",                # noqa: E251
-                media_class = MEDIA_CLASS_ARTIST,           # noqa: E251
+                media_class = MediaClass.ARTIST,           # noqa: E251
                 media_content_type = USER_ARTIST_2,         # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = False,                           # noqa: E251
@@ -295,8 +295,8 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = f"{item['title']}",                 # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,            # noqa: E251
-                media_content_type = MEDIA_TYPE_TRACK,      # noqa: E251
+                media_class = MediaClass.TRACK,            # noqa: E251
+                media_content_type = MediaType.TRACK,      # noqa: E251
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
@@ -326,7 +326,7 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",                 # noqa: E251
-                media_class = MEDIA_CLASS_ALBUM,            # noqa: E251
+                media_class = MediaClass.ALBUM,            # noqa: E251
                 media_content_type = USER_ALBUM,            # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
@@ -359,8 +359,8 @@ async def build_item_response(ytmusicplayer, payload):
                         
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + artists + " - " + a['title'],  # noqa: E251
-                        media_class = MEDIA_CLASS_TRACK,                       # noqa: E251
-                        media_content_type = MEDIA_TYPE_TRACK,                 # noqa: E251
+                        media_class = MediaClass.TRACK,                       # noqa: E251
+                        media_content_type = MediaType.TRACK,                 # noqa: E251
                         media_content_id = a['videoId'],                       # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = False,                                    # noqa: E251
@@ -369,8 +369,8 @@ async def build_item_response(ytmusicplayer, payload):
                 elif(a['resultType'] == 'playlist'):
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + a['title'],  # noqa: E251
-                        media_class = MEDIA_CLASS_PLAYLIST,                    # noqa: E251
-                        media_content_type = MEDIA_TYPE_PLAYLIST,              # noqa: E251
+                        media_class = MediaClass.PLAYLIST,                    # noqa: E251
+                        media_content_type = MediaType.PLAYLIST,              # noqa: E251
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = True,                                     # noqa: E251
@@ -379,8 +379,8 @@ async def build_item_response(ytmusicplayer, payload):
                 elif(a['resultType'] == 'album'):
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + a['title'],  # noqa: E251
-                        media_class = MEDIA_CLASS_ALBUM,                       # noqa: E251
-                        media_content_type = MEDIA_TYPE_ALBUM,                 # noqa: E251
+                        media_class = MediaClass.ALBUM,                       # noqa: E251
+                        media_content_type = MediaType.ALBUM,                 # noqa: E251
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = True,                                     # noqa: E251
@@ -390,8 +390,8 @@ async def build_item_response(ytmusicplayer, payload):
                     _LOGGER.debug("a: %s", a)
                     children.append(BrowseMedia(
                         title = helper.get(a['resultType'], "") + a['artist'], # noqa: E251
-                        media_class = MEDIA_CLASS_ARTIST,                      # noqa: E251
-                        media_content_type = MEDIA_TYPE_ARTIST,                # noqa: E251
+                        media_class = MediaClass.ARTIST,                      # noqa: E251
+                        media_content_type = MediaType.ARTIST,                # noqa: E251
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = False,                                      # noqa: E251
                         can_expand = True,                                     # noqa: E251
@@ -401,7 +401,7 @@ async def build_item_response(ytmusicplayer, payload):
                     continue
 
         # _LOGGER.debug("search entry end")
-    elif search_type == MEDIA_TYPE_ARTIST:
+    elif search_type == MediaType.ARTIST:
          media_all = await hass.async_add_executor_job(media_library.get_artist, search_id)
          helper = {'song': "Track: ", 'playlist': "Playlist: ", 'album': "Album: ", 'artist': "Artist"}
 
@@ -409,8 +409,8 @@ async def build_item_response(ytmusicplayer, payload):
             for a in media_all['singles']['results']:
               children.append(BrowseMedia(
                   title = helper.get('song', "") + a['title'],           # noqa: E251
-                  media_class = MEDIA_CLASS_ALBUM,                       # noqa: E251
-                  media_content_type = MEDIA_TYPE_ALBUM,                 # noqa: E251
+                  media_class = MediaClass.ALBUM,                       # noqa: E251
+                  media_content_type = MediaType.ALBUM,                 # noqa: E251
                   media_content_id = a['browseId'],                      # noqa: E251
                   can_play = True,                                       # noqa: E251
                   can_expand = False,                                    # noqa: E251
@@ -420,8 +420,8 @@ async def build_item_response(ytmusicplayer, payload):
             for a in media_all['albums']['results']:
               children.append(BrowseMedia(
                   title = helper.get('album', "") + a['title'],          # noqa: E251
-                  media_class = MEDIA_CLASS_ALBUM,                       # noqa: E251
-                  media_content_type = MEDIA_TYPE_ALBUM,                 # noqa: E251
+                  media_class = MediaClass.ALBUM,                       # noqa: E251
+                  media_content_type = MediaType.ALBUM,                 # noqa: E251
                   media_content_id = f"{a['browseId']}",                 # noqa: E251
                   can_play = True,                                       # noqa: E251
                   can_expand = True,                                     # noqa: E251
@@ -435,7 +435,7 @@ async def build_item_response(ytmusicplayer, payload):
             for e in media_all[cap]:
                 children.append(BrowseMedia(
                     title = f"{cap} - {e['title']}",      # noqa: E251
-                    media_class = MEDIA_CLASS_PLAYLIST,   # noqa: E251
+                    media_class = MediaClass.PLAYLIST,   # noqa: E251
                     media_content_type = MOOD_PLAYLISTS,  # noqa: E251
                     media_content_id = e['params'],       # noqa: E251
                     can_play = False,                     # noqa: E251
@@ -448,8 +448,8 @@ async def build_item_response(ytmusicplayer, payload):
         for item in media:
             children.append(BrowseMedia(
                 title = f"{item['title']}",                  # noqa: E251
-                media_class = MEDIA_CLASS_PLAYLIST,          # noqa: E251
-                media_content_type = MEDIA_TYPE_PLAYLIST,    # noqa: E251
+                media_class = MediaClass.PLAYLIST,          # noqa: E251
+                media_content_type = MediaType.PLAYLIST,    # noqa: E251
                 media_content_id = f"{item['playlistId']}",  # noqa: E251
                 can_play = True,                             # noqa: E251
                 can_expand = True,                           # noqa: E251
@@ -460,7 +460,7 @@ async def build_item_response(ytmusicplayer, payload):
         for e, f in ytmusicplayer._friendly_speakersList.items():
             children.append(BrowseMedia(
                 title = f,                            # noqa: E251
-                media_class = MEDIA_CLASS_TV_SHOW,    # noqa: E251
+                media_class = MediaClass.TV_SHOW,    # noqa: E251
                 media_content_type = CONF_RECEIVERS,  # noqa: E251
                 media_content_id = e,                 # noqa: E251
                 can_play = True,                      # noqa: E251
@@ -484,7 +484,7 @@ async def build_item_response(ytmusicplayer, payload):
 
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
-                media_class = MEDIA_CLASS_TRACK,            # noqa: E251
+                media_class = MediaClass.TRACK,            # noqa: E251
                 media_content_type = CUR_PLAYLIST_COMMAND,  # noqa: E251
                 media_content_id = i,                       # noqa: E251
                 can_play = True,                            # noqa: E251
@@ -503,8 +503,8 @@ async def build_item_response(ytmusicplayer, payload):
             for item in media:
                 children.append(BrowseMedia(
                     title = f"{item['title']}",  # noqa: E251
-                    media_class = MEDIA_CLASS_TRACK,  # noqa: E251
-                    media_content_type = MEDIA_TYPE_TRACK,  # noqa: E251
+                    media_class = MediaClass.TRACK,  # noqa: E251
+                    media_content_type = MediaType.TRACK,  # noqa: E251
                     media_content_id = f"{item['videoId']}",  # noqa: E251
                     can_play = True,  # noqa: E251
                     can_expand = False,  # noqa: E251
@@ -519,7 +519,7 @@ async def build_item_response(ytmusicplayer, payload):
         children.sort(key=lambda x: x.title, reverse=False)
     response = BrowseMedia(
         media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-            search_type, MEDIA_CLASS_DIRECTORY
+            search_type, MediaClass.DIRECTORY
         ),
         media_content_id=search_id,
         media_content_type=search_type,
@@ -531,7 +531,7 @@ async def build_item_response(ytmusicplayer, payload):
     )
 
     if search_type == "library_music":
-        response.children_media_class = MEDIA_CLASS_MUSIC
+        response.children_media_class = MediaClass.MUSIC
     elif len(children) > 0:
         response.calculate_children_class()
     t = (datetime.datetime.now() - p1).total_seconds()
@@ -543,36 +543,36 @@ async def build_item_response(ytmusicplayer, payload):
 def library_payload(ytmusicplayer):
     # Create response payload to describe contents of a specific library.
     # Used by async_browse_media.
-    library_info = BrowseMedia(media_class=MEDIA_CLASS_DIRECTORY, media_content_id="library", media_content_type="library", title="Media Library", can_play=False, can_expand=True, children=[])
+    library_info = BrowseMedia(media_class=MediaClass.DIRECTORY, media_content_id="library", media_content_type="library", title="Media Library", can_play=False, can_expand=True, children=[])
 
-    library_info.children.append(BrowseMedia(title=LIB_PLAYLIST_TITLE,   media_class=MEDIA_CLASS_PLAYLIST, media_content_type=LIB_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=LIB_ALBUM_TITLE,      media_class=MEDIA_CLASS_ALBUM,    media_content_type=LIB_ALBUM,      media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=LIB_TRACKS_TITLE,     media_class=MEDIA_CLASS_TRACK,    media_content_type=LIB_TRACKS,     media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=HISTORY_TITLE,        media_class=MEDIA_CLASS_TRACK,    media_content_type=HISTORY,        media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=USER_TRACKS_TITLE,    media_class=MEDIA_CLASS_TRACK,    media_content_type=USER_TRACKS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=USER_ALBUMS_TITLE,    media_class=MEDIA_CLASS_ALBUM,    media_content_type=USER_ALBUMS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=USER_ARTISTS_TITLE,   media_class=MEDIA_CLASS_ARTIST,   media_content_type=USER_ARTISTS,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=USER_ARTISTS_2_TITLE, media_class=MEDIA_CLASS_ARTIST,   media_content_type=USER_ARTISTS_2, media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=MOOD_TITLE,           media_class=MEDIA_CLASS_PLAYLIST, media_content_type=MOOD_OVERVIEW,  media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=PLAYER_TITLE,         media_class=MEDIA_CLASS_TV_SHOW,  media_content_type=CONF_RECEIVERS, media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
-    library_info.children.append(BrowseMedia(title=CUR_PLAYLIST_TITLE,   media_class=MEDIA_CLASS_PLAYLIST, media_content_type=CUR_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=LIB_PLAYLIST_TITLE,   media_class=MediaClass.PLAYLIST, media_content_type=LIB_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=LIB_ALBUM_TITLE,      media_class=MediaClass.ALBUM,    media_content_type=LIB_ALBUM,      media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=LIB_TRACKS_TITLE,     media_class=MediaClass.TRACK,    media_content_type=LIB_TRACKS,     media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=HISTORY_TITLE,        media_class=MediaClass.TRACK,    media_content_type=HISTORY,        media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=USER_TRACKS_TITLE,    media_class=MediaClass.TRACK,    media_content_type=USER_TRACKS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=USER_ALBUMS_TITLE,    media_class=MediaClass.ALBUM,    media_content_type=USER_ALBUMS,    media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=USER_ARTISTS_TITLE,   media_class=MediaClass.ARTIST,   media_content_type=USER_ARTISTS,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=USER_ARTISTS_2_TITLE, media_class=MediaClass.ARTIST,   media_content_type=USER_ARTISTS_2, media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=MOOD_TITLE,           media_class=MediaClass.PLAYLIST, media_content_type=MOOD_OVERVIEW,  media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=PLAYER_TITLE,         media_class=MediaClass.TV_SHOW,  media_content_type=CONF_RECEIVERS, media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
+    library_info.children.append(BrowseMedia(title=CUR_PLAYLIST_TITLE,   media_class=MediaClass.PLAYLIST, media_content_type=CUR_PLAYLIST,   media_content_id="", can_play=False, can_expand=True, thumbnail=""))  # noqa: E241
 
     # add search button if possible
     if(ytmusicplayer._search.get("query", "") != ""):
         library_info.children.append(
-            BrowseMedia(title="Results for \"" + str(ytmusicplayer._search.get("query", "No search")) + "\"", media_class=MEDIA_CLASS_DIRECTORY, media_content_type=SEARCH, media_content_id="", can_play=False, can_expand=True, thumbnail="")
+            BrowseMedia(title="Results for \"" + str(ytmusicplayer._search.get("query", "No search")) + "\"", media_class=MediaClass.DIRECTORY, media_content_type=SEARCH, media_content_id="", can_play=False, can_expand=True, thumbnail="")
         )
 
     # add "go to album of track" if possible
     if(ytmusicplayer._track_album_id not in ["", None] and ytmusicplayer._track_name not in ["", None]):
         library_info.children.append(
-            BrowseMedia(title="Album of \"" + str(ytmusicplayer._track_name) + "\"", media_class=MEDIA_CLASS_ALBUM, media_content_type=ALBUM_OF_TRACK, media_content_id="1", can_play=True, can_expand=True, thumbnail=ytmusicplayer._track_album_cover)
+            BrowseMedia(title="Album of \"" + str(ytmusicplayer._track_name) + "\"", media_class=MediaClass.ALBUM, media_content_type=ALBUM_OF_TRACK, media_content_id="1", can_play=True, can_expand=True, thumbnail=ytmusicplayer._track_album_cover)
         )
 
     # add "radio of track" if possible
     if(ytmusicplayer._attributes['videoId'] != ""):
         library_info.children.append(
-            BrowseMedia(title="Radio of \"" + str(ytmusicplayer._track_name) + "\"", media_class=MEDIA_CLASS_PLAYLIST, media_content_type=CHANNEL_VID, media_content_id=ytmusicplayer._attributes['videoId'], can_play=True, can_expand=False, thumbnail="")
+            BrowseMedia(title="Radio of \"" + str(ytmusicplayer._track_name) + "\"", media_class=MediaClass.PLAYLIST, media_content_type=CHANNEL_VID, media_content_id=ytmusicplayer._attributes['videoId'], can_play=True, can_expand=False, thumbnail="")
         )
 
     return library_info

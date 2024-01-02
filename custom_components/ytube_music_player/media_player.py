@@ -422,7 +422,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	@property
 	def media_content_type(self):
 		# Content type of current playing media.
-		return MEDIA_TYPE_MUSIC
+		return MediaType.MUSIC
 
 	@property
 	def media_title(self):
@@ -479,14 +479,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def repeat(self):
 		# Return current repeat mode.
 		if(self._playContinuous):
-			return REPEAT_MODE_ALL
-		return REPEAT_MODE_OFF
+			return RepeatMode.ALL
+		return RepeatMode.OFF
 
 	async def async_set_repeat(self, repeat: str):
 		self.log_me('debug', "[S] set_repeat: " + repeat)
 		# Set repeat mode.
 		data = {ATTR_ENTITY_ID: self._select_playContinuous}
-		if repeat != REPEAT_MODE_OFF:
+		if repeat != RepeatMode.OFF:
 			self._playContinuous = True
 			if(self._select_playContinuous != ""):
 				await self.hass.services.async_call(DOMAIN_IB, IB_ON, data)
@@ -543,11 +543,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.log_me('debug', "[E] (fail) TURNON")
 				return
 			if(_source.state == "Playlist"):
-				self._attributes['_media_type'] = MEDIA_TYPE_PLAYLIST
+				self._attributes['_media_type'] = MediaType.PLAYLIST
 			else:
 				self._attributes['_media_type'] = CHANNEL
 		else:
-			self._attributes['_media_type'] = MEDIA_TYPE_PLAYLIST
+			self._attributes['_media_type'] = MediaType.PLAYLIST
 
 		# store id and start play_media
 		self._attributes['_media_id'] = self._playlists[idx]['playlistId']
@@ -1309,7 +1309,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._last_auto_advance = datetime.datetime.now()  # avoid auto_advance
 		data = {
 			ATTR_MEDIA_CONTENT_ID: _url,
-			ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_MUSIC,
+			ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
 			ATTR_ENTITY_ID: self._remote_player,
 			"extra": {
 				"metadata": {
@@ -1485,12 +1485,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		try:
 			crash_extra = ''
 			self._attributes['current_playlist_title'] = ""
-			if(media_type == MEDIA_TYPE_PLAYLIST):
+			if(media_type == MediaType.PLAYLIST):
 				crash_extra = 'get_playlist(playlistId=' + str(media_id) + ')'
 				playlist_info = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
 				self._tracks = playlist_info['tracks'][:self._trackLimit]  # limit function doesn't really work ... seems like
 				self._attributes['current_playlist_title'] = str(playlist_info['title'])
-			elif(media_type == MEDIA_TYPE_ALBUM):
+			elif(media_type == MediaType.ALBUM):
 				crash_extra = 'get_album(browseId=' + str(media_id) + ')'
 				if media_id[:7] == "OLAK5uy": #Sharing over Android app sends 'bad' album id. Checking and converting.
 					media_id = await self.hass.async_add_executor_job(self._api.get_album_browse_id, media_id)
@@ -1500,7 +1500,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				for i in range(0, len(self._tracks)):
 					self._tracks[i].update({'album': {'id': media_id}})
 					self._tracks[i].update({'thumbnails': [{'url': thumbnail}]})
-			elif(media_type == MEDIA_TYPE_TRACK):
+			elif(media_type == MediaType.TRACK):
 				crash_extra = 'get_song(videoId=' + str(media_id) + ',signatureTimestamp=' + str(self._signatureTimestamp) + ')'
 				self._tracks = [await self.hass.async_add_executor_job(lambda: self._api.get_song(media_id, self._signatureTimestamp))]  # no limit needed
 				self._tracks[0] = self._tracks[0]['videoDetails']
@@ -1856,7 +1856,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			else:
 				self.log_me('error', "no song_id given, but also currently not playing, so I don't know what to add/remove")
 		if(song_id != "" and playlist_id == ""):
-			if(self._attributes['_media_type'] in [MEDIA_TYPE_PLAYLIST, CHANNEL]):
+			if(self._attributes['_media_type'] in [MediaType.PLAYLIST, CHANNEL]):
 				playlist_id = self._attributes['_media_id']
 			else:
 				self.log_me('error', "No playlist Id provided and the current playmode isn't 'playlist' nor 'channel', so I don't know where to add/remove the track")
