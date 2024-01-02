@@ -369,4 +369,21 @@ def ensure_config(user_input):
 	return out
 
 
+def find_thumbnail(item):
+    item_thumbnail = ""
+    try:
+        thumbnail_list = ""
+        if 'thumbnails' in item:
+            if 'thumbnail' in item['thumbnails']:
+                thumbnail_list = item['thumbnails']['thumbnail']
+            else:
+                thumbnail_list = item['thumbnails']
+        elif 'thumbnail' in item:
+            thumbnail_list = item['thumbnail']
 
+        if isinstance(thumbnail_list, list):
+            if 'url' in thumbnail_list[-1]:
+                item_thumbnail = thumbnail_list[-1]['url']
+    except:
+        pass
+    return item_thumbnail

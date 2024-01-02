@@ -75,7 +75,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['playlistId']}",  # noqa: E251
                 can_play = True,                             # noqa: E251
                 can_expand = True,                           # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],   # noqa: E251
+                thumbnail = find_thumbnail(item)             # noqa: E251
             ))
 
 
@@ -94,11 +94,6 @@ async def build_item_response(ytmusicplayer, payload):
                 if(artist):
                     item_title = artist + " - " + item_title
 
-            thumbnail = ''
-            if 'thumbnails' in item:
-                if isinstance(item['thumbnails'], list):
-                    thumbnail = item['thumbnails'][-1]['url']
-
             children.append(BrowseMedia(
                 title = item_title,                       # noqa: E251
                 media_class = MEDIA_CLASS_TRACK,          # noqa: E251
@@ -106,7 +101,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
-                thumbnail = thumbnail,                    # noqa: E251
+                thumbnail = find_thumbnail(item)          # noqa: E251
             ))
 
     elif search_type == LIB_ALBUM:  # LIB! album OVERVIEW, not uploaded -> lists albums
@@ -122,14 +117,13 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = True,                          # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == MEDIA_TYPE_ALBUM:  # single album (NOT uploaded) -> lists tracks
         res = await hass.async_add_executor_job(media_library.get_album, search_id)
         media = res['tracks']
         title = res['title']
-        thumbnail = res['thumbnails'][-1]['url']  # here to expose it also for the header
 
         for item in media:
             children.append(BrowseMedia(
@@ -139,7 +133,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
-                thumbnail = thumbnail,                    # noqa: E251
+                thumbnail = find_thumbnail(res)           # noqa: E251
             ))
 
     elif search_type == LIB_TRACKS:  # liked songs (direct list, NOT uploaded) -> lists tracks
@@ -164,7 +158,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == HISTORY:  # history songs (direct list) -> lists tracks
@@ -190,7 +184,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_TRACKS:  # list all uploaded songs -> lists tracks
@@ -216,7 +210,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_ALBUMS:  # uploaded album overview!! -> lists user albums
@@ -231,7 +225,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = True,                          # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_ALBUM:  # single uploaded album -> lists tracks
@@ -240,11 +234,6 @@ async def build_item_response(ytmusicplayer, payload):
         title = res['title']
 
         for item in media:
-            try:
-                thumbnail = item['thumbnails'][-1]['url']
-            except:
-                thumbnail = ""
-
             children.append(BrowseMedia(
                 title = f"{item['title']}",               # noqa: E251
                 media_class = MEDIA_CLASS_TRACK,          # noqa: E251
@@ -252,7 +241,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",  # noqa: E251
                 can_play = True,                          # noqa: E251
                 can_expand = False,                       # noqa: E251
-                thumbnail = thumbnail,                    # noqa: E251
+                thumbnail = find_thumbnail(item)          # noqa: E251
             ))
 
     elif search_type == USER_ARTISTS:  # with S
@@ -267,7 +256,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = False,                           # noqa: E251
                 can_expand = True,                          # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_ARTISTS_2:  # list all artists now, but follow up will be the albums of that artist
@@ -282,7 +271,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = False,                           # noqa: E251
                 can_expand = True,                          # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_ARTIST:  # without S
@@ -311,7 +300,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['videoId']}",    # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
     elif search_type == USER_ARTIST_2:  # list each album of an uploaded artists only once .. next will be uploaded album view 'USER_ALBUM'
@@ -342,7 +331,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = True,                          # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],  # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
 
 
@@ -375,7 +364,7 @@ async def build_item_response(ytmusicplayer, payload):
                         media_content_id = a['videoId'],                       # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = False,                                    # noqa: E251
-                        thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                        thumbnail = find_thumbnail(a)                          # noqa: E251
                     ))
                 elif(a['resultType'] == 'playlist'):
                     children.append(BrowseMedia(
@@ -385,7 +374,7 @@ async def build_item_response(ytmusicplayer, payload):
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = True,                                     # noqa: E251
-                        thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                        thumbnail = find_thumbnail(a)                          # noqa: E251
                     ))
                 elif(a['resultType'] == 'album'):
                     children.append(BrowseMedia(
@@ -395,7 +384,7 @@ async def build_item_response(ytmusicplayer, payload):
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = True,                                       # noqa: E251
                         can_expand = True,                                     # noqa: E251
-                        thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                        thumbnail = find_thumbnail(a)                          # noqa: E251
                     ))
                 elif(a['resultType'] == 'artist'):
                     _LOGGER.debug("a: %s", a)
@@ -406,7 +395,7 @@ async def build_item_response(ytmusicplayer, payload):
                         media_content_id = f"{a['browseId']}",                 # noqa: E251
                         can_play = False,                                      # noqa: E251
                         can_expand = True,                                     # noqa: E251
-                        thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                        thumbnail = find_thumbnail(a)                          # noqa: E251
                     ))
                 else:  # video / artists / uploads are currently ignored
                     continue
@@ -425,7 +414,7 @@ async def build_item_response(ytmusicplayer, payload):
                   media_content_id = a['browseId'],                      # noqa: E251
                   can_play = True,                                       # noqa: E251
                   can_expand = False,                                    # noqa: E251
-                  thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                  thumbnail = find_thumbnail(a)                          # noqa: E251
               ))
          if('albums' in media_all):
             for a in media_all['albums']['results']:
@@ -436,7 +425,7 @@ async def build_item_response(ytmusicplayer, payload):
                   media_content_id = f"{a['browseId']}",                 # noqa: E251
                   can_play = True,                                       # noqa: E251
                   can_expand = True,                                     # noqa: E251
-                  thumbnail = a['thumbnails'][-1]['url'],                # noqa: E251
+                  thumbnail = find_thumbnail(a)                          # noqa: E251
               ))
 
     elif search_type == MOOD_OVERVIEW:
@@ -464,7 +453,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = f"{item['playlistId']}",  # noqa: E251
                 can_play = True,                             # noqa: E251
                 can_expand = True,                           # noqa: E251
-                thumbnail = item['thumbnails'][-1]['url'],   # noqa: E251
+                thumbnail = find_thumbnail(item)             # noqa: E251
             ))
     elif search_type == CONF_RECEIVERS:
         title = PLAYER_TITLE
@@ -493,12 +482,6 @@ async def build_item_response(ytmusicplayer, payload):
                 if(artist):
                     item_title = artist + " - " + item_title
 
-            item_thumbnail = ""
-            if 'thumbnails' in item:
-                item_thumbnail = item['thumbnails'][-1]['url']
-            elif 'thumbnail' in item:
-                item_thumbnail = item['thumbnail'][-1]['url']
-
             children.append(BrowseMedia(
                 title = item_title,                         # noqa: E251
                 media_class = MEDIA_CLASS_TRACK,            # noqa: E251
@@ -506,7 +489,7 @@ async def build_item_response(ytmusicplayer, payload):
                 media_content_id = i,                       # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = False,                         # noqa: E251
-                thumbnail = item_thumbnail,                 # noqa: E251
+                thumbnail = find_thumbnail(item)            # noqa: E251
             ))
             i += 1
 
@@ -517,22 +500,7 @@ async def build_item_response(ytmusicplayer, payload):
             media = res['tracks']
             title = res['title']
 
-#            children.append(BrowseMedia(
-#                title = f"All tracks",
-#                media_class = MEDIA_CLASS_ALBUM,
-#                media_content_type = MEDIA_TYPE_ALBUM,
-#                media_content_id = ytmusicplayer._track_album_id,
-#                can_play = True,
-#                can_expand = False,
-#                thumbnail = "",
-#            ))
-
             for item in media:
-                try:
-                    thumbnail = item['thumbnails'][-1]['url']
-                except:
-                    thumbnail = ""
-
                 children.append(BrowseMedia(
                     title = f"{item['title']}",  # noqa: E251
                     media_class = MEDIA_CLASS_TRACK,  # noqa: E251
@@ -540,7 +508,7 @@ async def build_item_response(ytmusicplayer, payload):
                     media_content_id = f"{item['videoId']}",  # noqa: E251
                     can_play = True,  # noqa: E251
                     can_expand = False,  # noqa: E251
-                    thumbnail = thumbnail  # noqa: E251
+                    thumbnail = find_thumbnail(item)             # noqa: E251
                 ))
         except:
             pass
@@ -564,7 +532,7 @@ async def build_item_response(ytmusicplayer, payload):
 
     if search_type == "library_music":
         response.children_media_class = MEDIA_CLASS_MUSIC
-    else:
+    elif len(children) > 0:
         response.calculate_children_class()
     t = (datetime.datetime.now() - p1).total_seconds()
     _LOGGER.debug("- Calc / grab time: " + str(t) + " sec")
