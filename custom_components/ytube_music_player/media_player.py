@@ -1487,9 +1487,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._attributes['current_playlist_title'] = ""
 			if(media_type == MediaType.PLAYLIST):
 				crash_extra = 'get_playlist(playlistId=' + str(media_id) + ')'
-				playlist_info = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
-				self._tracks = playlist_info['tracks'][:self._trackLimit]  # limit function doesn't really work ... seems like
-				self._attributes['current_playlist_title'] = str(playlist_info['title'])
+				if(media_id == ALL_LIB_TRACKS):
+					self._tracks = await self.hass.async_add_executor_job(lambda: self._api.get_library_songs(limit=self._trackLimit))
+					self._attributes['current_playlist_title'] = ALL_LIB_TRACKS_TITLE
+				else:
+					playlist_info = await self.hass.async_add_executor_job(lambda: self._api.get_playlist(media_id, limit=self._trackLimit))
+					self._tracks = playlist_info['tracks'][:self._trackLimit]  # limit function doesn't really work ... seems like
+					self._attributes['current_playlist_title'] = str(playlist_info['title'])
 			elif(media_type == MediaType.ALBUM):
 				crash_extra = 'get_album(browseId=' + str(media_id) + ')'
 				if media_id[:7] == "OLAK5uy": #Sharing over Android app sends 'bad' album id. Checking and converting.

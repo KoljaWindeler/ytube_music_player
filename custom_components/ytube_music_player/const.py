@@ -166,6 +166,8 @@ LIB_ALBUM_TITLE = "Library Albums"
 
 LIB_TRACKS = 'library_tracks'
 LIB_TRACKS_TITLE = "Library Songs"
+ALL_LIB_TRACKS = 'all_library_tracks'
+ALL_LIB_TRACKS_TITLE = 'All library tracks'
 
 HISTORY = 'history'
 HISTORY_TITLE = "Last played songs"
