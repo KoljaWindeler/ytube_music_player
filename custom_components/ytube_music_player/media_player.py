@@ -1789,12 +1789,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self._interrupt_data['pos'] = None
 		elif(command == SERVICE_CALL_RELOAD_DROPDOWNS):
 			await self.async_update_selects()
-		elif(command == SERVICE_CALL_OFF_IS_IDLE):  # needed for the MPD but for nobody else
+		elif(command == SERVICE_CALL_OFF_IS_IDLE):  # needed for the MPD and OwnTone server but for nobody else
 			self._x_to_idle = STATE_OFF
 			self.log_me('debug', "Setting x_is_idle to State Off")
 		elif(command == SERVICE_CALL_PAUSED_IS_IDLE):  # needed for the Sonos but for nobody else
 			self._x_to_idle = STATE_PAUSED
 			self.log_me('debug', "Setting x_is_idle to State Paused")
+		elif(command == SERVICE_CALL_IDLE_IS_IDLE): # reset idle detection to default behaviour
+			self._x_to_idle = None
+			self.log_me('debug', "Resetting x_is_idle")
 		elif(command == SERIVCE_CALL_DEBUG_AS_ERROR):
 			self._debug_as_error = True
 			self.log_me('debug', "Posting debug messages as error until restart")
