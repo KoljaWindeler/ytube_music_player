@@ -172,8 +172,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._playContinuous = True
 		self._signatureTimestamp = 0
 		self._x_to_idle = None  # Some Mediaplayer don't transition to 'idle' but to 'off' on track end. This re-routes off to idle
-		self._ignore_paused_on_media_change = False
-		self._ignore_next_remote_pause_state = False	# Some Mediaplayers temporarely switches to 'paused' during media changes (next/prev/seek)
+		self._ignore_paused_on_media_change = False	# RobinR1, OwnTone compatibility
+		self._ignore_next_remote_pause_state = False	# RobinR1, OwnTone compatibility: Some Mediaplayers temporarely switches to 'paused' during media changes (next/prev/seek)
 		self._search = {"query": "", "filter": None, "limit": 20}
 		self.reset_attributs()
 
@@ -804,11 +804,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# set this player in to pause state when the remote player does, or ignore when assumed it is a temporary state (as some players do while seeking/skipping track)
 			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED):
 				self.log_me('debug', "Remote Player changed from PLAYING to PAUSED.")
-				if(self._ignore_paused_on_media_change and self._ignore_next_remote_pause_state):
-					self.log_me('debug', "Ignoring state change")
-					self._ignore_next_remote_pause_state = False
-					return
-				else:
+				if(self._ignore_paused_on_media_change and self._ignore_next_remote_pause_state):	# RobinR1, OwnTone compatibility
+					self.log_me('debug', "Ignoring state change")					# RobinR1, OwnTone compatibility
+					self._ignore_next_remote_pause_state = False					# RobinR1, OwnTone compatibility
+					return										# RobinR1, OwnTone compatibility
+				else:											# RobinR1, OwnTone compatibility
 					return await self.async_media_pause()
 			# resume playback when the player does
 			elif(old_state.state == STATE_PAUSED and new_state.state == STATE_PLAYING and self._state == STATE_PAUSED):
@@ -1650,14 +1650,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if self._playing:
 			self._next_track_no = max(self._next_track_no - 2, -1)
 			self._allow_next = False
-			self._ignore_next_remote_pause_state = True
+			self._ignore_next_remote_pause_state = True	# RobinR1, OwnTone compatibility
 			await self.async_get_track()
 
 	async def async_media_next_track(self, **kwargs):
 		# Send next track command.
 		if self._playing:
 			self._allow_next = False
-			self._ignore_next_remote_pause_state = True
+			self._ignore_next_remote_pause_state = True	# RobinR1, OwnTone compatibility
 			await self.async_get_track()
 
 	async def async_media_stop(self, **kwargs):
@@ -1681,7 +1681,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_media_seek(self, position):
 		# Seek the media to a specific location.
 		self.log_me('debug', "seek: " + str(position))
-		self._ignore_next_remote_pause_state = True
+		self._ignore_next_remote_pause_state = True			# RobinR1, OwnTone compatibility
 		data = {ATTR_ENTITY_ID: self._remote_player, 'seek_position': position}
 		await self.hass.services.async_call(DOMAIN_MP, 'media_seek', data)
 
@@ -1806,11 +1806,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		elif(command == SERVICE_CALL_PAUSED_IS_IDLE):  # needed for the Sonos but for nobody else
 			self._x_to_idle = STATE_PAUSED
 			self.log_me('debug', "Setting x_is_idle to State Paused")
-		elif(command == SERVICE_CALL_IGNORE_PAUSED_ON_MEDIA_CHANGE):
-			self._ignore_paused_on_media_change = True
+		elif(command == SERVICE_CALL_IGNORE_PAUSED_ON_MEDIA_CHANGE):		# RobinR1, OwnTone compatibility
+			self._ignore_paused_on_media_change = True			# RobinR1, OwnTone compatibility
 			self.log_me('debug', "Setting to ignore remote player Paused state on Next/Prev track and Seek")
-		elif(command == SERVICE_CALL_DO_NOT_IGNORE_PAUSED_ON_MEDIA_CHANGE):
-			self._ignore_paused_on_media_change = False
+		elif(command == SERVICE_CALL_DO_NOT_IGNORE_PAUSED_ON_MEDIA_CHANGE):	# RobinR1, OwnTone compatibility
+			self._ignore_paused_on_media_change = False			# RobinR1, OwnTone compatibility
 			self.log_me('debug', "Setting to NOT ignore remote player Paused state on Next/Prev track and Seek")
 		elif(command == SERIVCE_CALL_DEBUG_AS_ERROR):
 			self._debug_as_error = True
