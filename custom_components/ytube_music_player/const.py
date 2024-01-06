@@ -129,11 +129,11 @@ CONF_SELECT_SPEAKERS = 'select_speakers'
 CONF_SELECT_PLAYMODE = 'select_playmode'
 CONF_SELECT_PLAYCONTINUOUS = 'select_playcontinuous'
 
-DEFAULT_SELECT_PLAYCONTINUOUS = input_boolean.DOMAIN + "." + DOMAIN + '_playcontinuous'
-DEFAULT_SELECT_SOURCE = input_select.DOMAIN + "." + DOMAIN + '_source'
-DEFAULT_SELECT_PLAYLIST = input_select.DOMAIN + "." + DOMAIN + '_playlist'
-DEFAULT_SELECT_PLAYMODE = input_select.DOMAIN + "." + DOMAIN + '_playmode'
-DEFAULT_SELECT_SPEAKERS = input_select.DOMAIN + "." + DOMAIN + '_speakers'
+DEFAULT_SELECT_PLAYCONTINUOUS = "" #input_boolean.DOMAIN + "." + DOMAIN + '_playcontinuous' # cleared defaults to avoid further issues with multiple instances
+DEFAULT_SELECT_SOURCE = "" #input_select.DOMAIN + "." + DOMAIN + '_source'     # cleared defaults to avoid further issues with multiple instances
+DEFAULT_SELECT_PLAYLIST = "" #input_select.DOMAIN + "." + DOMAIN + '_playlist' # cleared defaults to avoid further issues with multiple instances
+DEFAULT_SELECT_PLAYMODE = "" #input_select.DOMAIN + "." + DOMAIN + '_playmode' # cleared defaults to avoid further issues with multiple instances
+DEFAULT_SELECT_SPEAKERS = "" #input_select.DOMAIN + "." + DOMAIN + '_speakers' # cleared defaults to avoid further issues with multiple instances
 DEFAULT_HEADER_FILENAME = 'ytube_header.json'
 DEFAULT_LIKE_IN_NAME = False
 DEFAULT_DEBUG_AS_ERROR = False
