@@ -121,7 +121,7 @@ To start a playback use the `media_player.play_media` service.
 
 type for mini-media-player or `media_content_type` for the service call | details
 --  | --
-`playlist` | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*
+`playlist` | plays a playlist from YouTube. *You can get the playlist Id from the Youtube Music website. Open a playlist from the library and copy the id from the link e.g. https://music.youtube.com/playlist?list=PL6H6TfFpYvpersxxxxxxxxxaPueTqieF*. You can also use `media_content_id: all_library_tracks` to start a playlist with all tracks from your library.
 `channel` | Starts a radio based on a playlist. So the id has to be a **playlist_id**
 `vid_channel` | Starts a radio based on a videoId. So the id has to be a **video_id**
 `album` | plays an album. *You can  get the album Id from the Youtube Music website. Open an album from the library https://music.youtube.com/library/albums and copy the Id from the links*
