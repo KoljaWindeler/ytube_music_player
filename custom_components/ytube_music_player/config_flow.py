@@ -51,6 +51,8 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 	# lets check if oauth worked
 	async def async_step_oauth(self, user_input=None):   # pylint: disable=unused-argument
 		self._errors = {}
+		if user_input is not None:
+			self.data = user_input
 		try:
 			self.token = await self.hass.async_add_executor_job(lambda: self.oauth.token_from_code(self.code["device_code"])) 
 			self.refresh_token = RefreshingToken(credentials=self.oauth, **self.token)
@@ -68,7 +70,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 	async def async_step_finish(self,user_input=None):
 		self._errors = {}
 		if user_input is not None:
-			self.data = user_input
+			self.data.update(user_input)
 			await self.hass.async_add_executor_job(lambda: self.refresh_token.store_token(self.data[CONF_HEADER_PATH]))
 			if(self.data[CONF_ADVANCE_CONFIG]):
 				return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,3)), errors=self._errors)
