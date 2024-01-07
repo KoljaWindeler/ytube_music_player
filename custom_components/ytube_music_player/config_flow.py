@@ -69,8 +69,6 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		self._errors = {}
 		if user_input is not None:
 			self.data = user_input
-			_LOGGER.error("here2")
-			_LOGGER.error(user_input)
 			await self.hass.async_add_executor_job(lambda: self.refresh_token.store_token(self.data[CONF_HEADER_PATH]))
 			if(self.data[CONF_ADVANCE_CONFIG]):
 				return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,3)), errors=self._errors)

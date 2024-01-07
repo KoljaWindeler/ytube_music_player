@@ -783,11 +783,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# chromecast quite frequently change from playing to idle twice, so we need some kind of time guard
 			if(old_state.state == STATE_PLAYING and new_state.state == STATE_IDLE and (datetime.datetime.now() - self._last_auto_advance).total_seconds() > 10):
 				self._allow_next = False
+				# add track to history
+				try:
+					response = await self.hass.async_add_executor_job(lambda: self._api.get_song(self._attributes['videoId'], self._signatureTimestamp))
+					await self.hass.async_add_executor_job(lambda: self._api.add_history_item(response))
+				except:
+					self.log_me('debug', "adding "+self._attributes['videoId']+" to history failed")
+
 				await self.async_get_track()
 			# turn this player off when the remote_player was shut down
 			elif((old_state.state == STATE_PLAYING or old_state.state == STATE_IDLE or old_state.state == STATE_PAUSED) and new_state.state == STATE_OFF):
 				if(self._x_to_idle == STATE_OFF or self._x_to_idle == STATE_OFF_1X):  # workaround for MPD (changes to OFF at the end of a track)
 					self._allow_next = False
+					# add track to history
+					try:
+						response = await self.hass.async_add_executor_job(lambda: self._api.get_song(self._attributes['videoId'], self._signatureTimestamp))
+						await self.hass.async_add_executor_job(lambda: self._api.add_history_item(response))
+					except:
+						self.log_me('debug', "adding "+self._attributes['videoId']+" to history failed")
 					await self.async_get_track()
 					if(self._x_to_idle == STATE_OFF_1X):
 						self._x_to_idle = None
@@ -799,6 +812,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			elif(old_state.state == STATE_PLAYING and new_state.state == STATE_PAUSED and  # noqa: W504
 								(datetime.datetime.now() - self._last_auto_advance).total_seconds() > 10 and  # noqa: W504
 								self._x_to_idle == STATE_PAUSED):
+				# add track to history
+				try:
+					response = await self.hass.async_add_executor_job(lambda: self._api.get_song(self._attributes['videoId'], self._signatureTimestamp))
+					await self.hass.async_add_executor_job(lambda: self._api.add_history_item(response))
+				except:
+					self.log_me('debug', "adding "+self._attributes['videoId']+" to history failed")
 				self._allow_next = False
 				await self.async_get_track()
 			# set this player in to pause state when the remote player does, or ignore when assumed it is a temporary state (as some players do while seeking/skipping track)
