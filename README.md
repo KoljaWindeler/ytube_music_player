@@ -59,7 +59,13 @@ Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/
 At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (lower right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
 At this point you should hear some music from the remote_player. 
 
-Ok, the media_browser is nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
+[@pathofleastresisor](https://github.com/pathofleastresistor) build a great custom card for the ytube_music_player that you can find [here](https://github.com/pathofleastresistor/polr-ytube-media-card).
+I really recommend to use this card to ease the navigation within YouTube.
+
+<img src="polr-ytube-media-card_1.png" alt="drawing" width="400"/> <img src="polr-ytube-media-card_2.png" alt="drawing" width="400"/>
+
+
+Ok, the media_browser and polr-ytube-media-card are nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
 Well you don't have to use the media_browser. You can start a playback directly. All you need to know is the 'type' of the media (playlist / album / track / ..) and the 'id'.
 
 The easiest way to get those information is to start the playback once with the media_browser and then (while it is still playing) checkout the media_player state.  Go to 'development tools' -> 'states' and find `media_player.ytube_music_player`. It will display some attributes. Note `_media_id` (e.g. 'PL1ua59sKbGkcgVVsiMuPxlq5vaIJn4Ise') and `_media_type` (e.g. 'playlist')
