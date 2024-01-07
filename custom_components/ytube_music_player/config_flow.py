@@ -11,7 +11,8 @@ import os.path
 from homeassistant.helpers.storage import STORAGE_DIR
 from ytmusicapi import YTMusic
 import requests
-from ytmusicapi.auth.oauth import YTMusicOAuth
+from ytmusicapi.auth.oauth import OAuthCredentials, RefreshingToken
+
 
 import traceback
 import asyncio
@@ -41,7 +42,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		user_input[CONF_NAME] = DOMAIN
 
 		session = requests.Session()
-		self.oauth = YTMusicOAuth(session)
+		self.oauth = OAuthCredentials("","",session,"")
 		self.code = await self.hass.async_add_executor_job(self.oauth.get_code) 
 		user_input[CONF_CODE] = self.code
 		return self.async_show_form(step_id="oauth", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
@@ -51,7 +52,9 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 	async def async_step_oauth(self, user_input=None):   # pylint: disable=unused-argument
 		self._errors = {}
 		try:
-			self.token = await self.hass.async_add_executor_job(lambda: self.oauth.get_token_from_code(self.code["device_code"])) 
+			self.token = await self.hass.async_add_executor_job(lambda: self.oauth.token_from_code(self.code["device_code"])) 
+			self.refresh_token = RefreshingToken(credentials=self.oauth, **self.token)
+			self.refresh_token.update(self.refresh_token.as_dict())
 		except:
 			self._errors["base"] = ERROR_GENERIC
 			user_input[CONF_CODE] = self.code
@@ -66,7 +69,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		self._errors = {}
 		if user_input is not None:
 			self.data = user_input
-			await self.hass.async_add_executor_job(lambda: self.oauth.dump_token(self.token,self.data[CONF_HEADER_PATH])) 
+			await self.hass.async_add_executor_job(lambda: self.refresh_token.store_token(self.data[CONF_HEADER_PATH]))
 			if(self.data[CONF_ADVANCE_CONFIG]):
 				return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,3)), errors=self._errors)
 			else:

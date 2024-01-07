@@ -243,7 +243,7 @@ async def async_try_login(hass, path, brand_id):
 			_LOGGER.debug("- using brand ID: "+brand_id)
 			api = await hass.async_add_executor_job(YTMusic,path,brand_id)
 		else:
-			_LOGGER.debug("- login without brand ID")
+			_LOGGER.debug("- login without brand ID and credential at path "+path)
 			api = await hass.async_add_executor_job(YTMusic,path)
 	except KeyError as err:
 		_LOGGER.debug("- Key exception")
