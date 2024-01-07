@@ -146,8 +146,11 @@ Service | parameter | details
 `ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: interrupt_resume | Special animal 2/2: This is the 2nd part and will resume the playback
 `ytube_music_player.add_to_playlist` | `entity_id`: media_player.ytube_media_player,  `song_id`: define the ID of the song you want to add. Skip this parameter if you want to add the song that is currently playing,  `playlist_id`: define the ID of the playlist, skip this if you've started a channel based on your own playlist and want to add the song to that playlist | Adds a song to a playlist
 `ytube_music_player.remove_from_playlist` | `entity_id`: media_player.ytube_media_player,  `song_id`: define the ID of the song you want to remove. Skip this parameter if you want to remove the song that is currently playing,  `playlist_id`: define the ID of the playlist, skip this if you want to remove the song from the current playlist (requires that you've started playing via playlist) | Removes a song from a playlist
-
-
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: off_is_idle | Some media_player integrations, like MPD or OwnTone server, switch to off state at the end of a song instead of switching to idle state. Calling this method will make YTube music player detect an off state also as "idle" state. Consequence ofcourse is that manual turning off of the remote player will also trigger next song.
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: paused_is_idle | Some media_player integrations, like Sonos, will switch to paused at the end of a song instead of switching to idle state. Calling this method will make YTube music player detect a paused state also as "idle" state. Consequence ofcourse is that manual pausing of the remote player will also trigger next song.
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: idle_is_idle | If the idle detection method was changed by calling the `off_is_idle` or `paused_id_idle` method, this service call will reset the idle detection back to the default behavior where the next song is only started when the remote media_player switches to the actual idle state.
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: ignore_paused_on_media_change | Some media_player integrations, like OwnTone server, temporarily switch to paused when next/prev track is manually selected or when a new position in the current track is selected (seek). By default YTube music player will always try to sync its state with the remote player, hence in this case pause playback on next/prev track or seek actions. Calling this method will make YTube music player ignore next playing -> paused state change of the remote player whenever a manual next/prev track or seek action is performed.
+`ytube_music_player.call_method` | `entity_id`: media_player.ytube_media_player, `command`: do_not_ignore_paused_on_media_change | This call will reset a previous `ignore_paused_on_media_change` call.
 
 ## Dropdowns, Buttons and Marksdowns
 The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
@@ -225,12 +228,15 @@ sequence:
     entity_id: media_player.ytube_music_player
 ```
 
-## Sonos support / Proxy
+## Proxy
 
-Update 01/2022: Playback on Sonos Speakers is not longer possible. YouTube Music reduced the download speed to something close to real-time. The solution below relied on a fast download and thus won't work any more (will take ~3min to buffer the song before it can be played on the Sonos speaker). 
+Some media_players have issues playing the forwarded streams from YTube music player. E.g. Playback on Sonos speakers returns a "mime-type unknown" error. Also many DLNA devices are quite picky about the stream and may fail to play it for several reasons (e.g. URL too long, invalid format). A workaround is to use a proxy that will in turn stream a compatible file to the problem device.
 
-Playback on Sonos speakers has several issues. Just forwarding the stream to the media_player returns a "mime-type unknown" error. 
-I've done some testing on a Sonos Speaker of a friend and found that it is possible to download the current track and serve it from the webserver that homeassistant offers.
+### Method 1: Built-in proxy
+YTube music player provides a simple built-in proxy functionality where it will download the current track and place it in a local folder (e.g. `/config/www`) and forward a predefined url pointing to that downloaded track to the target media_player. 
+
+**Update 01/2022**: Playback using the proxy is currently flawed. YouTube Music reduced the download speed to something close to real-time. The solution below relied on a fast download and thus won't work any more (will take ~3min to buffer the song before it can be played). 
+
 This feature can be activated by providing two settings:
 1) `proxy_path` | This is the local folder, that the component is using to STORE the file. 
 The easiest way it to provide your www folder. Be aware: If you're using a docker image (or HassOS) that the component looks from INSIDE the image.
@@ -243,6 +249,84 @@ This will spin up server on port 8080 that serves `/config/www` so your `proxy_u
 
 You can use this also with other speakers, but it will in general add some lack as the component has to download the track before it will start the playback. So if you don't need it: don't use it. If you have further question or if this is working for you please provide some feedback at https://github.com/KoljaWindeler/ytube_music_player/issues/38 as I can't test this on my own easily. Thanks!
 
+### Method 2: OwnTone server as proxy
+[OwnTone server](https://owntone.github.io/owntone-server/) through the [OwnTone HA integration](https://www.home-assistant.io/integrations/forked_daapd) is able to play the stream provided by YTube music player and can output the stream to either OwnTone server configured targets (by default it should detect DLNA and AirPlay devices on the network) or serve the stream as a file `http://SERVER_ADDRESS:3689/stream.mp3` in real-time.
+
+ * Set up OwnTone server
+
+   You can set up an independent OwnTone server using the instructions [here](https://owntone.github.io/owntone-server/installation/) or you can use the [OwnTone server HA addon](https://github.com/a-marcel/hassio-addon-owntone) by @a-marcel. **Note: Currently only the beta version from this repo seems to work with recent versions of HA.**
+
+ * Install the HA [OwnTone integration](https://www.home-assistant.io/integrations/forked_daapd)
+
+   After installation, it should automatically detect your OwnTone server. See the OwnTone integration page for more information.
+   
+ * After a restart of HA you should now be able to select the OwnTone server as target speaker
+
+   However the OwnTone server/integration has a few odities of its own: it will turn to state 'off' instead of 'idle' at the end of a track and it will shortly switch to state 'paused' when next/previous track is selected or when performing a seek in the current track. YTube music player can handle this, but requires some extra service calls to know about this behavior:
+
+   * Send commands `off_is_idle` and `ignore_paused_on_media_change` to the YTube music player entity.
+
+As mentioned above, OwnTone should auto-detect DLNA and Airplay devices automatically, if they are in the same subnet as the OwnTone server. If that is the case, you can set the current output of OwnTone server using the OwnTone integration.  
+
+For other devices like e.g. Sonos speakers, or if you have problems with the auto-detection of OwnTone, you can use HA media_player integrations (Sonos, DLNA, ...) to play the URL `http://SERVER_ADDRESS:3689/stream.mp3` which should contain the YTube music stream when YTube music player is streaming to the OwnTone media_player.
+
+Example automation to set up YTube music player when OwnTone server is set as target speaker:
+```yaml
+alias: Set YT Music player settings according to selected speakers
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - input_select.ytube_music_player_speakers
+    from: null
+    to: null
+action:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: input_select.ytube_music_player_speakers
+            state: OwnTone server                
+        sequence:
+          - alias: Detect OFF state also as idle
+            service: ytube_music_player.call_method
+            data:
+              entity_id: media_player.ytube_music_player
+              command: off_is_idle
+          - alias: Ignore PLAYING to PAUSED transition after media change
+            service: ytube_music_player.call_method
+            data:
+              entity_id: media_player.ytube_music_player
+              command: ignore_paused_on_media_change
+    default:
+      - alias: Only detect IDLE state as idle
+        service: ytube_music_player.call_method
+        data:
+          entity_id: media_player.ytube_music_player
+          command: idle_is_idle
+      - alias: Do NOT ignore PLAYING to PAUSED transitions
+        service: ytube_music_player.call_method
+        data:
+          entity_id: media_player.ytube_music_player
+          command: do_not_ignore_paused_on_media_change
+```
+
+Example automation to play the OwnTone server stream on Sonos speakers:
+```yaml
+alias: Play OwnTone stream on Sonos
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - media_player.owntone_server
+    to: playing
+action:
+  - service: media_player.play_media
+    data:
+      media_content_type: music
+      media_content_id: http://[server IP]:3689/stream.mp3
+    target:
+      entity_id: media_player.sonos
+```
 
 ## Auto Advance
 When playing a playlist / album / radio the natural expectation is to play the next track once the last has finished. Ytube_music_player can't offload this task to the remote_player (the one that actually plays the music) as most players don't support playlists.
@@ -251,14 +335,18 @@ Thus Ytube_music_player has to track the status the remote_player and detect the
 
 Most player I've tested (Chromecast / Google Home / Browser Mod) will transistion from `playing` to `idle`.
 As a result the code of Ytube_music_player will play the next track whenever this state transition happens.
+
 Sadly not all player follow this logic. E.g. MPD based media_player will transition from `playing` to `off` at the end of a tack, some sonos speaker will switch to `paused`. I've added special commands to Ytube_music_player to overcome those issues. This will change the way ytube_music_player will react on state changes. E.g. if the `off_is_idle` command was sent, ytube_music_player will advance to the next track whenever the remote_player will transition from `playing` to `off`. This will enable auto-next-track. 
 
-*The drawback is obviously that you can't switch off the playback on the remote_player anymore (meaning the `off` button of `media_player.mpd`) because ytube_music_player has to understand this as end of track. You can of cause still shutdown to playback by turning of ytube_music_player.*
+### Off is Idle / Paused is idle / Idle is idle
 
-### MPD fix
+Some media_players like MPD or OwnTone server will transition to `off` instead of `idle` at the end of each track as mentioned above. Other media_players like Sonos may transition to `paused` instead of `idle`. You can set Ytube_music_player to handle this by performing a service call with command `off_is_idle` or `paused_is_idle`.
 
-The mpd media_player will transition to `off` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
-Please add this automation from **@lightzhuk** to your configuration:
+*The drawback is obviously that you can't switch off the playback on the remote_player anymore (meaning the `off` button of `media_player.mpd`) because ytube_music_player will understand this as the end of the track. You can of course still shutdown the playback by turning off ytube_music_player.*
+
+To reset this behavior and only start a next song when an actual transition to `idle` is detected, send the command `idle_is_idle`.
+
+If you will only use e.g. MPD as target player, you can do this during startup of homeassistant using this automation from **@lightzhuk** in your configuration:
 ```yaml
 - alias: mpd_fix
   initial_state: true
@@ -273,22 +361,46 @@ Please add this automation from **@lightzhuk** to your configuration:
         command: off_is_idle
 ```
 
-### Sonos fix
-
-The sonos media_player will transition to `pause` instead of `idle` at the end of each track as mentioned above. Ytube_music_player is able to handle this.
-Please add this automation to your configuration:
+Or you can add an automation triggered on the `input_select.ytube_music_player_speakers` entity to set this behavior depending on the selected target:
 ```yaml
-- alias: sonos_fix
-  initial_state: true
-  trigger:
-    - platform: homeassistant
-      event: start
-  action:
-    - delay: 00:00:12
-    - service: ytube_music_player.call_method
-      entity_id: media_player.ytube_music_player
-      data:
-        command: paused_is_idle
+alias: Set YT Music player auto advance detection according to selected speakers
+mode: single
+trigger:
+  - platform: state
+    entity_id:
+      - input_select.ytube_music_player_speakers
+    from: null
+    to: null
+action:
+  - choose:
+      - conditions:
+          - condition: or
+            conditions:
+              - condition: state
+                entity_id: input_select.ytube_music_player_speakers
+                state: Mpd
+              - condition: state
+                entity_id: input_select.ytube_music_player_speakers
+                state: OwnTone server                
+        sequence:
+          - service: ytube_music_player.call_method
+            data:
+              entity_id: media_player.ytube_music_player
+              command: off_is_idle
+      - conditions:
+          - condition: state
+            entity_id: input_select.ytube_music_player_speakers
+            state: Sonos
+        sequence:
+          - service: ytube_music_player.call_method
+            data:
+              entity_id: media_player.ytube_music_player
+              command: paused_is_idle
+    default:
+      - service: ytube_music_player.call_method
+        data:
+          entity_id: media_player.ytube_music_player
+          command: idle_is_idle
 ```
 
 ## Debug Information
