@@ -62,7 +62,7 @@ At this point you should hear some music from the remote_player.
 [@pathofleastresisor](https://github.com/pathofleastresistor) build a great custom card for the ytube_music_player that you can find [here](https://github.com/pathofleastresistor/polr-ytube-media-card).
 I really recommend to use this card to ease the navigation within YouTube.
 
-![mini-media-player](polr-ytube-media-card.png)
+![polr-ytube-media-card](./polr-ytube-media-card.png)
 
 
 Ok, the media_browser and polr-ytube-media-card are nice, but what if you want a little more? Like automations, or call it via Node-Red or Appdaemon .. I mean, we're in HomeAssistant, right? 
