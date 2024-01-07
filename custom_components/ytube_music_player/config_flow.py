@@ -60,7 +60,7 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 			user_input[CONF_CODE] = self.code
 			return self.async_show_form(step_id="oauth", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
 		# if we get here then Oauth worked, right?
-		user_input[CONF_HEADER_PATH] = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME)
+		user_input[CONF_HEADER_PATH] = os.path.join(self.hass.config.path(STORAGE_DIR),DEFAULT_HEADER_FILENAME+user_input[CONF_NAME].replace(' ','_')+'.json')
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
 
 
@@ -69,6 +69,8 @@ class yTubeMusicFlowHandler(config_entries.ConfigFlow):
 		self._errors = {}
 		if user_input is not None:
 			self.data = user_input
+			_LOGGER.error("here2")
+			_LOGGER.error(user_input)
 			await self.hass.async_add_executor_job(lambda: self.refresh_token.store_token(self.data[CONF_HEADER_PATH]))
 			if(self.data[CONF_ADVANCE_CONFIG]):
 				return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,3)), errors=self._errors)
@@ -142,12 +144,10 @@ async def async_create_form(hass, user_input, page=1):
 	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
 	
-
 	if(page == 1):
-		data_schema[vol.Required(CONF_CODE+"lala", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
-		
-	elif(page == 2):
+		data_schema[vol.Required(CONF_CODE+"TT", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
 		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
+	elif(page == 2):
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
 					"multiple": "true",
