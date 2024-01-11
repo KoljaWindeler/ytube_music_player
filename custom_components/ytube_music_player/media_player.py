@@ -1003,7 +1003,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# seek, if possible
 			new_player = self.hass.states.get(self._remote_player)
 			if (all(a in old_player.attributes for a in ('media_position', 'media_position_updated_at', 'media_duration')) and 'supported_features' in new_player.attributes):
-				if(new_player.attributes['supported_features'] | SUPPORT_SEEK):
+				if(new_player.attributes['supported_features'] | MediaPlayerEntityFeature.SEEK):
 					now = datetime.datetime.now(datetime.timezone.utc)
 					delay = now - old_player.attributes['media_position_updated_at']
 					pos = delay.total_seconds() + old_player.attributes['media_position']
@@ -1813,7 +1813,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			await self.async_get_track()
 			if('pos' in self._interrupt_data):
 				player = self.hass.states.get(self._remote_player)
-				if(player.attributes['supported_features'] | SUPPORT_SEEK):
+				if(player.attributes['supported_features'] | MediaPlayerEntityFeature.SEEK):
 					data = {'seek_position': self._interrupt_data['pos'], ATTR_ENTITY_ID: self._remote_player}
 					await self.hass.services.async_call(DOMAIN_MP, media_player.SERVICE_MEDIA_SEEK, data)
 				self._interrupt_data['pos'] = None
