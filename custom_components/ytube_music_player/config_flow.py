@@ -118,15 +118,55 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 	async def async_step_init(self, user_input=None):   # pylint: disable=unused-argument
 		"""Call this as first page."""
 		self._errors = {}
+		# sync data and user input
 		user_input = self.data
+		self.redo_token = False
+				
+		# Test if we can start YTMusic with this file
+		try:
+			await self.hass.async_add_executor_job(YTMusic,self.data[CONF_HEADER_PATH])
+		except:
+			_LOGGER.debug("Login error")
+			# Not working, lets prepare new session
+			session = requests.Session()
+			self.oauth = OAuthCredentials("","",session,"")
+			self.code = await self.hass.async_add_executor_job(self.oauth.get_code) 
+			user_input[CONF_CODE] = self.code
+			self.redo_token = True
+			# no good, start with page 1 and -> oauth
+			return self.async_show_form(step_id="oauth", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
+		# all is well, lets continue with page 2 and -> finish
+		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
+
+	# addition oauth needed
+	async def async_step_oauth(self, user_input=None):   # pylint: disable=unused-argument
+		self._errors = {}
+		# sync data and user input again
+		self.data.update(user_input)
+		user_input = self.data
+		
+		# test token
+		try:
+			self.token = await self.hass.async_add_executor_job(lambda: self.oauth.token_from_code(self.code["device_code"])) 
+			self.refresh_token = RefreshingToken(credentials=self.oauth, **self.token)
+			self.refresh_token.update(self.refresh_token.as_dict())
+		except:
+			self._errors["base"] = ERROR_GENERIC
+			user_input[CONF_CODE] = self.code
+			return self.async_show_form(step_id="oauth", data_schema=vol.Schema(await async_create_form(self.hass,user_input,1)), errors=self._errors)
+		# if we get here then Oauth worked, right?
 		return self.async_show_form(step_id="finish", data_schema=vol.Schema(await async_create_form(self.hass,user_input,2)), errors=self._errors)
 
 	# will be called by sending the form, until configuration is done
 	async def async_step_finish(self,user_input=None):
 		self._errors = {}
-		# if file name changed, we need to move the cookie
-		if(self.data[CONF_HEADER_PATH]!=user_input[CONF_HEADER_PATH]):
-			os.rename(self.data[CONF_HEADER_PATH],user_input[CONF_HEADER_PATH])
+		if(self.redo_token):
+			await self.hass.async_add_executor_job(lambda: self.refresh_token.store_token(self.data[CONF_HEADER_PATH]))
+		else:		
+			# if file name changed, we need to move the cookie
+			if(self.data[CONF_HEADER_PATH]!=user_input[CONF_HEADER_PATH]):
+				os.rename(self.data[CONF_HEADER_PATH],user_input[CONF_HEADER_PATH])
+		# update AFTER the if above!!
 		self.data.update(user_input)
 		if(self.data[CONF_ADVANCE_CONFIG]):
 			return self.async_show_form(step_id="adv_finish", data_schema=vol.Schema(await async_create_form(self.hass,self.data,3)), errors=self._errors)
