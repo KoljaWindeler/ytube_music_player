@@ -44,10 +44,16 @@
     },
     "options": {
         "step": {
+            "oauth": {
+                "description": "The token is somehow not longer valid. Please open the URL below in a seperate browser window again. Once you completed the setup please return to this page and go on",
+                "data": {
+                    "codeTT": "Google Device Code",
+                    "name": "Name for the entity (without 'media_player' prefix)"
+                }
+            },
             "finish": {
                 "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "name": "Name for the entity (without 'media_player' prefix)",
                     "speakers": "Select the default output device",
                     "header_path": "File path for the header file",
                     "advance_config": "Show advance configuration"
