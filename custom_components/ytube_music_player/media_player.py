@@ -1994,11 +1994,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							self.log_me('debug', "rate thumb up")
 							arg = 'LIKE'
 				await self.hass.async_add_executor_job(self._api.rate_song, song_id, arg)
-				self._attributes['likeStatus'] = arg
-				if(self._like_in_name):
-					self._attr_name = self._org_name + " - " + arg
-				self.async_schedule_update_ha_state()
-				self._tracks[self._next_track_no]['likeStatus'] = arg
+				# only change arguments if the track that we're rating is the current one
+				if(song_id == self._attributes['videoId']):
+					self._attributes['likeStatus'] = arg
+					if(self._like_in_name):
+						self._attr_name = self._org_name + " - " + arg
+					self.async_schedule_update_ha_state()
+					self._tracks[self._next_track_no]['likeStatus'] = arg
 			except:
 				self.exc()
 		self.log_me('debug', "[E] async_rate_track")
