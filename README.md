@@ -421,8 +421,10 @@ There are two ways to enable the debug output (as of 20210303):
 
 ```yaml
 service: ytube_music_player.call_method
-entity_id: media_player.ytube_music_player_cf <-- replace this with your player 
-command: debug_as_error
+data:
+  entity_id: media_player.ytube_music_player <-- replace this with your player 
+  command: debug_as_error
+  parameters: [0]
 ```
 
 This will instantly post all messages as errors until you reboot homeassistant:
