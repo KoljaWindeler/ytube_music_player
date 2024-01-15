@@ -108,12 +108,21 @@ async def build_item_response(ytmusicplayer, payload):
         media = await hass.async_add_executor_job(media_library.get_library_albums, BROWSER_LIMIT)
         title = LIB_ALBUM_TITLE
 
-
         for item in media:
+            item_title = item['title']
+            if("artists" in item):
+                artist = ""
+                if(isinstance(item["artists"], str)):
+                    artist = item["artists"]
+                elif(isinstance(item["artists"], list)):
+                    artist = item["artists"][0]["name"]
+                if(artist):
+                    item_title = artist + " - " + item['title']
+
             children.append(BrowseMedia(
-                title = f"{item['title']}",                 # noqa: E251
-                media_class = MediaClass.ALBUM,            # noqa: E251
-                media_content_type = MediaType.ALBUM,      # noqa: E251
+                title = item_title,                         # noqa: E251
+                media_class = MediaClass.ALBUM,             # noqa: E251
+                media_content_type = MediaType.ALBUM,       # noqa: E251
                 media_content_id = f"{item['browseId']}",   # noqa: E251
                 can_play = True,                            # noqa: E251
                 can_expand = True,                          # noqa: E251
