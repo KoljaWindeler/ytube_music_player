@@ -103,6 +103,8 @@ SERVICE_CALL_IDLE_IS_IDLE = "idle_is_idle"
 SERIVCE_CALL_DEBUG_AS_ERROR = "debug_as_error"
 SERVICE_CALL_LIKE_IN_NAME = "like_in_name"
 SERVICE_CALL_GOTO_TRACK = "goto_track"
+SERVICE_CALL_MOVE_TRACK = "move_track_within_playlist"
+SERVICE_CALL_APPEND_TRACK = "append_track_to_playlist"
 
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)

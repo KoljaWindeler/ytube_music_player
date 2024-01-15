@@ -1848,6 +1848,29 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._shuffle = False  # set false, otherwise async_get_track will override next_track
 			await self.async_get_track()
 			self._shuffle = prev_shuffle  # restore
+		elif(command == SERVICE_CALL_APPEND_TRACK):
+			self.log_me('debug', "Adding track " + str(parameters[0]) + " at position " + str(parameters[1]))
+			if(len(parameters)==2 and parameters[1].isnumeric()):
+				add_track = await self.hass.async_add_executor_job(lambda: self._api.get_song(parameters[0], self._signatureTimestamp))  # no limit needed
+			else:
+				self.log_me('debug', str(parameters[1]) + " is not numeric, or not exactly 2 parameters given")
+			# how to check
+			# I don't know why, but the format of get_song is very differnt, so we fix at least author and thumbnail to make it lookalike
+			add_track['videoDetails']['artists'] = [{'name': add_track['videoDetails']['author'], 'id': ''}]
+			add_track['videoDetails']['thumbnails'] = add_track['videoDetails']['thumbnail']['thumbnails']
+			self._tracks.insert(int(parameters[1]),add_track['videoDetails'])
+
+			await self._tracks_to_attribute()
+		elif(command == SERVICE_CALL_MOVE_TRACK):
+			self.log_me('debug', "Moving track " + str(parameters[0]) + " to position " + str(parameters[1]))
+			if(parameters[0].isnumeric() and (parameters[1].isnumeric() or parameters[1]=="-1")):
+				add_track = self._tracks[int(parameters[0])]
+				self._tracks.remove(add_track)
+				if(parameters[1].isnumeric()):
+					self._tracks.insert(int(parameters[1]),add_track)
+				await self._tracks_to_attribute()
+			else:
+				self.log_me('debug', str(parameters[0]) + " or " + str(parameters[1]) + " is not numeric, not moving tracks")
 		else:
 			self.log_me('error', "Command " + str(command) + " not implimented")
 		self.log_me('debug', "[E] async_call_method")
