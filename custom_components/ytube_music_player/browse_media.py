@@ -89,6 +89,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == HOME_CAT:
 		sort_list = False
+		title = HOME_TITLE
 		media = await hass.async_add_executor_job(media_library.get_home, 20)
 		ytmusicplayer.lastHomeMedia = media # store for next round, to keep the same respnse, two seperate calls lead to different data
 
@@ -112,6 +113,7 @@ async def build_item_response(ytmusicplayer, payload):
 		sort_list = False
 		# try to run with the same session as HOME_CAT had in the first call
 		media = lastHomeMedia
+		title = search_id
 		# backup if this fails (e.g. direct URL call that jumped the HOME_CAT)
 		if(media == ""):
 			media = await hass.async_add_executor_job(media_library.get_home, 20)
@@ -120,15 +122,15 @@ async def build_item_response(ytmusicplayer, payload):
 				for content in item['contents']:
 					if(content != None):
 						play_id = ""
-						title = ""
+						item_title = ""
 						#_LOGGER.debug(content)
 						#_LOGGER.debug("")
 						if('videoId' in content):
-							title = content["title"]
+							item_title = content["title"]
 							if("artists" in content):
 								for artist in content["artists"]:
 									if(artist["id"] != None):
-										title += " - "+artist["name"]
+										item_title += " - "+artist["name"]
 										break
 							play_id = f"{content['videoId']}"
 							play_type = MediaClass.TRACK
@@ -139,9 +141,9 @@ async def build_item_response(ytmusicplayer, payload):
 							# ok, this can be an Artist or and Album
 							# album start with MPRE
 							if(content['browseId'].startswith('MPREb_')):
-								title = content["title"]
+								item_title = content["title"]
 								if("year" in content): # WTF YT, why is the artist stored in 'year'?
-									title += " - "+content["year"]
+									item_title += " - "+content["year"]
 								play_id = f"{content['browseId']}"
 								play_type = MediaClass.ALBUM
 								playable = True
@@ -152,7 +154,7 @@ async def build_item_response(ytmusicplayer, payload):
 						elif('playlistId' in content):
 							# RDAMPL - playlist / album radio
 							# RDAMVL - track radio
-							title = content["title"]
+							item_title = content["title"]
 							play_id = f"{content['playlistId']}"
 							play_type = MediaClass.PLAYLIST
 							playable = True
@@ -165,7 +167,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 						if(play_id!=""):
 							children.append(BrowseMedia(
-								title = title,				# noqa: E251
+								title = item_title,					# noqa: E251
 								media_class = MediaClass.PLAYLIST,	# noqa: E251
 								media_content_type = play_type,		# noqa: E251
 								media_content_id = play_id,		# noqa: E251
