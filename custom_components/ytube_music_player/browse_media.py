@@ -57,8 +57,8 @@ async def build_item_response(ytmusicplayer, payload):
 	media_library = ytmusicplayer._api
 	hass = ytmusicplayer.hass
 	children = []
-	thumbnail = None
-	title = None
+	header_thumbnail = None
+	header_title = None
 	media = None
 	sort_list = ytmusicplayer._sortBrowser
 	p1 = datetime.datetime.now()
@@ -74,7 +74,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	if search_type == LIB_PLAYLIST:  # playlist OVERVIEW -> lists playlists
 		media = await hass.async_add_executor_job(media_library.get_library_playlists, BROWSER_LIMIT)
-		title = LIB_PLAYLIST_TITLE  # single playlist
+		header_title = LIB_PLAYLIST_TITLE  # single playlist
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -89,7 +89,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == HOME_CAT:
 		sort_list = False
-		title = HOME_TITLE
+		header_title = HOME_TITLE
 		media = await hass.async_add_executor_job(media_library.get_home, 20)
 		ytmusicplayer.lastHomeMedia = media # store for next round, to keep the same respnse, two seperate calls lead to different data
 
@@ -113,7 +113,7 @@ async def build_item_response(ytmusicplayer, payload):
 		sort_list = False
 		# try to run with the same session as HOME_CAT had in the first call
 		media = lastHomeMedia
-		title = search_id
+		header_title = search_id
 		# backup if this fails (e.g. direct URL call that jumped the HOME_CAT)
 		if(media == ""):
 			media = await hass.async_add_executor_job(media_library.get_home, 20)
@@ -177,11 +177,10 @@ async def build_item_response(ytmusicplayer, payload):
 							))
 				break
 
-
-
 	elif search_type == MediaType.PLAYLIST:  # single playlist -> lists tracks
 		media = await hass.async_add_executor_job(media_library.get_playlist, search_id, BROWSER_LIMIT)
-		title = media['title']
+		header_title = media['title']
+		header_thumbnail = find_thumbnail(media)
 
 		for item in media['tracks']:
 			item_title = f"{item['title']}"
@@ -206,7 +205,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == LIB_ALBUM:  # LIB! album OVERVIEW, not uploaded -> lists albums
 		media = await hass.async_add_executor_job(media_library.get_library_albums, BROWSER_LIMIT)
-		title = LIB_ALBUM_TITLE
+		header_title = LIB_ALBUM_TITLE
 
 		for item in media:
 			item_title = item['title']
@@ -232,7 +231,8 @@ async def build_item_response(ytmusicplayer, payload):
 	elif search_type == MediaType.ALBUM:  # single album (NOT uploaded) -> lists tracks
 		res = await hass.async_add_executor_job(media_library.get_album, search_id)
 		media = res['tracks']
-		title = res['title']
+		header_title = res['title']
+		header_thumbnail = find_thumbnail(res)
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -242,12 +242,12 @@ async def build_item_response(ytmusicplayer, payload):
 				media_content_id = f"{item['videoId']}",  # noqa: E251
 				can_play = True,						  # noqa: E251
 				can_expand = False,					   # noqa: E251
-				thumbnail = find_thumbnail(res)		   # noqa: E251
+				thumbnail = find_thumbnail(res)		  # noqa: E251
 			))
 
 	elif search_type == LIB_TRACKS:  # liked songs (direct list, NOT uploaded) -> lists tracks
 		media = await hass.async_add_executor_job(lambda: media_library.get_library_songs(limit=BROWSER_LIMIT))
-		title = LIB_TRACKS_TITLE
+		header_title = LIB_TRACKS_TITLE
 
 		for item in media:
 			item_title = f"{item['title']}"
@@ -273,7 +273,7 @@ async def build_item_response(ytmusicplayer, payload):
 	elif search_type == HISTORY:  # history songs (direct list) -> lists tracks
 		media = await hass.async_add_executor_job(media_library.get_history)
 		search_id = HISTORY
-		title = HISTORY_TITLE
+		header_title = HISTORY_TITLE
 
 		for item in media:
 			item_title = f"{item['title']}"
@@ -299,7 +299,7 @@ async def build_item_response(ytmusicplayer, payload):
 	elif search_type == USER_TRACKS:  # list all uploaded songs -> lists tracks
 		media = await hass.async_add_executor_job(media_library.get_library_upload_songs, BROWSER_LIMIT)
 		search_id = USER_TRACKS
-		title = USER_TRACKS_TITLE
+		header_title = USER_TRACKS_TITLE
 
 		for item in media:
 			item_title = f"{item['title']}"
@@ -324,7 +324,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == USER_ALBUMS:  # uploaded album overview!! -> lists user albums
 		media = await hass.async_add_executor_job(media_library.get_library_upload_albums, BROWSER_LIMIT)
-		title = USER_ALBUMS_TITLE
+		header_title = USER_ALBUMS_TITLE
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -340,7 +340,7 @@ async def build_item_response(ytmusicplayer, payload):
 	elif search_type == USER_ALBUM:  # single uploaded album -> lists tracks
 		res = await hass.async_add_executor_job(media_library.get_library_upload_album, search_id)
 		media = res['tracks']
-		title = res['title']
+		header_title = res['title']
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -355,7 +355,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == USER_ARTISTS:  # with S
 		media = await hass.async_add_executor_job(media_library.get_library_upload_artists, BROWSER_LIMIT)
-		title = USER_ARTISTS_TITLE
+		header_title = USER_ARTISTS_TITLE
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -370,7 +370,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == USER_ARTISTS_2:  # list all artists now, but follow up will be the albums of that artist
 		media = await hass.async_add_executor_job(media_library.get_library_upload_artists, BROWSER_LIMIT)
-		title = USER_ARTISTS_2_TITLE
+		header_title = USER_ARTISTS_2_TITLE
 
 		for item in media:
 			children.append(BrowseMedia(
@@ -385,7 +385,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == USER_ARTIST:  # without S
 		media = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
-		title = USER_ARTIST_TITLE
+		header_title = USER_ARTIST_TITLE
 		if(isinstance(media, list)):
 			if('artist' in media[0]):
 				if(isinstance(media[0]['artist'], list)):
@@ -414,7 +414,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == USER_ARTIST_2:  # list each album of an uploaded artists only once .. next will be uploaded album view 'USER_ALBUM'
 		media_all = await hass.async_add_executor_job(media_library.get_library_upload_artist, search_id, BROWSER_LIMIT)
-		title = USER_ARTIST_2_TITLE
+		header_title = USER_ARTIST_2_TITLE
 		media = list()
 		for item in media_all:
 			if('album' in item):
@@ -445,7 +445,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 
 	elif search_type == SEARCH:
-		title = SEARCH_TITLE
+		header_title = SEARCH_TITLE
 		if ytmusicplayer._search is not None:
 			media_all = await hass.async_add_executor_job(lambda: media_library.search(query=ytmusicplayer._search.get('query', ""), filter=ytmusicplayer._search.get('filter', None), limit=int(ytmusicplayer._search.get('limit', 20))))
 
@@ -537,7 +537,7 @@ async def build_item_response(ytmusicplayer, payload):
 
 	elif search_type == MOOD_OVERVIEW:
 		media_all = await hass.async_add_executor_job(lambda: media_library.get_mood_categories())
-		title = MOOD_TITLE
+		header_title = MOOD_TITLE
 		for cap in media_all:
 			for e in media_all[cap]:
 				children.append(BrowseMedia(
@@ -549,9 +549,10 @@ async def build_item_response(ytmusicplayer, payload):
 					can_expand = True,					# noqa: E251
 					thumbnail = "",					   # noqa: E251
 				))
+
 	elif search_type == MOOD_PLAYLISTS:
 		media = await hass.async_add_executor_job(lambda: media_library.get_mood_playlists(search_id))
-		title = MOOD_TITLE
+		header_title = MOOD_TITLE
 		for item in media:
 			children.append(BrowseMedia(
 				title = f"{item['title']}",				  # noqa: E251
@@ -562,8 +563,9 @@ async def build_item_response(ytmusicplayer, payload):
 				can_expand = True,						   # noqa: E251
 				thumbnail = find_thumbnail(item)			 # noqa: E251
 			))
+
 	elif search_type == CONF_RECEIVERS:
-		title = PLAYER_TITLE
+		header_title = PLAYER_TITLE
 		for e, f in ytmusicplayer._friendly_speakersList.items():
 			children.append(BrowseMedia(
 				title = f,							# noqa: E251
@@ -575,7 +577,7 @@ async def build_item_response(ytmusicplayer, payload):
 				thumbnail = "",					   # noqa: E251
 			))
 	elif search_type == CUR_PLAYLIST:
-		title = CUR_PLAYLIST_TITLE
+		header_title = CUR_PLAYLIST_TITLE
 		sort_list = False
 		i = 1
 		for item in ytmusicplayer._tracks:
@@ -605,7 +607,7 @@ async def build_item_response(ytmusicplayer, payload):
 			res = await hass.async_add_executor_job(lambda: media_library.get_album(ytmusicplayer._track_album_id))
 			sort_list = False
 			media = res['tracks']
-			title = res['title']
+			header_title = res['title']
 
 			for item in media:
 				children.append(BrowseMedia(
@@ -625,16 +627,14 @@ async def build_item_response(ytmusicplayer, payload):
 	if sort_list:
 		children.sort(key=lambda x: x.title, reverse=False)
 	response = BrowseMedia(
-		media_class=CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(
-			search_type, MediaClass.DIRECTORY
-		),
-		media_content_id=search_id,
-		media_content_type=search_type,
-		title=title,
-		can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
-		can_expand=True,
-		children=children,
-		thumbnail=thumbnail,
+		media_class = CONTAINER_TYPES_SPECIFIC_MEDIA_CLASS.get(search_type, MediaClass.DIRECTORY),
+		media_content_id = search_id,
+		media_content_type = search_type,
+		title = header_title,
+		can_play = search_type in PLAYABLE_MEDIA_TYPES and search_id,
+		can_expand = True,
+		children = children,
+		thumbnail = header_thumbnail,
 	)
 
 	if search_type == "library_music":
