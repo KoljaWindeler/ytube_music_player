@@ -1174,7 +1174,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			info = self.extract_info(track)
 			track_attributes.append(info['track_artist'] + " - " + info['track_name'])
 		await self.async_update_extra_sensor('tracks', track_attributes)  # update extra sensor
-
+		
+		# fire event to let media card know to update
+		event_data = {
+    		"device_id": self._attr_unique_id,
+			"entity_id" : DOMAIN_MP+"."+self._attr_name,
+    		"type": "reload_playlist",
+		}
+		self.hass.bus.async_fire(DOMAIN+"_event", event_data)
 		self.log_me('debug', "[E] _tracks_to_attribute")
 
 	async def async_update_extra_sensor(self, attribute, value):
