@@ -215,7 +215,7 @@ async def build_item_response(ytmusicplayer, payload):
 				elif(isinstance(item["artists"], list)):
 					artist = item["artists"][0]["name"]
 				if(artist):
-					item_title = artist + " - " + item['title']
+					item_title = item['title'] + " - " + artist
 
 			children.append(BrowseMedia(
 				title = item_title,						 # noqa: E251
