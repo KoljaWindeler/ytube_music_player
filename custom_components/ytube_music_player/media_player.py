@@ -19,14 +19,10 @@ import homeassistant.components.input_select as input_select
 import homeassistant.components.input_boolean as input_boolean
 import homeassistant.components.media_player as media_player
 
-from pytube import YouTube
-from pytube import request
-from pytube import extract
-################### Temp FIX remove me! ###############################
-################### Temp FIX remove me! ###############################
-#from pytube.cipher import Cipher
-################### Temp FIX remove me! ###############################
-################### Temp FIX remove me! ###############################
+from pytube import YouTube # to generate cipher
+from pytube import request # to generate cipher
+from pytube import extract # to generate cipher
+
 import ytmusicapi
 # use this to work with local version
 # and make sure that the local package is also only loading local files
@@ -709,13 +705,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_get_cipher(self, videoId):
 		self.log_debug_later("[S] async_get_cipher")
 		embed_url = "https://www.youtube.com/embed/" + videoId
+		# this is why we need pytube as include 
 		embed_html = await self.hass.async_add_executor_job(request.get, embed_url)
 		js_url = extract.js_url(embed_html)
 		self._js = await self.hass.async_add_executor_job(request.get, js_url)
-# Temp FIX remove me!
 		self._cipher = pytube.cipher.Cipher(js=self._js)
-#		self._cipher = Cipher(js=self._js)
-		# 2do some sort of check if tis worked
+		# this is why we need pytube as include 
 		self.log_me('debug', "[E] async_get_cipher")
 
 	async def async_sync_player(self, entity_id=None, old_state=None, new_state=None):
@@ -1386,7 +1381,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[E] async_get_track")
 
 
-	async def async_get_url(self, videoId=None, retry=True):
+	async def async_get_url(self, videoId=None, retry=60):
 		self.log_me('debug', "[S] async_get_url")
 		if(videoId is None):
 			self.log_me('debug', "videoId was None")
@@ -1420,27 +1415,42 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				streamId = 0
 				found_quality = -1
 				quality_mapper = {'AUDIO_QUALITY_LOW': 1, 'AUDIO_QUALITY_MEDIUM': 2, 'AUDIO_QUALITY_HIGH': 3}
-				# try to find best audio only stream
+				# try to find valid audio streams
+				valid_streams = []
 				for i, stream in enumerate(streamingData):
-					# self.log_me('debug', 'found stream')
-					# self.log_me('debug',stream)
+					#self.log_me('debug', 'found stream')
+					#self.log_me('error',stream)
 					if('audioQuality' in stream):
-						# self.log_me('debug', '- found stream with audioQuality ' + stream['audioQuality'] + ' (' + str(i) + ')')
+						# self.log_me('error', '- found stream with audioQuality ' + stream['audioQuality'] + ' (' + str(i) + ')')
 						# store only stream with better quality, accept 0 once
-						if(quality_mapper.get(stream['audioQuality'], 0) > found_quality):
-							found_quality = quality_mapper.get(stream['audioQuality'], 0)
-							streamId = i
+						stream['audioQuality'] = quality_mapper.get(stream['audioQuality'], 0)
+						valid_streams.append(stream)
 					elif(found_quality == -1):  # only search for mimetype if we didn't find a quality stream before
 						if('mimeType' in stream):
 							if(stream['mimeType'].startswith('audio/mp4')):
 								self.log_me('debug', '- found audio/mp4 audiostream (' + str(i) + ')')
-								streamId = i
+								stream['audioQuality'] = quality_mapper.get(stream['audioQuality'], 0)
+								valid_streams.append(stream)
 							elif(stream['mimeType'].startswith('audio')):
 								self.log_me('debug', '- found audio audiostream (' + str(i) + ')')
-								streamId = i
+								stream['audioQuality'] = quality_mapper.get(stream['audioQuality'], 0)
+								valid_streams.append(stream)
+				
+				# try to find best audio only stream, but accept lower quality if we have to
+				valid_streams.sort(key=lambda x: x['bitrate'], reverse=True)
+				if(retry<20):
+					streamId = min(3,len(valid_streams))
+				elif(retry<30):
+					streamId = min(2,len(valid_streams))
+				elif(retry<40):
+					streamId = min(1,len(valid_streams))
+				else:
+					streamId = 0
+				
+				self.log_me('debug', 'Using stream '+str(streamId)+"/"+str(len(valid_streams)))
 				# self.log_me('debug', '- using stream ' + str(streamId))
-				if(streamingData[streamId].get('url') is None):
-					sigCipher_ch = streamingData[streamId]['signatureCipher']
+				if(valid_streams[streamId].get('url') is None):
+					sigCipher_ch = valid_streams[streamId]['signatureCipher']
 					sigCipher_ex = sigCipher_ch.split('&')
 					res = dict({'s': '', 'url': ''})
 					for sig in sigCipher_ex:
@@ -1451,24 +1461,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					# in case it's down the player might not load and thus we won't have a javascript loaded
 					# so if that happens: we try with this url, might work better (at least the file should be online)
 					# the only trouble i could see is that this video is private and thus also won't load the player ..
-					if(self._js == ""):
+					if(self._js == "" or retry<60):
+						self.log_me('debug', "- reloading cipher from current video")
 						await self.async_get_cipher(videoId)
 					signature = self._cipher.get_signature(ciphered_signature=res['s'])
 					_url = res['url'] + "&sig=" + signature
 					self.log_me('debug', "- self decoded URL via cipher")
-
 					r = await self.hass.async_add_executor_job(requests.head, _url)
 					if(r.status_code == 403):
-						self.log_me('debug', "- decoded url return 403 status code")
-						if(retry):
+						self.log_me('error', "- decoded url return 403 status code, attempt "+str(retry)+"/60")
+						if(retry>0):
 							self.log_me('debug', "- updating signature Timestamp and try again")
 							self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
-							return await self.async_get_url(videoId, False)
+							return await self.async_get_url(videoId, retry-1)
 						else:
 							self.log_me('debug', "- giving up, maybe pyTube can help")
 							_url = ""
 				else:
-					_url = streamingData[streamId]['url']
+					_url = valid_streams[streamId]['url']
 					self.log_me('debug', "- found URL in api data")
 
 		except Exception:
