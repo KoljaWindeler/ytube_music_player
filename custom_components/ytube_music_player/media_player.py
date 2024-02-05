@@ -85,6 +85,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
 		self._attr_name = self._org_name
 		self._init_extra_sensor = config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
+		self._maxDatarate = config.data.get(CONF_MAX_DATARATE,DEFAULT_MAX_DATARATE)
 
 		# confgurations can be either the full entity_id or just the name
 		self._select_playlist = input_select.DOMAIN + "." + config.data.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST).replace(input_select.DOMAIN + ".", "")
@@ -123,6 +124,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "- like_in_name: " + str(self._like_in_name))
 		self.log_me('debug', "- track_limit: " + str(self._trackLimit))
 		self.log_me('debug', "- legacy_radio: " + str(self._legacyRadio))
+		self.log_me('debug', "- max_dataRate: " + str(self._maxDatarate))
 
 		self._brand_id = str(config.data.get(CONF_BRAND_ID, ""))
 		self._api = None
@@ -1438,6 +1440,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				
 				# try to find best audio only stream, but accept lower quality if we have to
 				valid_streams.sort(key=lambda x: x['bitrate'], reverse=True)
+				self.log_me('debug', "found "+str(len(valid_streams))+" streams")
+				# remove all streams with too high bitrates
+				if(self._maxDatarate>0):
+					for stream in valid_streams:
+						if(stream['bitrate']>self._maxDatarate):
+							if(len(valid_streams)>1):
+								valid_streams.remove(stream)
+								self.log_me('debug', '- removed stream with too high bitrate of '+str(stream['bitrate']))
+							else:
+								self.log_me('debug', '- preseved stream, too high quality but last available stream')
+
 				if(retry<20):
 					streamId = min(3,len(valid_streams))
 				elif(retry<30):
@@ -1447,7 +1460,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				else:
 					streamId = 0
 				
-				self.log_me('debug', 'Using stream '+str(streamId)+"/"+str(len(valid_streams)))
+				self.log_me('debug', 'Using stream '+str(streamId)+"/"+str(len(valid_streams))+", bitrate:"+str(valid_streams[streamId]['bitrate']))
 				# self.log_me('debug', '- using stream ' + str(streamId))
 				if(valid_streams[streamId].get('url') is None):
 					sigCipher_ch = valid_streams[streamId]['signatureCipher']

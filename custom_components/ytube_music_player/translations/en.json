@@ -32,6 +32,7 @@
                     "debug_as_error": "Show all debug output as ERROR in the log",
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
+                    "max_datarate": "Limit the maximum bit rate",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information"
@@ -74,6 +75,7 @@
                     "debug_as_error": "Show all debug output as ERROR in the log",
                     "shuffle": "Turn on shuffle on startup",
                     "track_limit": "Limit of simultaneously loaded tracks",
+                    "max_datarate": "Limit the maximum bit rate, 0 to disable",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information"

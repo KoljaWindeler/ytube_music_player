@@ -120,6 +120,7 @@ CONF_DEBUG_AS_ERROR = 'debug_as_error'
 CONF_LEGACY_RADIO = 'legacy_radio'
 CONF_SORT_BROWSER = 'sort_browser'
 CONF_INIT_EXTRA_SENSOR = 'extra_sensor'
+CONF_MAX_DATARATE = 'max_datarate'
 
 CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
@@ -143,6 +144,7 @@ DEFAULT_INIT_EXTRA_SENSOR = False
 PROXY_FILENAME = "ytube_proxy.mp4"
 
 DEFAULT_TRACK_LIMIT = 25
+DEFAULT_MAX_DATARATE = 0
 DEFAULT_LEGACY_RADIO = True
 DEFAULT_SORT_BROWSER = True
 DEFAULT_SHUFFLE_MODE = 1
@@ -329,6 +331,7 @@ def ensure_config(user_input):
 	out[CONF_LEGACY_RADIO] = DEFAULT_LEGACY_RADIO
 	out[CONF_SORT_BROWSER] = DEFAULT_SORT_BROWSER
 	out[CONF_INIT_EXTRA_SENSOR] = DEFAULT_INIT_EXTRA_SENSOR
+	out[CONF_MAX_DATARATE] = DEFAULT_MAX_DATARATE
 
 	if user_input is not None:
 		out.update(user_input)
