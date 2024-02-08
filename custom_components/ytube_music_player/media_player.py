@@ -747,6 +747,17 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			else:
 				self._media_position_updated = datetime.datetime.now(datetime.timezone.utc)
 
+		# Workaround for chromecast sometimes not playing first song in a playlist
+		if(old_state!=None and new_state!=None):	
+			try:
+				if(old_state.state == STATE_IDLE and new_state.state == STATE_PAUSED):
+					if(self._state == STATE_PLAYING):
+						self.log_me('error','chromecast in pause should be playings, '+str(old_state))
+						await self.async_get_track()
+			except:
+				pass
+
+		# detect app switch an turn off if so
 		if('app_id' in _player.attributes):
 			if(self._app_id == None):
 				self._app_id = _player.attributes['app_id']
@@ -1315,7 +1326,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return await self.async_get_track(retry=retry - 1)
 
 		# proxy playback, needed e.g. for sonos
-		if(1):
+		try:
 			if(self._proxy_url != "" and self._proxy_path != "" and self._proxy_url != " " and self._proxy_path != " "):
 				p1 = datetime.datetime.now()
 				_proxy_url = await self.hass.async_add_executor_job(lambda:  urlopen(Request(_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'})))
@@ -1327,7 +1338,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_url = self._proxy_url + "/" + PROXY_FILENAME
 				t = (datetime.datetime.now() - p1).total_seconds()
 				self.log_me('debug', "- proxy loading time: " + str(t) + " sec")
-		else:
+		except:
 			_LOGGER.error("The proxy method hit an error, turning off")
 			self.exc()
 			await self.async_turn_off_media_player()
@@ -1388,6 +1399,39 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(videoId is None):
 			self.log_me('debug', "videoId was None")
 			return ""
+		_url = await self.async_get_url_self(videoId,retry)
+
+		# check url
+		if(_url != ""):
+			r = await self.hass.async_add_executor_job(requests.head, _url)
+			if(r.status_code == 403):
+				self.log_me('error', "- self decoded url return 403 status code, attempt "+str(retry)+"/60")
+				_url = ""
+		
+		if(_url == ""):
+			_url = await self.async_get_url_pytube(videoId)
+		
+		# check url
+		if(_url != ""):
+			r = await self.hass.async_add_executor_job(requests.head, _url)
+			if(r.status_code == 403 or r.status_code == 410):
+				self.log_me('error', "- self decoded url return 403 status code, attempt "+str(retry)+"/60")
+				_url = ""
+
+				if(retry>0):
+					self.log_me('debug', "- updating signature Timestamp and try again")
+					self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
+					return await self.async_get_url(videoId, retry-1)
+				else:
+					self.log_me('debug', "- giving up, maybe pyTube can help")
+					_url = ""
+
+		self.log_me('debug', "[E] async_get_url")
+		return _url
+
+
+	async def async_get_url_self(self, videoId=None, retry=60):
+		self.log_me('debug', "[S] async_get_url_self")
 		_url = ""
 		await self.async_check_api()
 		try:
@@ -1477,19 +1521,24 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if(self._js == "" or retry<60):
 						self.log_me('debug', "- reloading cipher from current video")
 						await self.async_get_cipher(videoId)
-					signature = self._cipher.get_signature(ciphered_signature=res['s'])
-					_url = res['url'] + "&sig=" + signature
+					
+					#stream_manifest = extract.apply_descrambler(self.streaming_data)
+					##try:
+            		#extract.apply_signature(stream_manifest, self.vid_info, self.js)
+        			##except exceptions.ExtractError:
+					##	extract.apply_signature(stream_manifest, self.vid_info, self.js)
+					if "signature" in res['url'] or ("s" not in res and ("&sig=" in res['url'] or "&lsig=" in res['url'])):
+						# For certain videos, YouTube will just provide them pre-signed, in
+						# which case there's no real magic to download them and we can skip
+						# the whole signature descrambling entirely.
+						self.log_me('error',"signature found, skip decipher")
+						_url = res['url']
+					else:
+						self.log_me('error',"signature not found, decoding")
+						signature = self._cipher.get_signature(ciphered_signature=res['s'])
+						_url = res['url'] + "&sig=" + signature
 					self.log_me('debug', "- self decoded URL via cipher")
-					r = await self.hass.async_add_executor_job(requests.head, _url)
-					if(r.status_code == 403):
-						self.log_me('error', "- decoded url return 403 status code, attempt "+str(retry)+"/60")
-						if(retry>0):
-							self.log_me('debug', "- updating signature Timestamp and try again")
-							self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
-							return await self.async_get_url(videoId, retry-1)
-						else:
-							self.log_me('debug', "- giving up, maybe pyTube can help")
-							_url = ""
+					
 				else:
 					_url = valid_streams[streamId]['url']
 					self.log_me('debug', "- found URL in api data")
@@ -1498,26 +1547,28 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.error("- Failed to get own(!) URL for track, further details below. Will not try YouTube method")
 			_LOGGER.error(traceback.format_exc())
 			_LOGGER.error(videoId)
-
-		# backup: run youtube stack, only if we failed
-		if(_url == ""):
-			try:
-				streamingData = await self.hass.async_add_executor_job(YouTube, "https://www.youtube.com/watch?v=" + videoId)
-				streams = streamingData.streams
-				streams_audio = streams.filter(only_audio=True)
-				if(len(streams_audio) > 0):
-					_url = streams_audio.order_by('abr').last().url
-				else:
-					_url = streams.order_by('abr').last().url
-				_LOGGER.error("ultimatly")
-				_LOGGER.error(_url)
-
-			except Exception as err:
-				# _LOGGER.error(traceback.format_exc())
-				_LOGGER.error("- Failed to get URL with YouTube methode")
-				_LOGGER.error(err)
-				return ""
 		self.log_me('debug', "[E] async_get_url")
+		return _url
+
+	async def async_get_url_pytube(self, videoId=None):
+		# backup: run youtube stack, only if we failed
+		self.log_me('debug', "[S] async_get_url_pytube")
+		_url = ""
+		try:
+			streamingData = await self.hass.async_add_executor_job(lambda: YouTube("https://www.youtube.com/watch?v=" + videoId))
+			streams = await self.hass.async_add_executor_job(lambda: streamingData.streams)
+			streams_audio = streams.filter(only_audio=True)
+			if(len(streams_audio) > 0):
+				_url = streams_audio.order_by('abr').last().url
+			else:
+				_url = streams.order_by('abr').last().url
+
+		except Exception as err:
+			# _LOGGER.error(traceback.format_exc())
+			_LOGGER.error("- Failed to get URL with YouTube methode")
+			_LOGGER.error(err)
+			return ""
+		self.log_me('debug', "[E] async_get_url_pytube")
 		return _url
 
 
