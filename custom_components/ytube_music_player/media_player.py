@@ -1419,8 +1419,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				_url = ""
 
 				if(retry>0):
-					self.log_me('debug', "- updating signature Timestamp and try again")
-					self._signatureTimestamp = await self.hass.async_add_executor_job(self._api.get_signatureTimestamp)
+					self._api = None
+					self.log_me('debug', "- relogin to fresh cookie and try again")
+					self.async_check_api() 
 					return await self.async_get_url(videoId, retry-1)
 				else:
 					self.log_me('debug', "- giving up, maybe pyTube can help")
