@@ -184,7 +184,8 @@ async def async_create_form(hass, user_input, page=1):
 	"""Create form for UI setup."""
 	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
-	
+	languages = ["ar", "de", "en", "es", "fr", "hi", "it", "ja", "ko", "nl", "pt", "ru", "tr", "ur", "zh_CN", "zh_TW"]
+
 	if(page == 1):
 		data_schema[vol.Required(CONF_CODE+"TT", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
 		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
@@ -196,6 +197,12 @@ async def async_create_form(hass, user_input, page=1):
 					"exclude_entities": [DOMAIN_MP+"."+user_input[CONF_NAME]]
                 }
             })
+		data_schema[vol.Required(CONF_API_LANGUAGE, default=user_input[CONF_API_LANGUAGE])] = selector({
+				"select": {
+					"options": languages,
+					"mode": "dropdown"
+				}
+			})
 		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
 		data_schema[vol.Required(CONF_ADVANCE_CONFIG, default=user_input[CONF_ADVANCE_CONFIG])] = vol.Coerce(bool) # show page 2
 
