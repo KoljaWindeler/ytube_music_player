@@ -84,6 +84,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._debug_as_error = config.data.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
 		self._attr_name = self._org_name
+		self._api_language = config.data.get(CONF_API_LANGUAGE, DEFAULT_API_LANGUAGE)
 		self._init_extra_sensor = config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
 		self._maxDatarate = config.data.get(CONF_MAX_DATARATE,DEFAULT_MAX_DATARATE)
 
@@ -347,7 +348,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._api is None):
 			self.log_debug_later("- no valid API, try to login")
 			if(os.path.exists(self._header_file)):
-				[ret, msg, self._api] = await async_try_login(self.hass, self._header_file, self._brand_id)
+				[ret, msg, self._api] = await async_try_login(self.hass, self._header_file, self._brand_id, self._api_language)
 				if(msg != ""):
 					self._api = None
 					out = "Issue during login: " + msg

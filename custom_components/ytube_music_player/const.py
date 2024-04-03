@@ -109,6 +109,7 @@ SERVICE_CALL_APPEND_TRACK = "append_track_to_queue"
 
 CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
 CONF_HEADER_PATH = 'header_path'
+CONF_API_LANGUAGE = 'api_language'
 CONF_SHUFFLE = 'shuffle'
 CONF_SHUFFLE_MODE = 'shuffle_mode'
 CONF_COOKIE = 'cookie'
@@ -138,6 +139,7 @@ DEFAULT_SELECT_PLAYLIST = "" #input_select.DOMAIN + "." + DOMAIN + '_playlist' #
 DEFAULT_SELECT_PLAYMODE = "" #input_select.DOMAIN + "." + DOMAIN + '_playmode' # cleared defaults to avoid further issues with multiple instances
 DEFAULT_SELECT_SPEAKERS = "" #input_select.DOMAIN + "." + DOMAIN + '_speakers' # cleared defaults to avoid further issues with multiple instances
 DEFAULT_HEADER_FILENAME = 'header_'
+DEFAULT_API_LANGUAGE = 'en'
 DEFAULT_LIKE_IN_NAME = False
 DEFAULT_DEBUG_AS_ERROR = False
 DEFAULT_INIT_EXTRA_SENSOR = False
@@ -241,7 +243,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 
-async def async_try_login(hass, path, brand_id):
+async def async_try_login(hass, path, brand_id, language='en'):
 	ret = {}
 	api = None
 	msg = ""
@@ -249,10 +251,10 @@ async def async_try_login(hass, path, brand_id):
 	try:
 		if(brand_id!=""):
 			_LOGGER.debug("- using brand ID: "+brand_id)
-			api = await hass.async_add_executor_job(YTMusic,path,brand_id)
+			api = await hass.async_add_executor_job(YTMusic,path,brand_id,None,None,language)
 		else:
 			_LOGGER.debug("- login without brand ID and credential at path "+path)
-			api = await hass.async_add_executor_job(YTMusic,path)
+			api = await hass.async_add_executor_job(YTMusic,path,None,None,None,language)
 	except KeyError as err:
 		_LOGGER.debug("- Key exception")
 		if(str(err)=="'contents'"):
@@ -312,6 +314,7 @@ def ensure_config(user_input):
 	"""Make sure that needed Parameter exist and are filled with default if not."""
 	out = {}
 	out[CONF_NAME] = DOMAIN
+	out[CONF_API_LANGUAGE] = DEFAULT_API_LANGUAGE
 	out[CONF_RECEIVERS] = ''
 	out[CONF_SHUFFLE] = DEFAULT_SHUFFLE
 	out[CONF_SHUFFLE_MODE] = DEFAULT_SHUFFLE_MODE
