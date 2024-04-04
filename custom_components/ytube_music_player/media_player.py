@@ -1978,10 +1978,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				supported_media = [['song', 'videoId'], ['playlist', 'browseId'], ['album', 'browseId'], ['artist','browseId']]
 				for media_type in supported_media:
 					for result in media_all:
-						if(result['resultType'] == media_type[0]):
-							if(not('title' in result) and ('artist' in result)):
-								result['title']=result['artist']
-							search_results.append({'type': media_type[0], 'title': result['title'], 'id': result[media_type[1]], 'thumbnail': result['thumbnails'][-1]['url']})
+						if result['resultType'] == media_type[0]:
+							if not('title' in result):
+								if 'artist' in result:
+									result['title'] = result['artist']
+								elif 'artists' in result:  # handle top result
+									result['title'] = result['artists'][0]['name']
+									result['browseId'] = result['artists'][0]['id']
+							if ('videoId' in result) or ('browseId' in result):
+								search_results.append({'type': media_type[0], 'title': result['title'], 'id': result[media_type[1]], 'thumbnail': result['thumbnails'][-1]['url']})
 
 				try:
 					await self.async_update_extra_sensor('search', search_results)
