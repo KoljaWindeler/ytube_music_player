@@ -1,0 +1,228 @@
+{
+    "title": "yTubeMediaPlayer",
+    "config": {
+        "step": {
+            "oauth": {
+                "description": "请在单独的浏览器窗口中打开下方链接，成功登录Google账户后返回本页面继续操作。",
+                "data": {
+                    "code": "Google Device Code",
+                    "name": "实体名称 (不含 'media_player' 前缀)"
+                }
+            },
+            "finish": {
+                "description": "请输入基本信息。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "speakers": "播放设备白名单",
+                    "header_path": "header文件保存路径",
+                    "api_language": "API返回结果语言",
+                    "advance_config": "显示高级选项"
+                }
+            },
+            "adv_finish": {
+                "description": "你可以在这里更改下拉菜单的实体ID，如果不使用下拉菜单，请将它们保持不变",
+                "data": {
+                    "brand_id": "如果您正在使用brand account，请输入brand id",
+                    "select_speakers": "播放设备下拉菜单实体ID",
+                    "select_playmode":"循环模式下拉菜单实体ID",
+                    "select_source":"播放列表/电台选择下拉菜单实体ID",
+                    "select_playlist":"播放列表下拉菜单实体ID",
+                    "select_playcontinuous":"持续播放模式下拉菜单实体ID",
+                    "proxy_path": "代理模式的本地路径，不需要请留空",
+                    "proxy_url": "代理服务器地址，不需要请留空",
+                    "like_in_name": "在名称中显示喜欢状态",
+                    "debug_as_error": "在日志中将所有调试输出显示为ERROR",
+                    "shuffle": "启动时随机播放",
+                    "track_limit": "加载曲目数量限制",
+                    "max_datarate": "限制最大比特率，设置为0以禁用",
+                    "legacy_radio": "将随机播放列表曲目创建为收藏夹电台",
+                    "sort_browser": "在媒体浏览器中对结果进行排序",
+                    "extra_sensor": "创建提供额外信息的传感器实体"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "没有获得访问权限，请再试一次。"
+        }
+    },
+    "options": {
+        "step": {
+            "oauth": {
+                "description": "登录令牌已失效。请再次在单独的浏览器窗口中打开下方链接，成功登录Google账户后返回本页面继续操作。",
+                "data": {
+                    "code": "Google Device Code",
+                    "name": "实体名称 (不含 'media_player' 前缀)"
+                }
+            },
+            "finish": {
+                "description": "请输入基本信息。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
+                "data": {
+                    "speakers": "播放设备白名单",
+                    "header_path": "header文件保存路径",
+                    "api_language": "API返回结果语言",
+                    "advance_config": "显示高级选项"
+                }
+            },
+            "adv_finish": {
+                "description": "你可以在这里更改下拉菜单的实体ID，如果不使用下拉菜单，请将它们保持不变",
+                "data": {
+                    "brand_id": "如果您正在使用brand account，请输入brand id",
+                    "select_speakers": "播放设备下拉菜单实体ID",
+                    "select_playmode":"循环模式下拉菜单实体ID",
+                    "select_source":"播放列表/电台选择下拉菜单实体ID",
+                    "select_playlist":"播放列表下拉菜单实体ID",
+                    "select_playcontinuous":"持续播放模式下拉菜单实体ID",
+                    "proxy_path": "代理模式的本地路径，不需要请留空",
+                    "proxy_url": "代理服务器地址，不需要请留空",
+                    "like_in_name": "在名称中显示喜欢状态",
+                    "debug_as_error": "在日志中将所有调试输出显示为ERROR",
+                    "shuffle": "启动时随机播放",
+                    "track_limit": "加载曲目数量限制",
+                    "max_datarate": "限制最大比特率，设置为0以禁用",
+                    "legacy_radio": "将随机播放列表曲目创建为收藏夹电台",
+                    "sort_browser": "在媒体浏览器中对结果进行排序",
+                    "extra_sensor": "创建提供额外信息的传感器实体"
+                }
+            }
+        },
+        "error": {
+            "ERROR_GENERIC": "没有获得访问权限，请再试一次。"
+        }
+    },
+    "services": {
+        "add_to_playlist": {
+            "name": "将歌曲添加到播放列表",
+            "description": "添加歌曲到播放列表",
+            "fields": {
+                "entity_id": {
+                    "name": "实体ID",
+                    "description": "ytube media player 的实体ID"
+                },
+                "song_id": {
+                    "name": "歌曲ID",
+                    "description": "歌曲ID，可选。默认使用当前歌曲ID。"
+                },
+                "playlist_id": {
+                    "name": "播放列表ID",
+                    "description": "播放列表ID，可选。默认使用当前播放列表ID。"
+                }
+            }
+        },
+        "remove_from_playlist": {
+            "name": "从播放列表中移除歌曲",
+            "description": "从播放列表中移除一首歌曲",
+            "fields": {
+                "entity_id": {
+                    "name": "实体ID",
+                    "description": "ytube media player 的实体ID"
+                },
+                "song_id": {
+                    "name": "歌曲ID",
+                    "description": "歌曲ID，可选。默认使用当前歌曲ID。"
+                },
+                "playlist_id": {
+                    "name": "播放列表ID",
+                    "description": "播放列表ID，可选。默认使用当前播放列表ID。"
+                }
+            }
+        },
+        "call_method": {
+            "name": "调用本组件方法",
+            "description": "运行自定义命令",
+            "fields": {
+                "entity_id": {
+                    "name": "实体ID",
+                    "description": "要运行自定义命令的目标实体ID。",
+                    "example": "media_player.ytube_music_player"
+                },
+                "command": {
+                    "name": "命令",
+                    "description": "要运行的自定义命令。",
+                    "example": "rate_track"
+                },
+                "parameters": {
+                    "name": "参数",
+                    "description": "参数数组，部分命令为可选参数。",
+                    "example": "thumb_up"
+                }
+            }
+        },
+        "search": {
+            "description": "在YouTube Music Player中搜索音乐/专辑等",
+            "name": "搜索",
+            "fields":{
+                "entity_id": {
+                    "name": "实体ID",
+                    "description": "要运行自定义命令的目标实体ID。",
+                    "example": "media_player.ytube_music_player"
+                },
+                "query": {
+                    "name": "搜索内容",
+                    "description": "要搜索的内容文本",
+                    "example": "2pm tetris"
+                },
+                "filter": {
+                    "name": "过滤器",
+                    "description": "搜索结果过滤器，可以是 'albums', 'playlists','artists' 或者 'songs'，留空返回所有结果。"
+                },
+                "limit": {
+                    "name": "限制",
+                    "description": "结果数量限制",
+                    "example": "20"
+                }
+            }
+        },
+        "rate_track": {
+            "name": "对曲目进行评分",
+            "description": "对歌曲进行评分",
+            "fields":  {
+                "entity_id": {
+                    "name": "Entity ID",
+                    "description": "要运行自定义命令的目标实体ID。",
+                    "example": "media_player.ytube_music_player"
+                },
+                "rating": {
+                    "name":"评分",
+                    "description": "歌曲的评分，可以是'thumb_up' / 'thumb_down' / 'thumb_middle' / 'thumb_toggle_up_middle'",
+                    "example": "thumb_up"
+                },
+                "song_id": {
+                    "name": "歌曲ID",
+                    "description": "歌曲ID，可选。默认使用当前歌曲ID。",
+                    "example": ""
+                }
+            }
+        },
+        "limit_count": {
+            "name": "歌曲限制数量",
+            "description": "限制加载的曲目数量",
+            "fields": {
+                "entity_id": {
+                    "name": "实体ID",
+                    "description": "要运行自定义命令的目标实体ID。",
+                    "example": "media_player.ytube_music_player"
+                },
+                "limit": {
+                    "name": "限制",
+                    "description": "每次执行加载的曲目数量",
+                    "example": "20"
+                }
+            }
+        },
+        "start_radio": {
+            "name": "电台",
+            "description": "基于当前曲目创建电台。",
+            "fields": {
+              "entity_id": {
+                  "name": "实体ID",
+                  "description": "要运行自定义命令的目标实体ID。",
+                  "example": "media_player.ytube_music_player"
+              },
+              "interrupt": {
+                "name": "中断",
+                "description": "是否中断当前播放",
+                "example": "true"
+              }
+            }
+        }
+    }
+}
