@@ -913,6 +913,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 							info['track_artist'] = name
 						else:
 							info['track_artist'] += " / " + name
+			elif 'author' in _track:
+				info['track_artist'] = _track['author']  # use 'author' if still no artist info.
 		except:
 			pass
 
@@ -937,6 +939,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		try:
 			if 'album' in _track:
+				info['track_album_name'] = _track['album']['name']  # fix missing album info.
 				if 'id' in _track['album']:
 					info['track_album_id'] = _track['album']['id']
 		except:
