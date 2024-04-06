@@ -41,17 +41,11 @@ from homeassistant.components.media_player import (
 	DOMAIN as DOMAIN_MP,
 )
 
-from homeassistant.components.input_boolean import (
-	SERVICE_TURN_OFF as IB_OFF,
-	SERVICE_TURN_ON as IB_ON,
-	DOMAIN as DOMAIN_IB,
-)
-
-import homeassistant.components.input_select as input_select
-import homeassistant.components.input_boolean as input_boolean
+import homeassistant.components.select as select
+import homeassistant.components.switch as switch
 
 # Should be equal to the name of your component.
-PLATFORMS = {"media_player", "sensor"}
+PLATFORMS = {"sensor", "select", "media_player" }
 DOMAIN = "ytube_music_player"
 
 SUPPORT_YTUBEMUSIC_PLAYER = (
@@ -127,17 +121,6 @@ CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PATH = 'proxy_path'
 
-CONF_SELECT_SOURCE = 'select_source'
-CONF_SELECT_PLAYLIST = 'select_playlist'
-CONF_SELECT_SPEAKERS = 'select_speakers'
-CONF_SELECT_PLAYMODE = 'select_playmode'
-CONF_SELECT_PLAYCONTINUOUS = 'select_playcontinuous'
-
-DEFAULT_SELECT_PLAYCONTINUOUS = "" #input_boolean.DOMAIN + "." + DOMAIN + '_playcontinuous' # cleared defaults to avoid further issues with multiple instances
-DEFAULT_SELECT_SOURCE = "" #input_select.DOMAIN + "." + DOMAIN + '_source'	 # cleared defaults to avoid further issues with multiple instances
-DEFAULT_SELECT_PLAYLIST = "" #input_select.DOMAIN + "." + DOMAIN + '_playlist' # cleared defaults to avoid further issues with multiple instances
-DEFAULT_SELECT_PLAYMODE = "" #input_select.DOMAIN + "." + DOMAIN + '_playmode' # cleared defaults to avoid further issues with multiple instances
-DEFAULT_SELECT_SPEAKERS = "" #input_select.DOMAIN + "." + DOMAIN + '_speakers' # cleared defaults to avoid further issues with multiple instances
 DEFAULT_HEADER_FILENAME = 'header_'
 DEFAULT_API_LANGUAGE = 'en'
 DEFAULT_LIKE_IN_NAME = False
@@ -231,10 +214,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend = vol.Schema({
 	DOMAIN: vol.Schema({
 		vol.Optional(CONF_RECEIVERS): cv.string,
 		vol.Optional(CONF_HEADER_PATH, default=DEFAULT_HEADER_FILENAME): cv.string,
-		vol.Optional(CONF_SELECT_SOURCE, default=DEFAULT_SELECT_SOURCE): cv.string,
-		vol.Optional(CONF_SELECT_PLAYLIST, default=DEFAULT_SELECT_PLAYLIST): cv.string,
-		vol.Optional(CONF_SELECT_PLAYMODE, default=DEFAULT_SELECT_PLAYMODE): cv.string,
-		vol.Optional(CONF_SELECT_SPEAKERS, default=DEFAULT_SELECT_SPEAKERS): cv.string,
 	})
 }, extra=vol.ALLOW_EXTRA)
 
@@ -318,11 +297,6 @@ def ensure_config(user_input):
 	out[CONF_RECEIVERS] = ''
 	out[CONF_SHUFFLE] = DEFAULT_SHUFFLE
 	out[CONF_SHUFFLE_MODE] = DEFAULT_SHUFFLE_MODE
-	out[CONF_SELECT_SOURCE] = DEFAULT_SELECT_SOURCE
-	out[CONF_SELECT_PLAYLIST] = DEFAULT_SELECT_PLAYLIST
-	out[CONF_SELECT_PLAYMODE] = DEFAULT_SELECT_PLAYMODE
-	out[CONF_SELECT_SPEAKERS] = DEFAULT_SELECT_SPEAKERS
-	out[CONF_SELECT_PLAYCONTINUOUS] = DEFAULT_SELECT_PLAYCONTINUOUS
 	out[CONF_PROXY_PATH] = ""
 	out[CONF_PROXY_URL] = ""
 	out[CONF_BRAND_ID] = ""

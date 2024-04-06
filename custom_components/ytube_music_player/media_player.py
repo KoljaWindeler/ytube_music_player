@@ -88,12 +88,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._init_extra_sensor = config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
 		self._maxDatarate = config.data.get(CONF_MAX_DATARATE,DEFAULT_MAX_DATARATE)
 
-		# confgurations can be either the full entity_id or just the name
-		self._select_playlist = input_select.DOMAIN + "." + config.data.get(CONF_SELECT_PLAYLIST, DEFAULT_SELECT_PLAYLIST).replace(input_select.DOMAIN + ".", "")
-		self._select_playMode = input_select.DOMAIN + "." + config.data.get(CONF_SELECT_PLAYMODE, DEFAULT_SELECT_PLAYMODE).replace(input_select.DOMAIN + ".", "")
-		self._select_playContinuous = input_boolean.DOMAIN + "." + config.data.get(CONF_SELECT_PLAYCONTINUOUS, DEFAULT_SELECT_PLAYCONTINUOUS).replace(input_boolean.DOMAIN + ".", "")
-		self._select_mediaPlayer = input_select.DOMAIN + "." + config.data.get(CONF_SELECT_SPEAKERS, DEFAULT_SELECT_SPEAKERS).replace(input_select.DOMAIN + ".", "")
-		self._select_source = input_select.DOMAIN + "." + config.data.get(CONF_SELECT_SOURCE, DEFAULT_SELECT_SOURCE).replace(input_select.DOMAIN + ".", "")
+		# All entities are now automatically generated,will be registered in the async_update_selects method later.
+		# This should be helpful for multiple accounts.
+		self._select_playlist = ""
+		self._select_playMode = ""
+		self._select_repeatMode = ""   # Previously, it was _select_playContinuous.
+		self._select_speaker = ""      # Previously, it was _select_mediaPlayer.
+		self._select_radioMode = ""    # Previously, it was _select_source.
 		self._like_in_name = config.data.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
 
 		self._shuffle = config.data.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
@@ -114,12 +115,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		self.log_me('debug', "YtubeMediaPlayer config: ")
 		self.log_me('debug', "- Header path: " + self._header_file)
-		self.log_me('debug', "- playlist: " + self._select_playlist)
-		self.log_me('debug', "- mediaplayer: " + self._select_mediaPlayer)
-		self.log_me('debug', "- source: " + self._select_source)
 		self.log_me('debug', "- speakerlist: " + str(self._speakersList))
-		self.log_me('debug', "- playModes: " + str(self._select_playMode))
-		self.log_me('debug', "- playContinuous: " + str(self._select_playContinuous))
 		self.log_me('debug', "- shuffle: " + str(self._shuffle))
 		self.log_me('debug', "- shuffle_mode: " + str(self._shuffle_mode))
 		self.log_me('debug', "- like_in_name: " + str(self._like_in_name))
@@ -486,15 +482,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_set_repeat(self, repeat: str):
 		self.log_me('debug', "[S] set_repeat: " + repeat)
 		# Set repeat mode.
-		data = {ATTR_ENTITY_ID: self._select_playContinuous}
 		if repeat != RepeatMode.OFF:
 			self._playContinuous = True
-			if(self._select_playContinuous != ""):
-				await self.hass.services.async_call(DOMAIN_IB, IB_ON, data)
 		else:
 			self._playContinuous = False
-			if(self._select_playContinuous != ""):
-				await self.hass.services.async_call(DOMAIN_IB, IB_OFF, data)
+
+		if(self._select_repeatMode != ""):
+			data = {select.ATTR_OPTION: repeat, ATTR_ENTITY_ID: self._select_repeatMode}
+			await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 		self.log_me('debug', "[E] set_repeat: " + repeat)
 
 	@property
@@ -537,10 +532,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			return
 
 		# playlist or playlist_radio?
-		if(self._select_source != ""):
-			_source = self.hass.states.get(self._select_source)
+		if(self._select_radioMode != ""):
+			_source = self.hass.states.get(self._select_radioMode)
 			if _source is None:
-				_LOGGER.error("- (%s) is not a valid input_select entity.", self._select_source)
+				_LOGGER.error("- (%s) is not a valid input_select entity.", self._select_radioMode)
 				self.log_me('debug', "[E] (fail) TURNON")
 				return
 			if(_source.state == "Playlist"):
@@ -570,10 +565,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# subscribe to changes
 		if(self._select_playMode != ""):
 			async_track_state_change(self.hass, self._select_playMode, self.async_update_playmode)
-		if(self._select_playContinuous != ""):
-			async_track_state_change(self.hass, self._select_playContinuous, self.async_update_playmode)
-		if(self._select_mediaPlayer != ""):
-			async_track_state_change(self.hass, self._select_mediaPlayer, self.async_select_source_helper)
+		if(self._select_repeatMode != ""):
+			async_track_state_change(self.hass, self._select_repeatMode, self.async_update_playmode)
+		if(self._select_speaker != ""):
+			async_track_state_change(self.hass, self._select_speaker, self.async_select_source_helper)
 
 		# make sure that the player, is on and idle
 		try:
@@ -666,14 +661,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(remote_player != ""):
 			# make sure that the entity ID is complete
 			remote_player = DOMAIN_MP + "." + remote_player
-		# sets the current media_player from input_select
-		elif(self._select_mediaPlayer != "" and await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)):  # drop down for player does exist .. double check!!
-			media_player_input_select = self.hass.states.get(self._select_mediaPlayer)  # Example: self.hass.states.get(input_select.gmusic_player_speakers)
-			if media_player_input_select is None:
-				self.log_me('error', "(" + self._select_mediaPlayer + ") is not a valid input_select entity to get the player.")
+		# sets the current media_player from speaker select
+		elif(self._select_speaker != "" and await self.async_check_entity_exists(self._select_speaker, unavailable_is_ok=False)):  # drop down for player does exist .. double check!!
+			media_player_select = self.hass.states.get(self._select_speaker)  # Example: self.hass.states.get(input_select.gmusic_player_speakers)
+			if media_player_select is None:
+				self.log_me('error', "(" + self._select_speaker + ") is not a valid select entity to get the player.")
 			else:
 				# since we can't be sure if the MediaPlayer Domain is in the field value, add it and remove it :D
-				remote_player = DOMAIN_MP + "." + media_player_input_select.state.replace(DOMAIN_MP + ".", "")
+				remote_player = DOMAIN_MP + "." + media_player_select.state.replace(DOMAIN_MP + ".", "")
 
 		# ok lets check if we have a player or post an error
 		if(await self.async_check_entity_exists(remote_player)):
@@ -983,9 +978,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			await self.async_update_remote_player(remote_player=DOMAIN_MP + "." + source)
 			self.log_me('debug', "- Choosing " + self._remote_player + " as player")
 			# try to set drop down
-			if(self._select_mediaPlayer != ""):
-				if(not await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)):
-					self.log_me('debug', "- Drop down for media player: " + str(self._select_mediaPlayer) + " not found")
+			if(self._select_speaker != ""):
+				if(not await self.async_check_entity_exists(self._select_speaker, unavailable_is_ok=False)):
+					self.log_me('debug', "- Drop down for media player: " + str(self._select_speaker) + " not found")
 				elif source in self._friendly_speakersList:
 					# untrack player field change (to avoid self call)
 					if(self._untrack_remote_player_selector is not None):
@@ -996,8 +991,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						except:
 							self.log_me('debug', "- untrack failed")
 							pass
-					data = {input_select.ATTR_OPTION: self._friendly_speakersList[source], ATTR_ENTITY_ID: self._select_mediaPlayer}
-					await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
+					data = {select.ATTR_OPTION: self._friendly_speakersList[source], ATTR_ENTITY_ID: self._select_speaker}
+					await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 					# resubscribe with 3 sec delay so the UI can settle, directly call it will trigger the change from above
 					async_call_later(self.hass, 3, self.async_track_select_mediaplayer_helper)
 				else:
@@ -1031,19 +1026,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# -- all others -- #
 		if(not await self.async_check_entity_exists(self._select_playlist, unavailable_is_ok=False)):
 			self.log_me('debug', "- playlist: " + str(self._select_playlist) + " not found")
-			self._select_playlist = ""
+			self._select_playlist = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_playlist']._attr_name # register select entity
 		if(not await self.async_check_entity_exists(self._select_playMode, unavailable_is_ok=False)):
 			self.log_me('debug', "- playmode: " + str(self._select_playMode) + " not found")
-			self._select_playMode = ""
-		if(not await self.async_check_entity_exists(self._select_playContinuous, unavailable_is_ok=False)):
-			self.log_me('debug', "- playContinuous: " + str(self._select_playContinuous) + " not found")
-			self._select_playContinuous = ""
-		if(not await self.async_check_entity_exists(self._select_mediaPlayer, unavailable_is_ok=False)):
-			self.log_me('debug', "- mediaPlayer: " + str(self._select_mediaPlayer) + " not found")
-			self._select_mediaPlayer = ""
-		if(not await self.async_check_entity_exists(self._select_source, unavailable_is_ok=False)):
-			self.log_me('debug', "- Source: " + str(self._select_source) + " not found")
-			self._select_source = ""
+			self._select_playMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_playmode']._attr_name # register select entity
+		if(not await self.async_check_entity_exists(self._select_repeatMode, unavailable_is_ok=False)):
+			self.log_me('debug', "- playContinuous: " + str(self._select_repeatMode) + " not found")
+			self._select_repeatMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_repeat']._attr_name # register select entity
+		if(not await self.async_check_entity_exists(self._select_speaker, unavailable_is_ok=False)):
+			self.log_me('debug', "- mediaPlayer: " + str(self._select_speaker) + " not found")
+			self._select_speaker = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_speaker']._attr_name # register select entity
+		if(not await self.async_check_entity_exists(self._select_radioMode, unavailable_is_ok=False)):
+			self.log_me('debug', "- Source: " + str(self._select_radioMode) + " not found")
+			self._select_radioMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_radiomode']._attr_name # register select entity
 		# ----------- speaker -----#
 		try:
 			if(isinstance(self._speakersList, str)):
@@ -1056,10 +1051,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			speakersList = list()
 
 		# generate the speaker list in any case (will be needed for the media_browser)
-		defaultPlayer = ''
-		if(len(speakersList) <= 1):  # if one player is in the speakersList -> grab all available player and preselect the one that was given, if the list contains two or more: don't add all other avilable, leave it as is
-			if(len(speakersList) == 1):
-				defaultPlayer = speakersList[0]
+		if(len(speakersList) <= 1):  # Perhaps this behavior is no longer necessary?
 			all_entities = await self.hass.async_add_executor_job(self.hass.states.all)
 			for e in all_entities:
 				if(e.entity_id.startswith(DOMAIN_MP) and not(e.entity_id.startswith(DOMAIN_MP + "." + DOMAIN))):
@@ -1067,37 +1059,25 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# create friendly speakerlist based on the current speakerLlist
 		self._friendly_speakersList = dict()
+		friendly_speakersList = []
 		for a in speakersList:
 			state = self.hass.states.get(DOMAIN_MP + "." + a)
 			friendly_name = state.attributes.get(ATTR_FRIENDLY_NAME)
 			if(friendly_name is None):
 				friendly_name = a
+			friendly_speakersList.append(friendly_name)
 			self._friendly_speakersList.update({a: friendly_name})
+		await self.hass.data[DOMAIN][self._attr_unique_id]['select_speaker'].async_update(friendly_speakersList)  # update speaker select
+		data = {select.ATTR_OPTION: friendly_speakersList[0], ATTR_ENTITY_ID: self._select_speaker}  # select the first one in the list as the default player
+		await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 
-		# check if the drop down exists
-		if(self._select_mediaPlayer == ""):
-			self.log_me('debug', "- Drop down for media player not found")
-			self._select_mediaPlayer = ""
-			# if exactly one unit is provided (meaning defaultPlayer is set), stick with it, if it existst
-			if(defaultPlayer != ''):
-				if(await self.async_update_remote_player(remote_player=speakersList[0])):
-					self.log_me('debug', "- Choosing " + self._remote_player + " as player")
-		else:  # dropdown exists
-			self.log_me('debug', "- Adding " + str(len(self._friendly_speakersList)) + " player to the dropdown")
-			data = {input_select.ATTR_OPTIONS: list(set(self._friendly_speakersList.values())), ATTR_ENTITY_ID: self._select_mediaPlayer}
-			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
-			if(defaultPlayer != ''):
-				if(defaultPlayer in self._friendly_speakersList):
-					data = {input_select.ATTR_OPTION: self._friendly_speakersList[defaultPlayer], ATTR_ENTITY_ID: self._select_mediaPlayer}
-					await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
-
-			# track changes
-			if(self._untrack_remote_player_selector is not None):
-				try:
-					self._untrack_remote_player_selector()
-				except:
-					self.log_me('error', 'untrack failed')
-			self._untrack_remote_player_selector = async_track_state_change(self.hass, self._select_mediaPlayer, self.async_select_source_helper)
+		# track changes
+		if(self._untrack_remote_player_selector is not None):
+			try:
+				self._untrack_remote_player_selector()
+			except:
+				self.log_me('error', 'untrack failed')
+		self._untrack_remote_player_selector = async_track_state_change(self.hass, self._select_speaker, self.async_select_source_helper)
 
 
 		# finally call update playlist to fill the list .. if it exists
@@ -1167,9 +1147,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# sort with case-ignore
 			playlists = sorted(list(self._playlist_to_index.keys()), key=str.casefold)
 			await self.async_update_extra_sensor('playlists', playlists_to_extra)  # update extra sensor
-
-			data = {"options": list(playlists), "entity_id": self._select_playlist}
-			await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+			await self.hass.data[DOMAIN][self._attr_unique_id]['select_playlist'].async_update()  # update playlist select
 		except:
 			self.exc()
 			msg = "Caught error while loading playlist. please log for details"
@@ -1213,13 +1191,13 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# called from HA when th user changes the input entry, will read selection to membervar
 		self.log_me('debug', "[S] async_update_playmode")
 		try:
-			if(self._select_playContinuous != ""):
-				if(self.hass.states.get(self._select_playContinuous).state == "on"):
+			if(self._select_repeatMode != ""):
+				if(self.hass.states.get(self._select_repeatMode).state == RepeatMode.ALL):
 					self._playContinuous = True
 				else:
 					self._playContinuous = False
 		except:
-			self.log_me('debug', "- Selection field " + self._select_playContinuous + " not found, skipping")
+			self.log_me('debug', "- Selection field " + self._select_repeatMode + " not found, skipping")
 
 		try:
 			if(self._select_playMode != ""):
@@ -1236,7 +1214,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						self._shuffle_mode = 3
 					if(_playmode.state == PLAYMODE_DIRECT):
 						self._shuffle = False
-				self.set_shuffle(self._shuffle)
+				await self.async_set_shuffle(self._shuffle)  # The non-existent set_shuffle method was incorrectly called previously.
 		except:
 			self.log_me('debug', "- Selection field " + self._select_playMode + " not found, skipping")
 
@@ -1591,8 +1569,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# Update player if we got an input
 		if _player is not None:
 			await self.async_update_remote_player(remote_player=_player)
-			_option = {"option": _player, "entity_id": self._select_mediaPlayer}
-			await (input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, _option)
+			data = {"option": _player, "entity_id": self._select_speaker}
+			await (select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 
 		# load Tracks depending on input
 		try:
@@ -1812,11 +1790,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# setting the input will call the "input has changed" - callback .. but that should be alright
 		if(self._select_playMode != ""):
 			if(self._shuffle):
-				data = {input_select.ATTR_OPTION: self._attributes['shuffle_mode'], ATTR_ENTITY_ID: self._select_playMode}
-				await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
+				data = {select.ATTR_OPTION: self._attributes['shuffle_mode'], ATTR_ENTITY_ID: self._select_playMode}
 			else:
-				data = {input_select.ATTR_OPTION: PLAYMODE_DIRECT, ATTR_ENTITY_ID: self._select_playMode}
-				await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SELECT_OPTION, data)
+				data = {select.ATTR_OPTION: PLAYMODE_DIRECT, ATTR_ENTITY_ID: self._select_playMode}
+			await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 
 		self.async_schedule_update_ha_state()
 
@@ -2167,5 +2144,5 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				self.log_me('debug', "- untrack failed")
 			self._untrack_remote_player_selector = None
 		self._untrack_remote_player_selector = async_track_state_change(
-			self.hass, self._select_mediaPlayer, self.async_select_source_helper)
+			self.hass, self._select_speaker, self.async_select_source_helper)
 		self.log_me('debug', "- untrack resub")
