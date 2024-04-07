@@ -864,7 +864,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			_LOGGER.info("SHUFFLE_MODE: %s", self._shuffle_mode)
 
 		if event.data['shuffle']:
-			self.set_shuffle(event.data.get('shuffle'))
+			self.async_set_shuffle(event.data.get('shuffle'))
 			_LOGGER.info("- SHUFFLE: %s", self._shuffle)
 
 		self.log_me('debug', "- Speakers: (%s) | Source: (%s) | Name: (%s)", _speak, _source, _media)
