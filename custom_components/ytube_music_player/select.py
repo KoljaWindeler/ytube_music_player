@@ -21,6 +21,7 @@ class yTubeMusicSelectEntity(SelectEntity):
 		self.hass = hass
 		self._device_id = config.entry_id
 		self._device_name = config.data.get(CONF_NAME)
+		self._attr_has_entity_name = True
 
 	def select_option(self, option):
 		"""Change the selected option."""
@@ -45,7 +46,7 @@ class yTubeMusicPlaylistSelect(yTubeMusicSelectEntity):
 	def __init__(self, hass, config):
 		super().__init__(hass, config)
 		self._attr_unique_id = self._device_id + "_playlist"
-		self._attr_name = config.data.get(CONF_NAME) + "_playlist"
+		self._attr_name = "Playlist"
 		self._attr_icon = 'mdi:playlist-music'
 		self.hass.data[DOMAIN][self._device_id]['select_playlist'] = self
 		self._attr_options = ["loading"]
@@ -71,7 +72,7 @@ class yTubeMusicSpeakerSelect(yTubeMusicSelectEntity):
 	def __init__(self, hass, config):
 		super().__init__(hass, config)
 		self._attr_unique_id = self._device_id + "_speaker"
-		self._attr_name = config.data.get(CONF_NAME) + "_speaker"
+		self._attr_name = "Speaker"
 		self._attr_icon = 'mdi:speaker'
 		self.hass.data[DOMAIN][self._device_id]['select_speaker'] = self
 		self._attr_options = ["loading"]
@@ -94,7 +95,7 @@ class yTubeMusicPlayModeSelect(yTubeMusicSelectEntity):
 	def __init__(self, hass, config):
 		super().__init__(hass, config)
 		self._attr_unique_id = self._device_id + "_playmode"
-		self._attr_name = config.data.get(CONF_NAME) + "_playmode"
+		self._attr_name = "Play Mode"
 		self._attr_icon = 'mdi:shuffle'
 		self.hass.data[DOMAIN][self._device_id]['select_playmode'] = self
 		self._attr_options = ["Shuffle","Random","Shuffle Random","Direct"]
@@ -105,7 +106,7 @@ class yTubeMusicSourceSelect(yTubeMusicSelectEntity):
 	def __init__(self, hass, config):
 		super().__init__(hass, config)
 		self._attr_unique_id = self._device_id + "_radiomode"
-		self._attr_name = config.data.get(CONF_NAME) + "_radiomode"
+		self._attr_name = "Radio Mode"
 		self._attr_icon = 'mdi:music-box-multiple'
 		self.hass.data[DOMAIN][self._device_id]['select_radiomode'] = self
 		self._attr_options = ["Playlist","Playlist Radio"] # "Playlist" means not radio mode
@@ -116,7 +117,7 @@ class yTubeMusicRepeatSelect(yTubeMusicSelectEntity):
 	def __init__(self, hass, config):
 		super().__init__(hass, config)
 		self._attr_unique_id = self._device_id + "_repeat"
-		self._attr_name = config.data.get(CONF_NAME) + "_repeat"
+		self._attr_name = "Repeat Mode"
 		self._attr_icon = 'mdi:repeat'
 		self.hass.data[DOMAIN][self._device_id]['select_repeat'] = self
 		self._attr_options = ["all", "one", "off"]  # one for future

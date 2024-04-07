@@ -1023,19 +1023,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[S] async_update_selects")
 		# -- all others -- #
 		if(not await self.async_check_entity_exists(self._select_playlist, unavailable_is_ok=False)):
-			self._select_playlist = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_playlist']._attr_name # register select entity
+			self._select_playlist = self.hass.data[DOMAIN][self._attr_unique_id]['select_playlist'].entity_id  # register select entity
 			self.log_me('debug', "- playlist select: " + str(self._select_playlist) + " registered")
 		if(not await self.async_check_entity_exists(self._select_playMode, unavailable_is_ok=False)):
-			self._select_playMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_playmode']._attr_name # register select entity
+			self._select_playMode = self.hass.data[DOMAIN][self._attr_unique_id]['select_playmode'].entity_id  # register select entity
 			self.log_me('debug', "- play mode select: " + str(self._select_playMode) + " registered")
 		if(not await self.async_check_entity_exists(self._select_repeatMode, unavailable_is_ok=False)):
-			self._select_repeatMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_repeat']._attr_name # register select entity
+			self._select_repeatMode = self.hass.data[DOMAIN][self._attr_unique_id]['select_repeat'].entity_id  # register select entity
 			self.log_me('debug', "- repeat mode Select: " + str(self._select_repeatMode) + " registered")
 		if(not await self.async_check_entity_exists(self._select_speaker, unavailable_is_ok=False)):
-			self._select_speaker = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_speaker']._attr_name # register select entity
+			self._select_speaker = self.hass.data[DOMAIN][self._attr_unique_id]['select_speaker'].entity_id  # register select entity
 			self.log_me('debug', "- speaker select: " + str(self._select_speaker) + " registered")
 		if(not await self.async_check_entity_exists(self._select_radioMode, unavailable_is_ok=False)):
-			self._select_radioMode = select.DOMAIN + "." + self.hass.data[DOMAIN][self._attr_unique_id]['select_radiomode']._attr_name # register select entity
+			self._select_radioMode = self.hass.data[DOMAIN][self._attr_unique_id]['select_radiomode'].entity_id  # register select entity
 			self.log_me('debug', "- radio mode Select: " + str(self._select_radioMode) + " registered")
 		# ----------- speaker -----#
 		try:
