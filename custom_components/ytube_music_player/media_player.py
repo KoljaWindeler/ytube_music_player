@@ -15,8 +15,6 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import STORAGE_DIR
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
-import homeassistant.components.input_select as input_select
-import homeassistant.components.input_boolean as input_boolean
 import homeassistant.components.media_player as media_player
 
 from pytube import YouTube # to generate cipher
@@ -499,7 +497,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 
 	async def async_turn_on(self, *args, **kwargs):
-		# Turn on the selected media_player from input_select
+		# Turn on the selected media_player from select
 		self.log_me('debug', "[S] TURNON")
 		self._started_by = "UI"
 
@@ -535,7 +533,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._select_radioMode != ""):
 			_source = self.hass.states.get(self._select_radioMode)
 			if _source is None:
-				_LOGGER.error("- (%s) is not a valid input_select entity.", self._select_radioMode)
+				_LOGGER.error("- (%s) is not a valid select entity.", self._select_radioMode)
 				self.log_me('debug', "[E] (fail) TURNON")
 				return
 			if(_source.state == "Playlist"):
@@ -663,7 +661,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			remote_player = DOMAIN_MP + "." + remote_player
 		# sets the current media_player from speaker select
 		elif(self._select_speaker != "" and await self.async_check_entity_exists(self._select_speaker, unavailable_is_ok=False)):  # drop down for player does exist .. double check!!
-			media_player_select = self.hass.states.get(self._select_speaker)  # Example: self.hass.states.get(input_select.gmusic_player_speakers)
+			media_player_select = self.hass.states.get(self._select_speaker)  # Example: self.hass.states.get(select.gmusic_player_speakers)
 			if media_player_select is None:
 				self.log_me('error', "(" + self._select_speaker + ") is not a valid select entity to get the player.")
 			else:
