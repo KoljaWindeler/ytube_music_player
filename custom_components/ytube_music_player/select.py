@@ -56,10 +56,7 @@ class yTubeMusicPlaylistSelect(yTubeMusicSelectEntity):
 		# update select
 		self._ready = True
 		try:
-			als = []
-			for playlist in self.hass.data[DOMAIN][self._device_id]['playlists']:
-				als.append(playlist)
-			self._attr_options = als
+			self._attr_options = list(self.hass.data[DOMAIN][self._device_id]['playlists'].keys())
 		except:
 			pass
 		try:

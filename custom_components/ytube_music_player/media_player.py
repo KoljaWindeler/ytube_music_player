@@ -1177,8 +1177,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	async def async_update_extra_sensor(self, attribute, value):
 		# update extra sensor
 		self.log_debug_later("[S] async_update_extra_sensor")
+		self.hass.data[DOMAIN][self._attr_unique_id][attribute] = value
 		if(self._init_extra_sensor):
-			self.hass.data[DOMAIN][self._attr_unique_id][attribute] = value
 			try:
 				await self.hass.data[DOMAIN][self._attr_unique_id]['extra_sensor'].async_update()
 			except:
