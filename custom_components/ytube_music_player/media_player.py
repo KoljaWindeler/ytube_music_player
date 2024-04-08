@@ -300,10 +300,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self._attributes['_media_id'] = None
 
 		self.hass.data[DOMAIN][self._attr_unique_id]['lyrics'] = ""
-		self.hass.data[DOMAIN][self._attr_unique_id]['search'] = ""
+		# After turning off the media_player, keep the playlists and search information available
+		# as they may be needed forautomations.
+		# self.hass.data[DOMAIN][self._attr_unique_id]['search'] = ""
 		self.hass.data[DOMAIN][self._attr_unique_id]['tracks'] = ""
-		self.hass.data[DOMAIN][self._attr_unique_id]['playlists'] = ""
-		self.hass.data[DOMAIN][self._attr_unique_id]['total_tracks'] = ""
+		# self.hass.data[DOMAIN][self._attr_unique_id]['playlists'] = ""
+		self.hass.data[DOMAIN][self._attr_unique_id]['total_tracks'] = 0
 
 
 	async def async_update(self):
