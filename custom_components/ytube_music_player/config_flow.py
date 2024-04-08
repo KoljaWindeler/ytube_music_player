@@ -10,6 +10,7 @@ import os
 import os.path
 from homeassistant.helpers.storage import STORAGE_DIR
 from ytmusicapi import YTMusic
+from ytmusicapi.helpers import SUPPORTED_LANGUAGES
 import requests
 from ytmusicapi.auth.oauth import OAuthCredentials, RefreshingToken
 
@@ -184,7 +185,7 @@ async def async_create_form(hass, user_input, page=1):
 	"""Create form for UI setup."""
 	user_input = ensure_config(user_input)
 	data_schema = OrderedDict()
-	languages = ["ar", "de", "en", "es", "fr", "hi", "it", "ja", "ko", "nl", "pt", "ru", "tr", "ur", "zh_CN", "zh_TW"]
+	languages = list(SUPPORTED_LANGUAGES)
 
 	if(page == 1):
 		data_schema[vol.Required(CONF_CODE+"TT", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
@@ -200,7 +201,8 @@ async def async_create_form(hass, user_input, page=1):
 		data_schema[vol.Required(CONF_API_LANGUAGE, default=user_input[CONF_API_LANGUAGE])] = selector({
 				"select": {
 					"options": languages,
-					"mode": "dropdown"
+					"mode": "dropdown",
+					"sort": True
 				}
 			})
 		data_schema[vol.Required(CONF_HEADER_PATH, default=user_input[CONF_HEADER_PATH])] = str # file path of the header
@@ -216,10 +218,6 @@ async def async_create_form(hass, user_input, page=1):
 		data_schema[vol.Optional(CONF_TRACK_LIMIT, default=user_input[CONF_TRACK_LIMIT])] = vol.Coerce(int)
 		data_schema[vol.Optional(CONF_MAX_DATARATE, default=user_input[CONF_MAX_DATARATE])] = vol.Coerce(int)
 		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id
-		data_schema[vol.Optional(CONF_SELECT_SPEAKERS, default=user_input[CONF_SELECT_SPEAKERS])] = str # drop down to select remote_player
-		data_schema[vol.Optional(CONF_SELECT_SOURCE, default=user_input[CONF_SELECT_SOURCE])] = str # drop down to select playlist / playlist-radio
-		data_schema[vol.Optional(CONF_SELECT_PLAYLIST, default=user_input[CONF_SELECT_PLAYLIST])] = str # drop down that holds the playlists
-		data_schema[vol.Optional(CONF_SELECT_PLAYCONTINUOUS, default=user_input[CONF_SELECT_PLAYCONTINUOUS])] = str # select of input_boolean -> continuous on/off
 
 		data_schema[vol.Optional(CONF_PROXY_PATH, default=user_input[CONF_PROXY_PATH])] = str # select of input_boolean -> continuous on/off
 		data_schema[vol.Optional(CONF_PROXY_URL, default=user_input[CONF_PROXY_URL])] = str # select of input_boolean -> continuous on/off

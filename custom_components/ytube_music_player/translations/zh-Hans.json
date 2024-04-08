@@ -10,23 +10,18 @@
                 }
             },
             "finish": {
-                "description": "请输入基本信息。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
+                "description": "在这里进行基本设置。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "speakers": "播放设备白名单",
+                    "speakers": "选择输出设备白名单，第一个是默认设备。",
                     "header_path": "header文件保存路径",
                     "api_language": "API返回结果语言",
                     "advance_config": "显示高级选项"
                 }
             },
             "adv_finish": {
-                "description": "你可以在这里更改下拉菜单的实体ID，如果不使用下拉菜单，请将它们保持不变",
+                "description": "在这里进行高级设置，比如限制流量使用和单次加载的最大曲目数。",
                 "data": {
                     "brand_id": "如果您正在使用brand account，请输入brand id",
-                    "select_speakers": "播放设备下拉菜单实体ID",
-                    "select_playmode":"循环模式下拉菜单实体ID",
-                    "select_source":"播放列表/电台选择下拉菜单实体ID",
-                    "select_playlist":"播放列表下拉菜单实体ID",
-                    "select_playcontinuous":"持续播放模式下拉菜单实体ID",
                     "proxy_path": "代理模式的本地路径，不需要请留空",
                     "proxy_url": "代理服务器地址，不需要请留空",
                     "like_in_name": "在名称中显示喜欢状态",
@@ -54,23 +49,18 @@
                 }
             },
             "finish": {
-                "description": "请输入基本信息。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
+                "description": "在这里进行基本设置。需要帮助请查看https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "speakers": "播放设备白名单",
+                    "speakers": "选择输出设备白名单，第一个是默认设备。",
                     "header_path": "header文件保存路径",
                     "api_language": "API返回结果语言",
                     "advance_config": "显示高级选项"
                 }
             },
             "adv_finish": {
-                "description": "你可以在这里更改下拉菜单的实体ID，如果不使用下拉菜单，请将它们保持不变",
+                "description": "在这里进行高级设置，比如限制流量使用和单次加载的最大曲目数。",
                 "data": {
                     "brand_id": "如果您正在使用brand account，请输入brand id",
-                    "select_speakers": "播放设备下拉菜单实体ID",
-                    "select_playmode":"循环模式下拉菜单实体ID",
-                    "select_source":"播放列表/电台选择下拉菜单实体ID",
-                    "select_playlist":"播放列表下拉菜单实体ID",
-                    "select_playcontinuous":"持续播放模式下拉菜单实体ID",
                     "proxy_path": "代理模式的本地路径，不需要请留空",
                     "proxy_url": "代理服务器地址，不需要请留空",
                     "like_in_name": "在名称中显示喜欢状态",

@@ -12,21 +12,16 @@
             "finish": {
                 "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "speakers": "Select the default output device(s)",
+                    "speakers": "Select the output devices, the first one will be the default device",
                     "header_path": "File path for the header file",
                     "api_language": "The language parameter of the ytmusicapi, which determines the language of the returned results",
                     "advance_config": "Show advance configuration"
                 }
             },
             "adv_finish": {
-                "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
+                "description": "You can configure some behaviors of the player here, such as limiting data usage and setting the maximum number of tracks loaded per session.",
                 "data": {
                     "brand_id": "Enter a brand id if you are using a brand account",
-                    "select_speakers": "Entity id of input_select for speaker selection",
-                    "select_playmode":"Entity id of input_select for playmode selection",
-                    "select_source":"Entity id of input_select for playlist/radio selection",
-                    "select_playlist":"Entity id of input_select for playlist selection",
-                    "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
                     "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
                     "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
                     "like_in_name": "Show like status in the name",
@@ -56,21 +51,16 @@
             "finish": {
                 "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "speakers": "Select the default output device",
+                    "speakers": "Select the output devices, the first one will be the default device",
                     "header_path": "File path for the header file",
                     "api_language": "The language parameter of the ytmusicapi, which determines the language of the returned results",
                     "advance_config": "Show advance configuration"
                 }
             },
             "adv_finish": {
-                "description": "Here you can change to entity ids of select fields, if you don't use the dropdowns just leave them as is",
+                "description": "You can configure some behaviors of the player here, such as limiting data usage and setting the maximum number of tracks loaded per session.",
                 "data": {
                     "brand_id": "Enter a brand id if you are using a brand account",
-                    "select_speakers": "Entity id of input_select for speaker selection",
-                    "select_playmode":"Entity id of input_select for playmode selection",
-                    "select_source":"Entity id of input_select for playlist/radio selection",
-                    "select_playlist":"Entity id of input_select for playlist selection",
-                    "select_playcontinuous":"Entity id of input_boolean for play continouus selection",
                     "proxy_path": "Local path for proxy mode, leave blank if you don't need it",
                     "proxy_url": "Base URL for proxy mode, leave blank if you don't need it",
                     "like_in_name": "Show like status in the name",
