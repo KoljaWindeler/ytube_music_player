@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config, async_add_entities):
 	# Run setup via Storage
-	_LOGGER.debug("Config via Storage/UI")
+	_LOGGER.debug("init ytube sensor")
 	if(config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)):
 		async_add_entities([yTubeMusicSensor(hass, config)], update_before_add=True)
 
