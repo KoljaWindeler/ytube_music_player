@@ -491,6 +491,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					data = {select.ATTR_OPTION: repeat, ATTR_ENTITY_ID: self._selects['repeatmode']}
 					await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
 			self.log_me('debug', f"[E] set_repeat: {repeat}")
+			self.async_schedule_update_ha_state()
 
 	@property
 	def volume_level(self):
@@ -749,7 +750,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if(old_state.state == STATE_IDLE and new_state.state == STATE_PAUSED):
 					if(self._state == STATE_PLAYING):
 						self.log_me('error','chromecast in pause should be playings, '+str(old_state))
-						await self.async_get_track(keep_track_no=False)
+						await self.async_get_track()
 			except:
 				pass
 
@@ -1785,7 +1786,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if self.shuffle != shuffle:
 			self.log_me('debug', f"set_shuffle: {str(shuffle)}")
 			self._attr_shuffle = shuffle  # True / False
-		self.async_schedule_update_ha_state()
+			self.async_schedule_update_ha_state()
 
 
 	async def async_set_volume_level(self, volume):
