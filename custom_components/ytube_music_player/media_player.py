@@ -9,6 +9,7 @@ from urllib.parse import unquote
 import requests
 
 import voluptuous as vol
+from homeassistant.components.media_player import BrowseError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.event import async_call_later
@@ -22,6 +23,7 @@ from pytube import request # to generate cipher
 from pytube import extract # to generate cipher
 
 import ytmusicapi
+from pytube.exceptions import RegexMatchError
 # use this to work with local version
 # and make sure that the local package is also only loading local files
 # from .ytmusicapi import YTMusic
