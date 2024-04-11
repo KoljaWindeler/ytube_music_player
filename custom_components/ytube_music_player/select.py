@@ -8,12 +8,19 @@ from .const import *
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config, async_add_entities):
+	_LOGGER.debug("Init the dropdown(s)")
+	init_dropdowns = config.data.get(CONF_INIT_DROPDOWNS, DEFAULT_INIT_DROPDOWNS)
+	select_entities = {
+		"playlists": yTubeMusicPlaylistSelect(hass, config),
+		"speakers": yTubeMusicSpeakerSelect(hass, config),
+		"playmode": yTubeMusicPlayModeSelect(hass, config),
+		"radiomode": yTubeMusicSourceSelect(hass, config),
+		"repeatmode": yTubeMusicRepeatSelect(hass, config)
+	}
 	entities = []
-	entities.append(yTubeMusicPlaylistSelect(hass, config))
-	entities.append(yTubeMusicSpeakerSelect(hass, config))
-	entities.append(yTubeMusicPlayModeSelect(hass, config))
-	entities.append(yTubeMusicSourceSelect(hass, config))
-	entities.append(yTubeMusicRepeatSelect(hass, config))
+	for dropdown,entity in select_entities.items():
+		if dropdown in init_dropdowns:
+			entities.append(entity)
 	async_add_entities(entities, update_before_add=True)
 
 class yTubeMusicSelectEntity(SelectEntity):
@@ -48,7 +55,7 @@ class yTubeMusicPlaylistSelect(yTubeMusicSelectEntity):
 		self._attr_unique_id = self._device_id + "_playlist"
 		self._attr_name = "Playlist"
 		self._attr_icon = 'mdi:playlist-music'
-		self.hass.data[DOMAIN][self._device_id]['select_playlist'] = self
+		self.hass.data[DOMAIN][self._device_id]['select_playlists'] = self
 		self._attr_options = ["loading"]
 		self._attr_current_option = None
 
@@ -56,10 +63,7 @@ class yTubeMusicPlaylistSelect(yTubeMusicSelectEntity):
 		# update select
 		self._ready = True
 		try:
-			als = []
-			for playlist in self.hass.data[DOMAIN][self._device_id]['playlists']:
-				als.append(playlist)
-			self._attr_options = als
+			self._attr_options = list(self.hass.data[DOMAIN][self._device_id]['playlists'].keys())
 		except:
 			pass
 		try:
@@ -74,7 +78,7 @@ class yTubeMusicSpeakerSelect(yTubeMusicSelectEntity):
 		self._attr_unique_id = self._device_id + "_speaker"
 		self._attr_name = "Speaker"
 		self._attr_icon = 'mdi:speaker'
-		self.hass.data[DOMAIN][self._device_id]['select_speaker'] = self
+		self.hass.data[DOMAIN][self._device_id]['select_speakers'] = self
 		self._attr_options = ["loading"]
 		self._attr_current_option = None
 
@@ -119,6 +123,6 @@ class yTubeMusicRepeatSelect(yTubeMusicSelectEntity):
 		self._attr_unique_id = self._device_id + "_repeat"
 		self._attr_name = "Repeat Mode"
 		self._attr_icon = 'mdi:repeat'
-		self.hass.data[DOMAIN][self._device_id]['select_repeat'] = self
+		self.hass.data[DOMAIN][self._device_id]['select_repeatmode'] = self
 		self._attr_options = ["all", "one", "off"]  # one for future
 		self._attr_current_option = "all"

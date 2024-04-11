@@ -27,11 +27,13 @@
                     "like_in_name": "在名称中显示喜欢状态",
                     "debug_as_error": "在日志中将所有调试输出显示为ERROR",
                     "shuffle": "启动时随机播放",
+                    "shuffle_mode": "播放模式",
                     "track_limit": "加载曲目数量限制",
                     "max_datarate": "限制最大比特率，设置为0以禁用",
                     "legacy_radio": "将随机播放列表曲目创建为收藏夹电台",
                     "sort_browser": "在媒体浏览器中对结果进行排序",
-                    "extra_sensor": "创建提供额外信息的传感器实体"
+                    "extra_sensor": "创建提供额外信息的传感器实体",
+                    "dropdowns": "创建你需要的下拉菜单实体"
                 }
             }
         },
@@ -66,11 +68,13 @@
                     "like_in_name": "在名称中显示喜欢状态",
                     "debug_as_error": "在日志中将所有调试输出显示为ERROR",
                     "shuffle": "启动时随机播放",
+                    "shuffle_mode": "播放模式",
                     "track_limit": "加载曲目数量限制",
                     "max_datarate": "限制最大比特率，设置为0以禁用",
                     "legacy_radio": "将随机播放列表曲目创建为收藏夹电台",
                     "sort_browser": "在媒体浏览器中对结果进行排序",
-                    "extra_sensor": "创建提供额外信息的传感器实体"
+                    "extra_sensor": "创建提供额外信息的传感器实体",
+                    "dropdowns": "创建你需要的下拉菜单实体"
                 }
             }
         },
