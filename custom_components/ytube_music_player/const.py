@@ -317,8 +317,15 @@ def ensure_config(user_input):
 	out[CONF_MAX_DATARATE] = DEFAULT_MAX_DATARATE
 
 	if user_input is not None:
+		#  for the old shuffle_mode setting.
 		out.update(user_input)
-			
+		if isinstance(_shuffle_mode := out[CONF_SHUFFLE_MODE], int):
+			if _shuffle_mode >= 1:
+				out[CONF_SHUFFLE_MODE] = ALL_SHUFFLE_MODES[_shuffle_mode - 1]
+			else:
+				out[CONF_SHUFFLE_MODE] = PLAYMODE_DIRECT
+			_LOGGER.error(f"shuffle_mode: {_shuffle_mode} is a deprecated value and has been replaced with '{out[CONF_SHUFFLE_MODE]}'.")
+
 	return out
 
 
