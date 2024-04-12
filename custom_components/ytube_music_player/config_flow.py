@@ -191,13 +191,21 @@ async def async_create_form(hass, user_input, page=1):
 		data_schema[vol.Required(CONF_CODE+"TT", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
 		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
 	elif(page == 2):
+		# Generate a list of excluded entities.
+		# This method is more reliable because it won't become invalid 
+		# if users modify entity IDs, and it supports multiple instances.
+		_exclude_entities = []
+		for _ytm_player in hass.data[DOMAIN].values():
+			_LOGGER.warning(_ytm_player[DOMAIN_MP].entity_id)
+			_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
+	
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
 					"multiple": "true",
 					"filter": [{"domain": DOMAIN_MP}],
-					"exclude_entities": [DOMAIN_MP+"."+user_input[CONF_NAME]]
-                }
-            })
+					"exclude_entities": _exclude_entities
+				}
+			})
 		data_schema[vol.Required(CONF_API_LANGUAGE, default=user_input[CONF_API_LANGUAGE])] = selector({
 				"select": {
 					"options": languages,

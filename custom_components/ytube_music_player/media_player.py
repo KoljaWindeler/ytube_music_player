@@ -80,6 +80,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
 		self._attr_unique_id = config.entry_id
+		self.hass.data[DOMAIN][self._attr_unique_id][DOMAIN_MP] = self
 		self._debug_log_concat = ""
 		self._debug_as_error = config.data.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
