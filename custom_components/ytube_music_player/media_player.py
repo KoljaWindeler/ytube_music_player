@@ -93,11 +93,20 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# All entities are now automatically generated,will be registered in the async_update_selects method later.
 		# This should be helpful for multiple accounts.
 		self._selects = dict()  # use a dict to store the dropdown entity_id should be more convenient.
-		self._selects['playlists'] = None
-		self._selects['playmode'] = None
-		self._selects['repeatmode'] = None   # Previously, it was _select_playContinuous.
-		self._selects['speakers'] = None      # Previously, it was _select_mediaPlayer.
-		self._selects['radiomode'] = None    # Previously, it was _select_source.
+		# For old settings.
+		for k,v in OLD_INPUTS.items():
+			if v == CONF_SELECT_PLAYCONTINUOUS:
+				_domain = input_boolean.DOMAIN
+			else:
+				_domain = input_select.DOMAIN
+			try:
+				self._selects[k] = config.data.get(v)
+			except:
+				pass
+			if self._selects[k] is not None and self._selects[k].replace(" ","") != "":
+				self._selects[k] = _domain + "." + self._selects[k].replace(_domain + ".", "")
+				self.log_me('error', "Found old {} {}: {},Please consider using the new select entities.".format(_domain, k, self._selects[k] ))	
+
 		self._like_in_name = config.data.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
 
 		self._attr_shuffle = config.data.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
@@ -488,9 +497,22 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# Set repeat mode.
 			self._attr_repeat = repeat
 			if(self._selects['repeatmode'] is not None):
-				if self.hass.states.get(self._selects['repeatmode']).state != repeat:
-					data = {select.ATTR_OPTION: repeat, ATTR_ENTITY_ID: self._selects['repeatmode']}
-					await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
+				if repeat == RepeatMode.ALL:
+					ib_repeat = STATE_ON
+				else:
+					ib_repeat = STATE_OFF
+				if (_state := self.hass.states.get(self._selects['repeatmode']).state) != repeat:
+					if input_boolean.DOMAIN in self._selects['repeatmode']:
+						if _state != ib_repeat:
+							data = {ATTR_ENTITY_ID: self._selects['repeatmode']}
+							if ib_repeat == STATE_ON:
+								await self.hass.services.async_call(input_boolean.DOMAIN, IB_ON, data)
+							else:
+								await self.hass.services.async_call(input_boolean.DOMAIN, IB_OFF, data)
+					else:
+						data = {select.ATTR_OPTION: repeat, ATTR_ENTITY_ID: self._selects['repeatmode']}
+						await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
+					
 			self.log_me('debug', f"[E] set_repeat: {repeat}")
 			self.async_schedule_update_ha_state()
 
@@ -1027,7 +1049,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[S] async_update_selects")
 		# -- Register dropdown(s). -- #
 		for dropdown in self._init_dropdowns:
-			if self._selects[dropdown] is None:
+			if not await self.async_check_entity_exists(self._selects[dropdown], unavailable_is_ok=False):
 				entity_id = self.hass.data[DOMAIN][self._attr_unique_id][f'select_{dropdown}'].entity_id
 				if await self.async_check_entity_exists(entity_id, unavailable_is_ok=False):
 					self._selects[dropdown] = entity_id
@@ -1072,9 +1094,18 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			self._friendly_speakersList.update({a: friendly_name})
 		friendly_speakersList = list(self._friendly_speakersList.values())
 		if self._selects['speakers'] is not None:
-			await self.hass.data[DOMAIN][self._attr_unique_id]['select_speakers'].async_update(friendly_speakersList)  # update speaker select
-			data = {select.ATTR_OPTION: friendly_speakersList[0], ATTR_ENTITY_ID: self._selects['speakers']}  # select the first one in the list as the default player
-			await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
+			if input_select.DOMAIN in self._selects['speakers']:
+				_select = input_select
+			else:
+				_select = select
+			data = {_select.ATTR_OPTIONS: friendly_speakersList, ATTR_ENTITY_ID: self._selects['speakers']}
+			if _select == input_select:
+				await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+			else:
+				await self.hass.data[DOMAIN][self._attr_unique_id]['select_speakers'].async_update(friendly_speakersList)  # update speaker select
+			
+			data = {_select.ATTR_OPTION: friendly_speakersList[0], ATTR_ENTITY_ID: self._selects['speakers']}  # select the first one in the list as the default player
+			await self.hass.services.async_call(_select.DOMAIN, _select.SERVICE_SELECT_OPTION, data)
 		
 		# finally call update playlist to fill the list .. if it exists
 		await self.async_update_playlists()
@@ -1143,7 +1174,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			# sort with case-ignore
 			playlists = sorted(list(self._playlist_to_index.keys()), key=str.casefold)
 			await self.async_update_extra_sensor('playlists', playlists_to_extra)  # update extra sensor
-			await self.hass.data[DOMAIN][self._attr_unique_id]['select_playlists'].async_update()  # update playlist select
+			if self._selects['playlists'] is not None:  # update playlist select
+				if input_select.DOMAIN in self._selects['playlists']:
+					data = {input_select.ATTR_OPTIONS: list(playlists), ATTR_ENTITY_ID: self._selects["playlists"]}
+					await self.hass.services.async_call(input_select.DOMAIN, input_select.SERVICE_SET_OPTIONS, data)
+				else:
+					await self.hass.data[DOMAIN][self._attr_unique_id]['select_playlists'].async_update()
 		except:
 			self.exc()
 			msg = "Caught error while loading playlist. please log for details"
@@ -1192,14 +1228,15 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[S] async_update_playmode")
 		try:
 			if self._selects['repeatmode'] is not None:
-				await self.async_set_repeat(self.hass.states.get(self._selects['repeatmode']).state)
+				if (_state := self.hass.states.get(self._selects['repeatmode']).state) == STATE_ON:
+					_state = RepeatMode.ALL
+				await self.async_set_repeat(_state)
 		except:
 			self.log_me('debug', "- Selection field " + self._selects['repeatmode'] + " not found, skipping")
 
 		try:
 			if self._selects['playmode'] is not None:
-				_playmode = self.hass.states.get(self._selects['playmode']).state
-				if _playmode is not None:
+				if (_playmode := self.hass.states.get(self._selects['playmode']).state) is not None:
 					if _playmode in (PLAYMODE_SHUFFLE,PLAYMODE_DIRECT):
 						shuffle = False
 					else:
@@ -1573,8 +1610,12 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if _player is not None:
 			await self.async_update_remote_player(remote_player=_player)
 			if self._selects['speakers'] is not None:
-				data = {"option": _player, "entity_id": self._selects['speakers']}
-				await self.hass.services.async_call(select.DOMAIN, select.SERVICE_SELECT_OPTION, data)
+				if input_select.DOMAIN in self._selects['speakers']:
+					_select = input_select
+				else:
+					_select = select
+				data = {_select.ATTR_OPTION: _player, ATTR_ENTITY_ID: self._selects['speakers']}
+				await self.hass.services.async_call(_select.DOMAIN, _select.SERVICE_SELECT_OPTION, data)
 
 		# load Tracks depending on input
 		try:
