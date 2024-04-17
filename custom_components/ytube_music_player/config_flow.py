@@ -191,13 +191,21 @@ async def async_create_form(hass, user_input, page=1):
 		data_schema[vol.Required(CONF_CODE+"TT", default="https://www.google.com/device?user_code="+user_input[CONF_CODE]["user_code"])] = str # name of the component without domain
 		data_schema[vol.Required(CONF_NAME, default=user_input[CONF_NAME])] = str # name of the component without domain
 	elif(page == 2):
+		# Generate a list of excluded entities.
+		# This method is more reliable because it won't become invalid 
+		# if users modify entity IDs, and it supports multiple instances.
+		_exclude_entities = []
+		for _ytm_player in hass.data[DOMAIN].values():
+			_LOGGER.warning(_ytm_player[DOMAIN_MP].entity_id)
+			_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
+	
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
 					"multiple": "true",
 					"filter": [{"domain": DOMAIN_MP}],
-					"exclude_entities": [DOMAIN_MP+"."+user_input[CONF_NAME]]
-                }
-            })
+					"exclude_entities": _exclude_entities
+				}
+			})
 		data_schema[vol.Required(CONF_API_LANGUAGE, default=user_input[CONF_API_LANGUAGE])] = selector({
 				"select": {
 					"options": languages,
@@ -214,8 +222,8 @@ async def async_create_form(hass, user_input, page=1):
 				"select": {
 					"options": ALL_SHUFFLE_MODES,
 					"mode": "dropdown"
-                }
-            })
+				}
+			})
 		data_schema[vol.Optional(CONF_LIKE_IN_NAME, default=user_input[CONF_LIKE_IN_NAME])] = vol.Coerce(bool) # default like_in_name, TRUE/FALSE
 		data_schema[vol.Optional(CONF_DEBUG_AS_ERROR, default=user_input[CONF_DEBUG_AS_ERROR])] = vol.Coerce(bool) # debug_as_error, TRUE/FALSE
 		data_schema[vol.Optional(CONF_LEGACY_RADIO, default=user_input[CONF_LEGACY_RADIO])] = vol.Coerce(bool) # default radio generation typ
@@ -225,8 +233,13 @@ async def async_create_form(hass, user_input, page=1):
 				"select": {
 					"options": ALL_DROPDOWNS,
 					"multiple": "true"
-                }
-            })
+				}
+			})
+		#  add for the old inputs.
+		for _old_conf_input in OLD_INPUTS.values():
+			if user_input.get(_old_conf_input) is not None:
+				data_schema[vol.Optional(_old_conf_input, default=user_input[_old_conf_input])] = str
+
 		data_schema[vol.Optional(CONF_TRACK_LIMIT, default=user_input[CONF_TRACK_LIMIT])] = vol.Coerce(int)
 		data_schema[vol.Optional(CONF_MAX_DATARATE, default=user_input[CONF_MAX_DATARATE])] = vol.Coerce(int)
 		data_schema[vol.Optional(CONF_BRAND_ID, default=user_input[CONF_BRAND_ID])] = str # brand id

@@ -33,7 +33,12 @@
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information",
-                    "dropdowns": "Create the dropdown(s) you want to use"
+                    "dropdowns": "Create the dropdown(s) you want to use",
+                    "select_speakers": "Entity id of input_select for speaker selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playmode": "Entity id of input_select for playmode selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_source": "Entity id of input_select for playlist/radio selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playlist": "Entity id of input_select for playlist selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playcontinuous": "Entity id of input_boolean for play continuous selection(Deprecated. Leaving a space can permanently delete this field)"
                 }
             }
         },
@@ -74,7 +79,12 @@
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information",
-                    "dropdowns": "Create the dropdown(s) you want to use"
+                    "dropdowns": "Create the dropdown(s) you want to use",
+                    "select_speakers": "Entity id of input_select for speaker selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playmode": "Entity id of input_select for playmode selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_source": "Entity id of input_select for playlist/radio selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playlist": "Entity id of input_select for playlist selection(Deprecated. Leaving a space can permanently delete this field)",
+                    "select_playcontinuous": "Entity id of input_boolean for play continuous selection(Deprecated. Leaving a space can permanently delete this field)"
                 }
             }
         },

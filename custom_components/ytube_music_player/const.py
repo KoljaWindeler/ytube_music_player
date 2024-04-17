@@ -20,6 +20,7 @@ from homeassistant.const import (
 	CONF_PASSWORD,
 	STATE_PLAYING,
 	STATE_PAUSED,
+	STATE_ON,
 	STATE_OFF,
 	STATE_IDLE,
 	ATTR_COMMAND,
@@ -41,8 +42,16 @@ from homeassistant.components.media_player import (
 	DOMAIN as DOMAIN_MP,
 )
 
+#  add for old settings
+from homeassistant.components.input_boolean import (
+	SERVICE_TURN_OFF as IB_OFF,
+	SERVICE_TURN_ON as IB_ON,
+	DOMAIN as DOMAIN_IB,
+)
+
 import homeassistant.components.select as select
-import homeassistant.components.switch as switch
+import homeassistant.components.input_select as input_select  # add for old settings
+import homeassistant.components.input_boolean as input_boolean  # add for old settings
 
 # Should be equal to the name of your component.
 PLATFORMS = {"sensor", "select", "media_player" }
@@ -100,8 +109,7 @@ SERVICE_CALL_GOTO_TRACK = "goto_track"
 SERVICE_CALL_MOVE_TRACK = "move_track_within_queue"
 SERVICE_CALL_APPEND_TRACK = "append_track_to_queue"
 
-
-CONF_RECEIVERS = 'speakers'	 # list of speakers (media_players)
+CONF_RECEIVERS = 'speakers'  # list of speakers (media_players)
 CONF_HEADER_PATH = 'header_path'
 CONF_API_LANGUAGE = 'api_language'
 CONF_SHUFFLE = 'shuffle'
@@ -123,6 +131,25 @@ CONF_MAX_DATARATE = 'max_datarate'
 CONF_TRACK_LIMIT = 'track_limit'
 CONF_PROXY_URL = 'proxy_url'
 CONF_PROXY_PATH = 'proxy_path'
+
+#  add for old settings
+CONF_SELECT_SOURCE = 'select_source'
+CONF_SELECT_PLAYLIST = 'select_playlist'
+CONF_SELECT_SPEAKERS = 'select_speakers'
+CONF_SELECT_PLAYMODE = 'select_playmode'
+CONF_SELECT_PLAYCONTINUOUS = 'select_playcontinuous'
+OLD_INPUTS = {
+				"playlists": CONF_SELECT_PLAYLIST,
+				"speakers": CONF_SELECT_SPEAKERS,
+				"playmode": CONF_SELECT_PLAYMODE,
+				"radiomode": CONF_SELECT_SOURCE,
+				"repeatmode": CONF_SELECT_PLAYCONTINUOUS
+}
+DEFAULT_SELECT_PLAYCONTINUOUS = ""
+DEFAULT_SELECT_SOURCE = ""
+DEFAULT_SELECT_PLAYLIST = ""
+DEFAULT_SELECT_PLAYMODE = ""
+DEFAULT_SELECT_SPEAKERS = ""
 
 DEFAULT_HEADER_FILENAME = 'header_'
 DEFAULT_API_LANGUAGE = 'en'
@@ -317,8 +344,25 @@ def ensure_config(user_input):
 	out[CONF_MAX_DATARATE] = DEFAULT_MAX_DATARATE
 
 	if user_input is not None:
+		#  for the old shuffle_mode setting.
 		out.update(user_input)
-			
+		if isinstance(_shuffle_mode := out[CONF_SHUFFLE_MODE], int):
+			if _shuffle_mode >= 1:
+				out[CONF_SHUFFLE_MODE] = ALL_SHUFFLE_MODES[_shuffle_mode - 1]
+			else:
+				out[CONF_SHUFFLE_MODE] = PLAYMODE_DIRECT
+			_LOGGER.error(f"shuffle_mode: {_shuffle_mode} is a deprecated value and has been replaced with '{out[CONF_SHUFFLE_MODE]}'.")
+
+		# If old input(s) exists,uncheck the new corresponding select(s).
+		# If the old input is set to a blank space character, then permanently delete this field.
+		for dropdown in ALL_DROPDOWNS:
+			if (_old_conf_input := out.get(OLD_INPUTS[dropdown])) is not None:
+				if _old_conf_input.replace(" ","") == "":
+					del out[OLD_INPUTS[dropdown]]
+				else:
+					if dropdown in out[CONF_INIT_DROPDOWNS]:
+						out[CONF_INIT_DROPDOWNS].remove(dropdown)
+						_LOGGER.warning(f"old {dropdown} input_select: {_old_conf_input} exists,uncheck the corresponding new select.")
 	return out
 
 
