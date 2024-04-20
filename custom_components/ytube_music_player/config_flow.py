@@ -195,10 +195,10 @@ async def async_create_form(hass, user_input, page=1):
 		# This method is more reliable because it won't become invalid 
 		# if users modify entity IDs, and it supports multiple instances.
 		_exclude_entities = []
-		for _ytm_player in hass.data[DOMAIN].values():
-			_LOGGER.warning(_ytm_player[DOMAIN_MP].entity_id)
-			_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
-	
+		if (_ytm := hass.data.get(DOMAIN)) is not None:
+			for _ytm_player in _ytm.values():
+				_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
+
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
 					"multiple": "true",
