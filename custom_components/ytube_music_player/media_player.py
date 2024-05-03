@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 from homeassistant.components.media_player import BrowseError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -588,11 +588,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		# subscribe to changes
 		if self._selects['playmode'] is not None:
-			async_track_state_change(self.hass, self._selects['playmode'], self.async_update_playmode)
+			async_track_state_change_event(self.hass, self._selects['playmode'], self.async_update_playmode)
 		if self._selects['repeatmode'] is not None:
-			async_track_state_change(self.hass, self._selects['repeatmode'], self.async_update_playmode)
+			async_track_state_change_event(self.hass, self._selects['repeatmode'], self.async_update_playmode)
 		if self._selects['speakers'] is not None:
-			async_track_state_change(self.hass, self._selects['speakers'], self.async_select_source_helper)
+			async_track_state_change_event(self.hass, self._selects['speakers'], self.async_select_source_helper)
 
 		# make sure that the player, is on and idle
 		try:
@@ -719,7 +719,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					pass
 				self._untrack_remote_player = None
 		if(self._untrack_remote_player is None):
-			self._untrack_remote_player = async_track_state_change(self.hass, self._remote_player, self.async_sync_player)
+			self._untrack_remote_player = async_track_state_change_event(self.hass, self._remote_player, self.async_sync_player)
 		self.log_me('debug', "[E] async_update_remote_player")
 		return True
 
@@ -971,7 +971,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[S] async_select_source_helper")
 		# redirect call, obviously we got called by status change, so we can call it without argument and let it pick
 		source_entity_id = None
-		source = self.hass.states.get(entity_id).state
+		source = self.hass.states.get(self._selects['speakers']).state
 		# get entity id from friendly_name
 		for e, f in self._friendly_speakersList.items():
 			if(f == source):
@@ -1062,11 +1062,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			except:
 				self.log_me('error', 'untrack failed')
 		if self._selects['speakers'] is not None:
-			self._untrack_remote_player_selector = async_track_state_change(self.hass, self._selects['speakers'], self.async_select_source_helper)
+			self._untrack_remote_player_selector = async_track_state_change_event(self.hass, self._selects['speakers'], self.async_select_source_helper)
 		if self._selects['playmode'] is not None:
-			async_track_state_change(self.hass, self._selects['playmode'], self.async_update_playmode)
+			async_track_state_change_event(self.hass, self._selects['playmode'], self.async_update_playmode)
 		if self._selects['repeatmode'] is not None:
-			async_track_state_change(self.hass, self._selects['repeatmode'], self.async_update_playmode)
+			async_track_state_change_event(self.hass, self._selects['repeatmode'], self.async_update_playmode)
 		# ----------- speaker -----#
 		try:
 			if(isinstance(self._speakersList, str)):
@@ -1903,7 +1903,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				return
 			if('player' in self._interrupt_data):
 				await self.async_update_remote_player(remote_player=self._interrupt_data['player'])
-				self._untrack_remote_player = async_track_state_change(self.hass, self._remote_player, self.async_sync_player)
+				self._untrack_remote_player = async_track_state_change_event(self.hass, self._remote_player, self.async_sync_player)
 				self._interrupt_data['player'] = None
 			await self.async_get_track()
 			if('pos' in self._interrupt_data):
@@ -2175,6 +2175,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			except:
 				self.log_me('debug', "- untrack failed")
 			self._untrack_remote_player_selector = None
-		self._untrack_remote_player_selector = async_track_state_change(
+		self._untrack_remote_player_selector = async_track_state_change_event(
 			self.hass, self._selects['speakers'], self.async_select_source_helper)
 		self.log_me('debug', "- untrack resub")
