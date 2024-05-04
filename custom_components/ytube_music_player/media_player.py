@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import BrowseError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.core import Event
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -735,8 +736,19 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# this is why we need pytube as include 
 		self.log_me('debug', "[E] async_get_cipher")
 
-	async def async_sync_player(self, entity_id=None, old_state=None, new_state=None):
+	async def async_sync_player(self, event=None):
 		self.log_debug_later("[S] async_sync_player")
+		if isinstance(event,Event):
+			_event_data = event.data
+			entity_id = _event_data.get('entity_id')
+			old_state = _event_data.get('old_state')
+			new_state = _event_data.get('new_state')
+		else:
+			entity_id = None
+			old_state = None
+			new_state = None
+			self.log_me('debug', f"event: {event}")
+	
 		if(entity_id is not None and old_state is not None) and new_state is not None:
 			self.log_debug_later(entity_id + ": " + old_state.state + " -> " + new_state.state)
 			if(entity_id.lower() != self._remote_player.lower()):
@@ -966,8 +978,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		return info
 
-
-	async def async_select_source_helper(self, entity_id=None, old_state=None, new_state=None):
+	async def async_select_source_helper(self, event=None):
 		self.log_me('debug', "[S] async_select_source_helper")
 		# redirect call, obviously we got called by status change, so we can call it without argument and let it pick
 		source_entity_id = None
@@ -1218,8 +1229,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				pass
 		self.log_me('debug', "[E] async_update_extra_sensor")
 
-
-	async def async_update_playmode(self, entity_id=None, old_state=None, new_state=None):
+	async def async_update_playmode(self, event=None):
 		# called from HA when th user changes the input entry, will read selection to membervar
 		# Changing the shuffle_mode while music is playing will no longer cause interruptions.
 		# Only when shuffle_mode=true the next song will be random.
@@ -1258,7 +1268,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		else:
 			await self.async_get_track()
 
-	async def async_get_track(self, entity_id=None, old_state=None, new_state=None, retry=3, auto_advance=False, keep_track_no=True):
+	async def async_get_track(self, event=None, retry=3, auto_advance=False, keep_track_no=True):
 		self.log_me('debug', "[S] async_get_track")
 		# Get a track and play it from the track_queue.
 		# grab next track from prefetched lis
