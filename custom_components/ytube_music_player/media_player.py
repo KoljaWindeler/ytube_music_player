@@ -105,7 +105,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				pass
 			if self._selects[k] is not None and self._selects[k].replace(" ","") != "":
 				self._selects[k] = _domain + "." + self._selects[k].replace(_domain + ".", "")
-				self.log_me('error', "Found old {} {}: {},Please consider using the new select entities.".format(_domain, k, self._selects[k] ))	
+				self.log_me('debug', "Found old {} {}: {},please consider using the new select entities.".format(_domain, k, self._selects[k] ))	
 
 		self._like_in_name = config.data.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
 
