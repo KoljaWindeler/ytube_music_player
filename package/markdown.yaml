@@ -30,10 +30,10 @@ views:
                   id: PLZvjm51R8SGu_______-A17Kp3jZfg6pg
           - type: entities
             entities:
-              - entity: input_select.ytube_music_player_playlist
-              - entity: input_select.ytube_music_player_source
-              - entity: input_select.ytube_music_player_speakers
-              - entity: input_select.ytube_music_player_playmode
+              - entity: select.ytube_music_player_playlist
+              - entity: select.ytube_music_player_radio_mode
+              - entity: select.ytube_music_player_speaker
+              - entity: select.ytube_music_player_play_mode
             title: Kolja
           - type: 'custom:mini-media-player'
             entity: media_player.keller_2
