@@ -1117,6 +1117,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			
 			data = {_select.ATTR_OPTION: friendly_speakersList[0], ATTR_ENTITY_ID: self._selects['speakers']}  # select the first one in the list as the default player
 			await self.hass.services.async_call(_select.DOMAIN, _select.SERVICE_SELECT_OPTION, data)
+		else:
+			# we need to set the default player here, as there is no selct field. without a select field we don't get updates from the field and will never set the default player
+			await self.async_select_source(speakersList[0])
 		
 		# finally call update playlist to fill the list .. if it exists
 		await self.async_update_playlists()
