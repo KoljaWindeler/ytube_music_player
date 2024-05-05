@@ -53,7 +53,7 @@ Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/
    1. If the integration didn't show up in the list please REFRESH the page
 2. The integration will interact with the YouTube Music server via Googles oAuth method. You have to grand access for that. Copy the shown URL to a separate browser window and follow the instructions on the screen.
 3. On the second page you can configure the name of the player (handy if you want multiple players), define the default "remote player" and the oAuth file location (also needed if you want multiple player)
-4. The last (and optional) page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
+4. The last (and optional) page shows several checkboxes for dropdown field. You can leave the default values, or pick the items you want to use. (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
 
 ## Installation went fine, what now?
 At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (lower right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
@@ -160,7 +160,9 @@ Service | parameter | details
 
 ## Dropdowns, Buttons and Marksdowns
 The player can controlled with shortcut from the mini-media-player, with direct calls to the offered services or simply by turing the player on.
-However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. These are presented in the form of drop-down fields, as shown in the screenshot below. The dropdowns can be copied from the yaml at [package/default.yaml](https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml). *You can also rename those dropdowns if you have to (e.g. if you run two players). Go to the 'options' dialog (configflow) and change the default values during the second step to update the ytube_media_player if you do that.*
+However certain extra informations are required to controll what will be played and where to support the "one-click-turn-on" mode. 
+These are presented in the form of drop-down fields, as shown in the screenshot below.
+Go to the 'options' dialog (configflow) and choose the dropdowns you want to use.
 
 The player attributes contain addition informations, like the playlist and if available the lyrics of the track
 ![lyrics](lyrics.png)
@@ -283,14 +285,14 @@ mode: single
 trigger:
   - platform: state
     entity_id:
-      - input_select.ytube_music_player_speakers
+      - select.ytube_music_player_speaker
     from: null
     to: null
 action:
   - choose:
       - conditions:
           - condition: state
-            entity_id: input_select.ytube_music_player_speakers
+            entity_id: select.ytube_music_player_speaker
             state: OwnTone server                
         sequence:
           - alias: Detect OFF state also as idle
@@ -367,14 +369,14 @@ If you will only use e.g. MPD as target player, you can do this during startup o
         command: off_is_idle
 ```
 
-Or you can add an automation triggered on the `input_select.ytube_music_player_speakers` entity to set this behavior depending on the selected target:
+Or you can add an automation triggered on the `select.ytube_music_player_speaker` entity to set this behavior depending on the selected target:
 ```yaml
 alias: Set YT Music player auto advance detection according to selected speakers
 mode: single
 trigger:
   - platform: state
     entity_id:
-      - input_select.ytube_music_player_speakers
+      - select.ytube_music_player_speaker
     from: null
     to: null
 action:
@@ -383,10 +385,10 @@ action:
           - condition: or
             conditions:
               - condition: state
-                entity_id: input_select.ytube_music_player_speakers
+                entity_id: select.ytube_music_player_speaker
                 state: Mpd
               - condition: state
-                entity_id: input_select.ytube_music_player_speakers
+                entity_id: select.ytube_music_player_speaker
                 state: OwnTone server                
         sequence:
           - service: ytube_music_player.call_method
@@ -395,7 +397,7 @@ action:
               command: off_is_idle
       - conditions:
           - condition: state
-            entity_id: input_select.ytube_music_player_speakers
+            entity_id: select.ytube_music_player_speaker
             state: Sonos
         sequence:
           - service: ytube_music_player.call_method
@@ -446,28 +448,38 @@ Not yet tested, but should work in general. Please create two entities via the C
 
 ## FAQ
 - **[Q] Where are the input_select fields?**  
-  [A] you have to add them to your configuration, simply copy the content of https://github.com/KoljaWindeler/ytube_music_player/blob/main/package/default.yaml to your configuration.yaml (and restart home-assistant) 
-  
+  [A] After Version 20240420.02,You can find the options in advanced settings to choose the select entities you want to use,they will be automatically added to Home Assistant.  
+  Existing users can continue using the original input_select(s) which are created by the yaml.If you want to use the new select(s), follow these steps:  
+  1.) Setting the IDs of the original inputs to a blank space character will permanently delete this field.  
+  2.) Use checkboxes in the advance configuration to choose the new select entities you want to use.  
+  3.) If everything is working correctly(after adjusting your dashboard and automations), delete the YAML file used to create the old input entities.
+
+
 - **[Q] Where can I find the ID for e.g. a playlist?**  
   [A] simply start the playlist / album / track via the media_browser. Once the music is playing open the `developer tools` -> `states` and search for your `media_player.ytube_music_player`. Note the `_media_type` and the `_media_id` and use them for your service calls / shortcuts
-  
+
+
 - **[Q] I get 'malformed used input' what should I do?**  
   [A] I can't really explain what happens here, but simply remove the integration (on the integration page, no need to remove it via HACS) and set it up once more.
-  
+
+
  - **[Q] What is legacy radio?**  
   [A] YouTube Music offers differnt ways to play a radio. The 'legacy' version would choose a random track from that playlist and create a radio based on that single track. The 'non legacy' version will be based on the complete playlist. At least for me the 'legacy' way offers more variaty, the 'non legacy' is mostly the same list. 
-  
+
+
  - **[Q] What is Shuffle vs Random vs Shuffle Random**  
   [A] Once shuffle is enabled you can choose the method:  
   1.) **Shuffle** will shuffle the playlist on generation and the play straight 1,2,3,..., this is the default  
   2.) **Random** will NOT shuffle the playlist on generation but pick the tracks randomly, repeats can happen  
   3.) **Shuffle Random** will shuffle the playlist on generation and pick the next random, repeats can happen  
-  You can change the mode when you add the input_select.ytube_music_player_playmode
-  
+  You can change the mode when you add the select.ytube_music_player_play_mode
+ 
+
   - **[Q] Can I search for items**  
   [A] yes, please have a look at this little clip https://youtu.be/6pQJa0tvVMQ  
   basically call the service `ytube_music_player.search` and open the media_browser after that. There should be a new item that contains the results
-  
+
+
   - **[Q] Why is my playlist limited to 25 entries**  
   [A] This is the default number that this integration will load. You can change this number via the configuration menu: 
   "configuration" -> "integration" -> "ytube_music_player" -> "configure" -> "Show advance configuration" -> "Limit of simultaniously loaded tracks".
