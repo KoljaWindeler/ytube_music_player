@@ -3,10 +3,13 @@
     "config": {
         "step": {
             "oauth": {
-                "description": "Please open the URL below in a seperate browser window. Once you completed the setup please return to this page and go on",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "codeTT": "Google Device Code",
-                    "name": "Name for the entity (without 'media_player' prefix)"
+                    "name": "Name for the entity (without 'media_player' prefix)",
+                    "cookie": "Enter cookie text, copied from browser",
+                    "speakers": "Select the default output device",
+                    "header_path": "File path for the header file",
+                    "advance_config": "Show advance configuration"
                 }
             },
             "finish": {
@@ -43,16 +46,25 @@
             }
         },
         "error": {
-            "ERROR_GENERIC": "It looks like you haven't granted access to our request, please try again"
+            "ERROR_GENERIC": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
+            "ERROR_AUTH_USER": "Can't find the 'X-Goog-AuthUser' field, please check your input",
+            "ERROR_COOKIE":  "Can't find the 'Cookie' field, please check your input",
+            "ERROR_CONTENTS": "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?",
+            "ERROR_FORMAT": "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'",
+            "ERROR_NONE": "Format of cookie seams OK, but the returned sub API object is None",
+            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie"
         }
     },
     "options": {
         "step": {
             "oauth": {
-                "description": "The token is somehow not longer valid. Please open the URL below in a seperate browser window again. Once you completed the setup please return to this page and go on",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
                 "data": {
-                    "codeTT": "Google Device Code",
-                    "name": "Name for the entity (without 'media_player' prefix)"
+                    "name": "Name for the entity (without 'media_player' prefix)",
+                    "cookie": "Enter cookie text, copied from browser",
+                    "speakers": "Select the default output device",
+                    "header_path": "File path for the header file",
+                    "advance_config": "Show advance configuration"
                 }
             },
             "finish": {
@@ -75,7 +87,7 @@
                     "shuffle": "Turn on shuffle on startup",
                     "shuffle_mode": "Playmode",
                     "track_limit": "Limit of simultaneously loaded tracks",
-                    "max_datarate": "Limit the maximum bit rate, 0 to disable",
+                    "max_datarate": "Limit the maximum bit rate",
                     "legacy_radio": "Create radio as watchlist of random playlist track",
                     "sort_browser": "Sort results in the media browser",
                     "extra_sensor": "Create sensor that provide extra information",
@@ -89,7 +101,13 @@
             }
         },
         "error": {
-            "ERROR_GENERIC": "It looks like you haven't granted access to our request, please try again"
+            "ERROR_GENERIC": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
+            "ERROR_AUTH_USER": "Can't find the 'X-Goog-AuthUser' field, please check your input",
+            "ERROR_COOKIE":  "Can't find the 'Cookie' field, please check your input",
+            "ERROR_CONTENTS": "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?",
+            "ERROR_FORMAT": "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'",
+            "ERROR_NONE": "Format of cookie seams OK, but the returned sub API object is None",
+            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie"
         }
     },
     "services": {
