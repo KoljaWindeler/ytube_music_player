@@ -48,12 +48,32 @@ Please install this custom component via [HACS](https://hacs.xyz/docs/installati
 Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/how-to-install-any-custom-component-from-github-in-less-than-5-minutes-ad84e6dc56ff) and install the yTube_music_player from the default HACS repository.
 
 # Setup
-**Please use the config flow of Home Assistant**
-1. Go to Settings -> Devices -> "Add integration" -> "YouTube Music Player"
+Go to Settings -> Devices -> "Add integration" -> "YouTube Music Player"
+   If the integration didn't show up in the list please REFRESH the page
+
+Very unfortunatly YouTube removed oAuth around November 2024 so we have to go basck to the old method to grab and convert a cookie from youTube Music. 
+This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below. It is highly recommended to use Google chrome for this step!
+The process frequenty leads to GitHub Ticket that can't be supported. Please pay a close look to the details, it's no fun but works if you do it right :)
+
+![setup](setup.png)
+
+**1. Basic steps for grabbing**
+
+1. Open the development tools (I've used google chrome) [Crtl+Shift+I / F12]
+2. Open the Network tab
+3. Open https://music.youtube.com, log out, log in, browse a bit around like clicking on the library in the top menu
+4. Search for "browse" (for me only one item shows up)
+5. Go to "headers" -> "request headers" 
+6. copy everything starting after the "accept: */*" (mark with a mouse and copy to clipboard)
+
+**2. Please use the config flow of Home Assistant**
+
+7. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
    1. If the integration didn't show up in the list please REFRESH the page
-2. The integration will interact with the YouTube Music server via Googles oAuth method. You have to grand access for that. Copy the shown URL to a separate browser window and follow the instructions on the screen.
-3. On the second page you can configure the name of the player (handy if you want multiple players), define the default "remote player" and the oAuth file location (also needed if you want multiple player)
-4. The last (and optional) page shows several checkboxes for dropdown field. You can leave the default values, or pick the items you want to use. (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
+9. Paste the cookie into the indicated field, all other fields are optional or provide default values 
+   1. It is highly recommended to enter the entity_id of your default output player, otherwise you have to set that after every reboot
+   2. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
+      
 
 ## Installation went fine, what now?
 At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (lower right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
