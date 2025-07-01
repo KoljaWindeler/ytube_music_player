@@ -25,6 +25,7 @@ from pytubefix import request # to generate cipher
 from pytubefix import extract # to generate cipher
 
 import ytmusicapi
+from ytmusicapi.auth.oauth import OAuthCredentials
 from pytubefix.exceptions import RegexMatchError
 # use this to work with local version
 # and make sure that the local package is also only loading local files
@@ -112,7 +113,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "- track_limit: " + str(self._trackLimit))
 		self.log_me('debug', "- legacy_radio: " + str(self._legacyRadio))
 		self.log_me('debug', "- max_dataRate: " + str(self._maxDatarate))
-
+		
+		self._client_id = config.data.get(CONF_CLIENT_ID)
+		self._client_secret = config.data.get(CONF_CLIENT_SECRET)
 		self._brand_id = str(config.data.get(CONF_BRAND_ID, ""))
 		self._api = None
 		self._js = ""
@@ -337,7 +340,8 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(self._api is None):
 			self.log_debug_later("- no valid API, try to login")
 			if(os.path.exists(self._header_file)):
-				[ret, msg, self._api] = await async_try_login(self.hass, self._header_file, self._brand_id, self._api_language)
+				oauth_credentials=OAuthCredentials(client_id=self._client_id, client_secret=self._client_secret)
+				[ret, msg, self._api] = await async_try_login(self.hass, self._header_file, self._brand_id, self._api_language,oauth_credentials)
 				if(msg != ""):
 					self._api = None
 					out = "Issue during login: " + msg
@@ -1151,10 +1155,10 @@ class yTubeMusicComponent(MediaPlayerEntity):
 				if not('count' in playlist):
 					try:
 						extra_info = await self.hass.async_add_executor_job(self._api.get_playlist, playlist['playlistId'])
+						self._playlists[idx]['count'] = 25
 						if('trackCount' in extra_info):
-							self._playlists[idx]['count'] = int(extra_info['trackCount'])
-						else:
-							self._playlists[idx]['count'] = 25
+							if(extra_info['trackCount']):
+								self._playlists[idx]['count'] = int(extra_info['trackCount'])
 					except:
 						if('playlistId' in playlist):
 							self.log_me('debug', "- Failed to get_playlist count for playlist ID '" + str(playlist['playlistId']) + "' setting it to 25")
