@@ -51,29 +51,51 @@ Once you've installed HACS follow this [Guide](https://codingcyclist.medium.com/
 Go to Settings -> Devices -> "Add integration" -> "YouTube Music Player"
    If the integration didn't show up in the list please REFRESH the page
 
-Very unfortunatly YouTube removed oAuth around November 2024 so we have to go basck to the old method to grab and convert a cookie from youTube Music. 
-This is described in https://ytmusicapi.readthedocs.io/en/latest/setup.html#copy-authentication-headers and also below. It is highly recommended to use Google chrome for this step!
-The process frequenty leads to GitHub Ticket that can't be supported. Please pay a close look to the details, it's no fun but works if you do it right :)
+For the installation you need an Oauth token from google. Here is how you create it:
 
-![setup](setup.png)
+Open the provided link during the config flow. if this is the first time you use a google developer account you won't have project. So click "create project" in the upper right corner
+<img width="2864" height="1069" alt="Image" src="https://github.com/user-attachments/assets/d63cf24c-586f-4068-ba4b-382b60ac8d2d" />
 
-**1. Basic steps for grabbing**
+call it what ever you want .. it is just visible for you
+<img width="2864" height="1069" alt="Image" src="https://github.com/user-attachments/assets/ce4683cb-2ef6-4144-b19f-763aa668d68f" />
 
-1. Open the development tools (I've used google chrome) [Crtl+Shift+I / F12]
-2. Open the Network tab
-3. Open https://music.youtube.com, log out, log in, browse a bit around like clicking on the library in the top menu
-4. Search for "browse" (for me only one item shows up)
-5. Go to "headers" -> "request headers" 
-6. copy everything starting after the "accept: */*" (mark with a mouse and copy to clipboard)
+once created you need to cofigure the consent screen, again in the upper right corner
+<img width="2864" height="1069" alt="Image" src="https://github.com/user-attachments/assets/2251ddc2-d549-4349-8524-225647c3b6d2" />
 
-**2. Please use the config flow of Home Assistant**
+click get-started and follow the process
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/657f6d3d-1650-43f7-ab5a-71ff96e5835d" />
 
-7. Open Configuration -> Integrations -> "add integration" -> "YouTube Music Player"
-   1. If the integration didn't show up in the list please REFRESH the page
-9. Paste the cookie into the indicated field, all other fields are optional or provide default values 
-   1. It is highly recommended to enter the entity_id of your default output player, otherwise you have to set that after every reboot
-   2. The second page shows several entity_ids for dropdown field. You can leave the default values, even if you don't want to use those field and don't add them to your configuration... or clear the field ... both will work fine (see [below](https://github.com/KoljaWindeler/ytube_music_player#dropdowns-buttons-and-marksdowns))
-      
+again .. names won't matter
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/6015ad6e-6e08-4513-add5-a693900e1e1e" />
+
+likely you will also be able to have an external project
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/22db2918-9145-4950-82f7-3e453885bec7" />
+
+done
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/1b42d487-0678-4872-a103-bbc494c93aa9" />
+
+now you can create the oauth data
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/8e171d77-adc5-42b6-be04-f60faac9c549" />
+
+click create client
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/5b9f05ae-5e76-493e-9f76-a6b3ac3e0234" />
+
+select TV
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/1313b4fc-4301-4a8b-b69a-3f0904f07da8" />
+
+again .. names don't matter .. note down the data from the next screenshot .. those are the data that you need for homeassistant in a second but keep following the process here or you will end up with an error
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/c43d3eed-c67f-4147-94dd-9c8bd5eb797c" />
+
+go to audiance and add a testuser -> add user
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/12a65dfd-79c9-4a9e-8634-85ca43b36439" />
+
+add your googleaccount
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/16aa1785-34ad-41b9-9154-4c45896a8212" />
+
+make sure that it is listed ... 
+<img width="2864" height="1328" alt="Image" src="https://github.com/user-attachments/assets/ca814f86-acd1-4829-ae4a-223a15869393" />
+
+now you can continue with the oauth data in the next step in homeassistant
 
 ## Installation went fine, what now?
 At this point you should have a new entity called `media_player.ytube_music_player` (or similar if you've changed the name). Open the media_browser, make sure this new media_player is selected (lower right corner). You'll see an overview of differnt types like playlists / albums etc. Go, open a section and click play on one of those items.
