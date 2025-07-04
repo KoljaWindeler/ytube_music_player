@@ -243,7 +243,8 @@ async def async_create_form(hass, user_input, page=1, option_flow = False):
 		_exclude_entities = []
 		if (_ytm := hass.data.get(DOMAIN)) is not None:
 			for _ytm_player in _ytm.values():
-				_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
+				if DOMAIN_MP in _ytm_player:
+					_exclude_entities.append(_ytm_player[DOMAIN_MP].entity_id)
 
 		data_schema[vol.Required(CONF_RECEIVERS,default=user_input[CONF_RECEIVERS])] = selector({
 				"entity": {
