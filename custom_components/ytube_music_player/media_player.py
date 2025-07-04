@@ -59,16 +59,16 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
 		self._attr_unique_id = config.entry_id
-		config.data = dict(config.options or config.data)
+		configuration = dict(config.options or config.data)
 		self.hass.data[DOMAIN][self._attr_unique_id][DOMAIN_MP] = self
 		self._debug_log_concat = ""	
-		self._debug_as_error = config.data.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
-		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
+		self._debug_as_error = configuration.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
+		self._org_name = configuration.get(CONF_NAME, DOMAIN + name_add)
 		self._attr_name = self._org_name
-		self._api_language = config.data.get(CONF_API_LANGUAGE, DEFAULT_API_LANGUAGE)
-		self._init_extra_sensor = config.data.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
-		self._init_dropdowns = config.data.get(CONF_INIT_DROPDOWNS, DEFAULT_INIT_DROPDOWNS)
-		self._maxDatarate = config.data.get(CONF_MAX_DATARATE,DEFAULT_MAX_DATARATE)
+		self._api_language = configuration.get(CONF_API_LANGUAGE, DEFAULT_API_LANGUAGE)
+		self._init_extra_sensor = configuration.get(CONF_INIT_EXTRA_SENSOR, DEFAULT_INIT_EXTRA_SENSOR)
+		self._init_dropdowns = configuration.get(CONF_INIT_DROPDOWNS, DEFAULT_INIT_DROPDOWNS)
+		self._maxDatarate = configuration.get(CONF_MAX_DATARATE,DEFAULT_MAX_DATARATE)
 
 		# All entities are now automatically generated,will be registered in the async_update_selects method later.
 		# This should be helpful for multiple accounts.
@@ -80,29 +80,29 @@ class yTubeMusicComponent(MediaPlayerEntity):
 			else:
 				_domain = input_select.DOMAIN
 			try:
-				self._selects[k] = config.data.get(v)
+				self._selects[k] = configuration.get(v)
 			except:
 				pass
 			if self._selects[k] is not None and self._selects[k].replace(" ","") != "":
 				self._selects[k] = _domain + "." + self._selects[k].replace(_domain + ".", "")
 				self.log_me('debug', "Found old {} {}: {},please consider using the new select entities.".format(_domain, k, self._selects[k] ))	
 
-		self._like_in_name = config.data.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
+		self._like_in_name = configuration.get(CONF_LIKE_IN_NAME, DEFAULT_LIKE_IN_NAME)
 
-		self._attr_shuffle = config.data.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
-		self._shuffle_mode = config.data.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
+		self._attr_shuffle = configuration.get(CONF_SHUFFLE, DEFAULT_SHUFFLE)
+		self._shuffle_mode = configuration.get(CONF_SHUFFLE_MODE, DEFAULT_SHUFFLE_MODE)
 
 		default_header_file = os.path.join(hass.config.path(STORAGE_DIR), DEFAULT_HEADER_FILENAME)
-		self._header_file = config.data.get(CONF_HEADER_PATH, default_header_file)
-		self._speakersList = config.data.get(CONF_RECEIVERS)
-		self._trackLimit = config.data.get(CONF_TRACK_LIMIT)
-		self._legacyRadio = config.data.get(CONF_LEGACY_RADIO)
-		self._sortBrowser = config.data.get(CONF_SORT_BROWSER)
+		self._header_file = configuration.get(CONF_HEADER_PATH, default_header_file)
+		self._speakersList = configuration.get(CONF_RECEIVERS)
+		self._trackLimit = configuration.get(CONF_TRACK_LIMIT)
+		self._legacyRadio = configuration.get(CONF_LEGACY_RADIO)
+		self._sortBrowser = configuration.get(CONF_SORT_BROWSER)
 		self._friendly_speakersList = dict()
 
 		# proxy settings
-		self._proxy_url = config.data.get(CONF_PROXY_URL, "")
-		self._proxy_path = config.data.get(CONF_PROXY_PATH, "")
+		self._proxy_url = configuration.get(CONF_PROXY_URL, "")
+		self._proxy_path = configuration.get(CONF_PROXY_PATH, "")
 
 
 		self.log_me('debug', "YtubeMediaPlayer config: ")
@@ -115,9 +115,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "- legacy_radio: " + str(self._legacyRadio))
 		self.log_me('debug', "- max_dataRate: " + str(self._maxDatarate))
 		
-		self._client_id = config.data.get(CONF_CLIENT_ID)
-		self._client_secret = config.data.get(CONF_CLIENT_SECRET)
-		self._brand_id = str(config.data.get(CONF_BRAND_ID, ""))
+		self._client_id = configuration.get(CONF_CLIENT_ID)
+		self._client_secret = configuration.get(CONF_CLIENT_SECRET)
+		self._brand_id = str(configuration.get(CONF_BRAND_ID, ""))
 		self._api = None
 		self._js = ""
 		self._update_needed = False
