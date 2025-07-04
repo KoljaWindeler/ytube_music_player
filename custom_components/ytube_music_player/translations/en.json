@@ -3,27 +3,30 @@
     "config": {
         "step": {
             "oauth": {
-                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player. As of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "description": "Lets start with an entity name",
                 "data": {
                     "name": "Name for the entity (without 'media_player' prefix)",
-                    "client_id": "Enter your google client ID",
-                    "secret": "Enter your google client secret",
-                    "speakers": "Select the default output device",
-                    "header_path": "File path for the header file",
-                    "advance_config": "Show advance configuration"
+                    "renew_oauth": "Renew OAuth credentials"
                 }
             },
             "oauth2": {
+                "description": "Thanks, as of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "data": {
+                    "client_id": "Enter your google client ID",
+                    "secret": "Enter your google client secret"
+                }
+            },
+            "oauth3": {
                 "description": "Great, your OAuth works. After readind the next steps open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
                 "data": {}
             },
             "finish": {
-                "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player. As of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
                 "data": {
                     "speakers": "Select the output devices, the first one will be the default device",
-                    "header_path": "File path for the header file",
                     "api_language": "The language parameter of the ytmusicapi, which determines the language of the returned results",
-                    "advance_config": "Show advance configuration"
+                    "advance_config": "Show advance configuration",
+                    "header_path": "File path for the header file"
                 }
             },
             "adv_finish": {
@@ -64,19 +67,31 @@
     },
     "options": {
         "step": {
-            "user": {
-                "description": "Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+            "oauth": {
+                "description": "Lets start with an entity name",
                 "data": {
-                    "name": "Name for the entity (without 'media_player' prefix)"
+                    "name": "Name for the entity (without 'media_player' prefix)",
+                    "renew_oauth": "Renew OAuth credentials"
                 }
             },
+            "oauth2": {
+                "description": "Thanks, as of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "data": {
+                    "client_id": "Enter your google client ID",
+                    "secret": "Enter your google client secret"
+                }
+            },
+            "oauth3": {
+                "description": "Great, your OAuth works. After readind the next steps open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
+                "data": {}
+            },
             "finish": {
-                "description": "Please enter the basic data. Further information available at https://github.com/KoljaWindeler/ytube_music_player",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player. As of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
                 "data": {
                     "speakers": "Select the output devices, the first one will be the default device",
-                    "header_path": "File path for the header file",
                     "api_language": "The language parameter of the ytmusicapi, which determines the language of the returned results",
-                    "advance_config": "Show advance configuration"
+                    "advance_config": "Show advance configuration",
+                    "header_path": "File path for the header file"
                 }
             },
             "adv_finish": {
@@ -105,13 +120,14 @@
         },
         "error": {
             "ERROR_GENERIC": "Something with your cookie wasn't right. Format and fields are ok but the login failed",
-            "ERROR_AUTH_USER": "Can't find the 'X-Goog-AuthUser' field, please check your input",
+            "ERROR_OAUTH":"Your OAuth user/secret combination was rejected, please check and try again",
+            "ERROR_AUTH_USER": "It look like you haven't registered the code below, please follow the process before going to the next dialog",
             "ERROR_COOKIE":  "Can't find the 'Cookie' field, please check your input",
             "ERROR_CONTENTS": "Format of cookie is OK, found '__Secure-3PAPISID' and '__Secure-3PSID' but can't retrieve any data with this settings, maybe you didn't copy all data?",
             "ERROR_FORMAT": "Format of cookie is NOT OK, likely missing '__Secure-3PAPISID' or '__Secure-3PSID'",
             "ERROR_NONE": "Format of cookie seams OK, but the returned sub API object is None",
-            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie",
-            "ERROR_OAUTH":"Your OAuth user/secret combination was rejected, please check and try again"
+            "ERROR_FORBIDDEN": "YouTube returned a 403 error, meaning that you login data are not longer valid. Please update the cookie"
+
         }
     },
     "services": {

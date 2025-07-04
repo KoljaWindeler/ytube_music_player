@@ -120,6 +120,7 @@ CONF_CLIENT_SECRET = 'secret'
 CONF_CODE = 'code'
 CONF_BRAND_ID = 'brand_id'
 CONF_ADVANCE_CONFIG = 'advance_config'
+CONF_RENEW_OAUTH = 'renew_oauth'
 CONF_LIKE_IN_NAME = 'like_in_name'
 CONF_DEBUG_AS_ERROR = 'debug_as_error'
 CONF_LEGACY_RADIO = 'legacy_radio'
@@ -337,6 +338,7 @@ def ensure_config(user_input):
 	out[CONF_CLIENT_ID] = ""
 	out[CONF_CLIENT_SECRET] = ""
 	out[CONF_ADVANCE_CONFIG] = False
+	out[CONF_RENEW_OAUTH] = False
 	out[CONF_LIKE_IN_NAME] = DEFAULT_LIKE_IN_NAME
 	out[CONF_DEBUG_AS_ERROR] = DEFAULT_DEBUG_AS_ERROR
 	out[CONF_TRACK_LIMIT] = DEFAULT_TRACK_LIMIT

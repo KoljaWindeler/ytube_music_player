@@ -59,8 +59,9 @@ class yTubeMusicComponent(MediaPlayerEntity):
 	def __init__(self, hass, config, name_add):
 		self.hass = hass
 		self._attr_unique_id = config.entry_id
+		config.data = dict(config.options or config.data)
 		self.hass.data[DOMAIN][self._attr_unique_id][DOMAIN_MP] = self
-		self._debug_log_concat = ""
+		self._debug_log_concat = ""	
 		self._debug_as_error = config.data.get(CONF_DEBUG_AS_ERROR, DEFAULT_DEBUG_AS_ERROR)
 		self._org_name = config.data.get(CONF_NAME, DOMAIN + name_add)
 		self._attr_name = self._org_name
@@ -357,7 +358,6 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						self.log_debug_later("YouTube Api initialized ok")
 			else:
 				out = "can't find header file at " + self._header_file
-				_LOGGER.error(out)
 				data = {"title": "yTubeMediaPlayer error", "message": out}
 				await self.hass.services.async_call("persistent_notification", "create", data)
 				self.log_me('debug', "[E] (fail) async_check_api")
@@ -972,13 +972,14 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# get entity id from friendly_name
 		for e, f in self._friendly_speakersList.items():
 			if(f == source):
-				source_entity_id = e
+				source_entity_id = f"{DOMAIN_MP}.{e}"
 				break
 		if(source_entity_id is None):
 			self.log_me('debug', "- Couldn't find " + source + " in dropdown list, giving up")
 			return
 		else:
 			self.log_me('debug', 'Translated friendly name ' + source + ' to entity id ' + source_entity_id)
+		self.log_me('debug', "selected '"+source_entity_id+"'")
 		self.log_me('debug', "[E] async_select_source_helper")
 		return await self.async_select_source(source_entity_id)
 
@@ -1038,7 +1039,11 @@ class yTubeMusicComponent(MediaPlayerEntity):
 					if pos < old_player.attributes['media_duration']:
 						data = {'seek_position': pos, ATTR_ENTITY_ID: self._remote_player}
 						await self.hass.services.async_call(DOMAIN_MP, media_player.SERVICE_MEDIA_SEEK, data)
-		self.async_schedule_update_ha_state()
+		if not self.entity_id:
+			self.log_me('debug', "Skipping state update because entity_id is not yet set")
+		else:
+			self.async_schedule_update_ha_state()
+
 		self.log_me('debug', "[E] async_select_source")
 
 
