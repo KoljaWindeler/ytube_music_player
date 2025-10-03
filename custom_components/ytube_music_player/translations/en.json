@@ -10,18 +10,18 @@
                 }
             },
             "oauth2": {
-                "description": "Thanks, as of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "description": "Thanks, as of November 2024, YouTube Music requires a Client ID and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and pick TVs and Limited Input devices.",
                 "data": {
                     "client_id": "Enter your google client ID",
                     "secret": "Enter your google client secret"
                 }
             },
             "oauth3": {
-                "description": "Great, your OAuth works. After readind the next steps open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
+                "description": "Great, your OAuth works. After reading the next steps, open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
                 "data": {}
             },
             "finish": {
-                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player. As of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "description": "Please enter the path and the cookie data. Further information available at https://github.com/KoljaWindeler/ytube_music_player. As of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and pick TVs and Limited Input devices.",
                 "data": {
                     "speakers": "Select the output devices, the first one will be the default device",
                     "api_language": "The language parameter of the ytmusicapi, which determines the language of the returned results",
@@ -75,14 +75,14 @@
                 }
             },
             "oauth2": {
-                "description": "Thanks, as of November 2024, YouTube Music requires a Client Id and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and  pick TVs and Limited Input devices.",
+                "description": "Thanks, as of November 2024, YouTube Music requires a Client ID and Secret for the YouTube Data API to connect to the API. Please open https://console.cloud.google.com/apis/credentials, click create credentials -> OAuth Client ID and pick TVs and Limited Input devices.",
                 "data": {
                     "client_id": "Enter your google client ID",
                     "secret": "Enter your google client secret"
                 }
             },
             "oauth3": {
-                "description": "Great, your OAuth works. After readind the next steps open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
+                "description": "Great, your OAuth works. After reading the next steps, open the URL below. Next Steps: You have to confirm the same code twice, then connect it to you google account, (expand the page) and allow accesss. Only after this is done go to the next step here.",
                 "data": {}
             },
             "finish": {
