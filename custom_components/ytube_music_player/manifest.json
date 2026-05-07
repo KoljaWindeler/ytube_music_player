@@ -17,5 +17,5 @@
     "pytubefix>=10.6.1",
     "integrationhelper==0.2.2"
   ],
-  "version": "20251015.01"
+  "version": "20260507.01"
 }
