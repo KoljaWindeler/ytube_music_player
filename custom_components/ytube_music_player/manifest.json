@@ -14,7 +14,7 @@
   "issue_tracker": "https://github.com/KoljaWindeler/ytube_music_player/issues",
   "requirements": [
     "ytmusicapi==1.9.1",
-    "pytubefix @ https://github.com/JuanBindez/pytubefix/archive/5b9fc5c72c52c69d526ef0860e72ea6f395e1d6c.zip",
+    "pytubefix@https://github.com/JuanBindez/pytubefix/archive/5b9fc5c72c52c69d526ef0860e72ea6f395e1d6c.zip",
     "integrationhelper==0.2.2"
   ],
   "version": "20260508.01"
