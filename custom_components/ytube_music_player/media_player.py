@@ -1573,7 +1573,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 						_url = res['url']
 					else:
 						self.log_me('error',"signature not found, decoding")
-						signature = self._cipher.get_signature(ciphered_signature=res['s'])
+						signature = self._cipher.get_sig(ciphered_signature=res['s'])
 						_url = res['url'] + "&sig=" + signature
 					self.log_me('debug', "- self decoded URL via cipher")
 					
@@ -1593,7 +1593,7 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		self.log_me('debug', "[S] async_get_url_pytube")
 		_url = ""
 		try:
-			streamingData = await self.hass.async_add_executor_job(lambda: YouTube("https://www.youtube.com/watch?v=" + videoId, 'WEB'))
+			streamingData = await self.hass.async_add_executor_job(lambda: YouTube("https://www.youtube.com/watch?v=" + videoId))
 			streams = await self.hass.async_add_executor_job(lambda: streamingData.streams)
 			streams_audio = streams.filter(only_audio=True)
 			if(len(streams_audio) > 0):
