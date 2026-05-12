@@ -442,7 +442,24 @@ async def build_item_response(ytmusicplayer, payload):
 	elif search_type == SEARCH:
 		header_title = SEARCH_TITLE
 		if ytmusicplayer._search is not None:
-			media_all = await hass.async_add_executor_job(lambda: media_library.search(query=ytmusicplayer._search.get('query', ""), filter=ytmusicplayer._search.get('filter', None), limit=int(ytmusicplayer._search.get('limit', 20))))
+			search_filter = ytmusicplayer._search.get('filter', None)
+			search_query = ytmusicplayer._search.get('query', "")
+			search_limit = int(ytmusicplayer._search.get('limit', 20))
+			try:
+				media_all = await hass.async_add_executor_job(lambda: media_library.search(query=search_query, filter=search_filter, limit=search_limit))
+			except KeyError as err:
+				# ytmusicapi raises KeyError (e.g. 'header') when the YouTube Music
+				# response contains a result shape the parser doesn't understand.
+				# Retry once with filter='songs' so we still return useful results.
+				_LOGGER.warning("media_library.search raised KeyError (%s); retrying with filter='songs'", err)
+				if search_filter != 'songs':
+					try:
+						media_all = await hass.async_add_executor_job(lambda: media_library.search(query=search_query, filter='songs', limit=search_limit))
+					except KeyError as err2:
+						_LOGGER.error("media_library.search retry also raised KeyError (%s); returning empty results", err2)
+						media_all = []
+				else:
+					media_all = []
 
 			if(ytmusicplayer._search.get('filter', None) is not None):
 				helper = {}
