@@ -270,12 +270,14 @@ async def async_try_login(hass, path, brand_id=None, language='en',oauth=None):
 	is_oauth_file = False
 	if os.path.exists(path):
 		try:
-			with open(path, 'r') as f:
-				auth_data = json.load(f)
-				# OAuth token files have specific keys like 'token_type', 'access_token', 'refresh_token'
-				if isinstance(auth_data, dict) and ('token_type' in auth_data or 'refresh_token' in auth_data):
-					is_oauth_file = True
-					_LOGGER.debug("- Detected OAuth token file")
+			def _read_json():
+				with open(path, 'r', encoding='utf-8') as f:
+					return json.load(f)
+			auth_data = await hass.async_add_executor_job(_read_json)
+			# OAuth token files have specific keys like 'token_type', 'access_token', 'refresh_token'
+			if isinstance(auth_data, dict) and ('token_type' in auth_data or 'refresh_token' in auth_data):
+				is_oauth_file = True
+				_LOGGER.debug("- Detected OAuth token file")
 		except:
 			# Not a JSON file, probably browser headers
 			pass
