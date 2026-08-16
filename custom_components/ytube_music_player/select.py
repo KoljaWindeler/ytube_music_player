@@ -9,7 +9,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config, async_add_entities):
 	_LOGGER.debug("Init the dropdown(s)")
-	init_dropdowns = config.data.get(CONF_INIT_DROPDOWNS, DEFAULT_INIT_DROPDOWNS)
+	configuration = config.options or config.data
+	init_dropdowns = configuration.get(CONF_INIT_DROPDOWNS, DEFAULT_INIT_DROPDOWNS)
 	select_entities = {
 		"playlists": yTubeMusicPlaylistSelect(hass, config),
 		"speakers": yTubeMusicSpeakerSelect(hass, config),
