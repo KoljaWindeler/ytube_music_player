@@ -1436,29 +1436,22 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		if(videoId is None):
 			self.log_me('debug', "videoId was None")
 			return ""
-		_url = await self.async_get_url_self(videoId,retry)
+		_url = await self.async_get_url_pytube(videoId)
 
-		# check url
-		if(_url != ""):
-			r = await self.hass.async_add_executor_job(requests.head, _url)
-			if(r.status_code == 403):
-				self.log_me('error', "- self decoded url return 403 status code, attempt "+str(retry)+"/60")
-				_url = ""
-		
 		if(_url == ""):
-			_url = await self.async_get_url_pytube(videoId)
+			_url = await self.async_get_url_self(videoId,retry)
 		
 		# check url
 		if(_url != ""):
-			r = await self.hass.async_add_executor_job(requests.head, _url)
-			if(r.status_code == 403 or r.status_code == 410):
-				self.log_me('error', "- self decoded url return 403 status code, attempt "+str(retry)+"/60")
+			status_code = await self.async_probe_stream_url(_url)
+			if(status_code == 403 or status_code == 410):
+				self.log_me('error', "- stream url returned " + str(status_code) + " status code, attempt "+str(retry)+"/60")
 				_url = ""
 
 				if(retry>0):
 					self._api = None
 					self.log_me('debug', "- relogin to fresh cookie and try again")
-					self.async_check_api() 
+					await self.async_check_api() 
 					return await self.async_get_url(videoId, retry-1)
 				else:
 					self.log_me('debug', "- giving up, maybe pyTube can help")
@@ -1466,6 +1459,25 @@ class yTubeMusicComponent(MediaPlayerEntity):
 
 		self.log_me('debug', "[E] async_get_url")
 		return _url
+
+	async def async_probe_stream_url(self, _url):
+		def _probe():
+			headers = {
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
+				"Accept": "*/*",
+				"Range": "bytes=0-0",
+				"Connection": "close",
+			}
+			try:
+				response = requests.get(_url, headers=headers, stream=True, timeout=10, allow_redirects=True)
+				status_code = response.status_code
+				response.close()
+				return status_code
+			except Exception as err:
+				_LOGGER.debug("Stream URL probe failed, passing URL to media player anyway: %s", err)
+				return None
+
+		return await self.hass.async_add_executor_job(_probe)
 
 
 	async def async_get_url_self(self, videoId=None, retry=60):
@@ -1592,20 +1604,31 @@ class yTubeMusicComponent(MediaPlayerEntity):
 		# backup: run youtube stack, only if we failed
 		self.log_me('debug', "[S] async_get_url_pytube")
 		_url = ""
-		try:
-			streamingData = await self.hass.async_add_executor_job(lambda: YouTube("https://www.youtube.com/watch?v=" + videoId))
-			streams = await self.hass.async_add_executor_job(lambda: streamingData.streams)
-			streams_audio = streams.filter(only_audio=True)
-			if(len(streams_audio) > 0):
-				_url = streams_audio.order_by('abr').last().url
-			else:
-				_url = streams.order_by('abr').last().url
-
-		except Exception as err:
-			# _LOGGER.error(traceback.format_exc())
-			_LOGGER.error("- Failed to get URL with YouTube methode")
-			_LOGGER.error(err)
-			return ""
+		# YouTube hands the 'WEB' client SABR-only urls (sabr=1) since 2026. Those
+		# cannot be fetched with a plain GET: ffmpeg (and therefore Music Assistant)
+		# rejects them with "Invalid data found when processing input", even though
+		# the url itself answers with a 200/206. Try the clients that still return a
+		# directly downloadable url first and keep 'WEB' as a last resort.
+		for client in ('WEB_MUSIC', 'MWEB', 'ANDROID_VR', 'WEB'):
+			try:
+				streamingData = await self.hass.async_add_executor_job(lambda c=client: YouTube("https://www.youtube.com/watch?v=" + videoId, c))
+				streams = await self.hass.async_add_executor_job(lambda: streamingData.streams)
+				streams_audio = streams.filter(only_audio=True)
+				if(len(streams_audio) > 0):
+					_url = streams_audio.order_by('abr').last().url
+				else:
+					_url = streams.order_by('abr').last().url
+			except Exception as err:
+				self.log_me('debug', "- client " + client + " failed: " + str(err))
+				_url = ""
+				continue
+			if(_url != "" and "sabr=1" not in _url):
+				self.log_me('debug', "- got playable url from client " + client)
+				break
+			self.log_me('debug', "- client " + client + " returned a SABR-only url, trying next client")
+			_url = ""
+		if(_url == ""):
+			_LOGGER.error("- Failed to get a playable URL with the YouTube method (tried WEB_MUSIC, MWEB, ANDROID_VR, WEB)")
 		self.log_me('debug', "[E] async_get_url_pytube")
 		return _url
 
